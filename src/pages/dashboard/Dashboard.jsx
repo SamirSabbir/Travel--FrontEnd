@@ -5,6 +5,7 @@ import Sales from "../../components/dashboard/Sales";
 import Work from "../../components/dashboard/Work";
 import Pipeline from "../../components/dashboard/Pipeline";
 import VisaProcessing from "../../components/dashboard/VisaProcessing";
+import Invoice from "../../components/dashboard/Invoice";
 
 // Dummy user object – can be replaced with context/auth state later
 const dummyUser = {
@@ -20,6 +21,7 @@ const tabs = [
   { name: "Work", component: Work },
   { name: "Pipeline", component: Pipeline },
   { name: "Visa Processing", component: VisaProcessing },
+  {name:"Invoice", component: Invoice}
   // You can import and add other tabs like:
   // { name: "Sales", component: Sales },
   // { name: "HR", component: HR },
