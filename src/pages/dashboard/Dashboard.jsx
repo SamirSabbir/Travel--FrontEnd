@@ -14,9 +14,10 @@ import Approval from "../../components/dashboard/Approval";
 
 // Tab mapping with role-based visibility
 const allTabs = [
-  { name: "Leads", component: Leads, roles: ["employee", "hr", "admin"] },
-  { name: "Sales", component: Sales, roles: ["employee", "hr", "admin"] },
-  { name: "Work", component: Work, roles: ["employee", "admin"] },
+  { name: "Leads", component: Leads, roles: ["superAdmin"] },
+  // { name: "Sales", component: Sales, roles: ["employee", "hr", "admin"] },
+  { name: "Sales", component: Sales, roles: ["employee"] },
+  { name: "Work", component: Work, roles: ["employee", "AccountAdmin"] },
   { name: "Pipeline", component: Pipeline, roles: ["hr", "admin"] },
   {
     name: "Visa Processing",
@@ -93,8 +94,16 @@ const Dashboard = () => {
         {/* Tab List - Make this scrollable */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-2">
           {tabs.map((tab) => (
-            <button key={tab.name} /* ... */>
-              <span>{tab.name}</span>
+            <button
+              key={tab.name}
+              onClick={() => setSelectedTab(tab.name)}
+              className={`w-full text-left p-2 rounded transition ${
+                selectedTab === tab.name
+                  ? "bg-blue-500 text-white"
+                  : "hover:bg-blue-100"
+              }`}
+            >
+              {tab.name}
             </button>
           ))}
         </nav>
@@ -110,20 +119,18 @@ const Dashboard = () => {
         </div>
       </aside>
 
-     
-
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Top Header */}
 
-         {/* Add this inside your Dashboard component's return statement */}
-      {/* <div className="fixed bottom-0 left-0 p-4 bg-white shadow-lg rounded-tr-lg">
+        {/* Add this inside your Dashboard component's return statement */}
+        {/* <div className="fixed bottom-0 left-0 p-4 bg-white shadow-lg rounded-tr-lg">
         <div className="text-xs">
           <p>User Data: {JSON.stringify(user)}</p>
           <p>Available Tabs: {tabs.map((t) => t.name).join(", ")}</p>
         </div>
       </div> */}
-      
+
         <header className="bg-white shadow px-6 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold text-gray-700">
             Welcome, {user.name}
@@ -143,7 +150,6 @@ const Dashboard = () => {
         <main className="flex-1 p-6 overflow-y-auto">
           <CurrentTabComponent userRole={user.role} />
         </main>
-        
       </div>
     </div>
   );

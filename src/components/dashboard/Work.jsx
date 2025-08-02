@@ -1,142 +1,169 @@
-import React, { useState } from "react";
-
-
-//from the sales other information will  also  show here after that the employee will do other thing.
-//also need description here  
+import React, { useEffect, useState } from "react";
+import axios from "../../api/axios";
+import { toast } from "react-toastify";
+import { Loader2, Save } from "lucide-react";
 
 const Work = ({ userRole }) => {
-  // Dummy customer data from Sales tab
-  const customers = [
-    { id: 1, name: "Alice", phone: "01711-123456" },
-    { id: 2, name: "Bob", phone: "01822-654321" },
-  ];
+  const [workData, setWorkData] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState(null);
 
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [status, setStatus] = useState("Draft");
-  const [deliveryDate, setDeliveryDate] = useState("");
-  const [file, setFile] = useState(null);
-  const [workList, setWorkList] = useState([]);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    const newWork = {
-      id: workList.length + 1,
-      customer: selectedCustomer,
-      fileName: file?.name || "No file uploaded",
-      status,
-      deliveryDate: status === "Pending More Info" ? deliveryDate : null,
-    };
-
-    setWorkList((prev) => [...prev, newWork]);
-
-    // Reset
-    setSelectedCustomer(null);
-    setStatus("Draft");
-    setDeliveryDate("");
-    setFile(null);
+  const fetchWorks = async () => {
+    try {
+      const res = await axios.get("/works/my-works");
+      setWorkData(res.data.data);
+    } catch (err) {
+      toast.error("Failed to fetch work data");
+    }
   };
 
-  return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">Work</h2>
+  const fetchEmployees = async () => {
+    try {
+      const res = await axios.get("/users/findEmployeeUsers");
+      setEmployees(res.data.data);
+    } catch (err) {
+      toast.error("Failed to fetch employees");
+    }
+  };
 
-      {/* Customer Selection */}
-      <div className="mb-4">
-        <h3 className="font-medium mb-2">Select a Customer</h3>
-        <ul className="bg-white border rounded divide-y max-w-md">
-          {customers.map((cust) => (
-            <li
-              key={cust.id}
-              className={`px-4 py-2 cursor-pointer hover:bg-blue-50 ${
-                selectedCustomer?.id === cust.id ? "bg-blue-100 font-semibold" : ""
-              }`}
-              onClick={() => setSelectedCustomer(cust)}
-            >
-              {cust.name} - {cust.phone}
-            </li>
-          ))}
-        </ul>
+  useEffect(() => {
+    Promise.all([fetchWorks(), fetchEmployees()]).finally(() => setLoading(false));
+  }, []);
+
+  const handleUpdate = async (id, updatedFields) => {
+    setUpdatingId(id);
+    try {
+      if (userRole.toLowerCase() === "account admin") {
+        await axios.patch(`/works/update-work-account-admin/${id}`, {
+          payment: updatedFields.payment
+        });
+      } else {
+        await axios.patch(`/works/update-work-employee/${id}`, updatedFields);
+      }
+      toast.success("Work updated successfully");
+      await fetchWorks();
+    } catch (err) {
+      toast.error("Failed to update work");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleFieldChange = (id, field, value) => {
+    setWorkData(prev =>
+      prev.map(w => (w._id === id ? { ...w, [field]: value } : w))
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-10">
+        <Loader2 className="animate-spin h-8 w-8 text-gray-600" />
       </div>
+    );
+  }
 
-      {/* Work Form */}
-      {selectedCustomer && (
-        <form onSubmit={handleSubmit} className="space-y-4 max-w-md mb-10">
-          {/* File Upload */}
-          <div>
-            <label className="block font-semibold mb-1">Upload Document</label>
-            <input
-              type="file"
-              onChange={(e) => setFile(e.target.files[0])}
-              className="w-full"
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls"
-              required
-            />
-            {file && (
-              <p className="text-sm mt-1 text-gray-500">Selected: {file.name}</p>
-            )}
-          </div>
+  return (
+    <div className="p-6 space-y-6">
+      <h2 className="text-3xl font-bold text-gray-800 mb-4">Assigned Works</h2>
+      <div className="overflow-auto rounded-xl border shadow-sm">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-100 text-gray-700">
+            <tr>
+              {["Name", "Pax", "Country", "Submission Date", "Payment", "Transfer", "Actions"].map(col => (
+                <th key={col} className="px-4 py-3 text-left font-semibold border-b">
+                  {col}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="bg-white">
+            {workData.map((work) => (
+              <tr key={work._id} className="border-b hover:bg-gray-50 transition">
+                <td className="px-4 py-2 font-medium text-gray-900">{work.name}</td>
 
-          {/* Status Select */}
-          <div>
-            <label className="block font-semibold mb-1">Status</label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="w-full border rounded px-3 py-2"
-            >
-              <option value="Completed">Completed</option>
-              <option value="Draft">Draft</option>
-              <option value="Pending More Info">Pending More Info</option>
-            </select>
-          </div>
+                <td className="px-4 py-2">
+                  <input
+                    type="text"
+                    value={work.pax || ""}
+                    onChange={(e) => handleFieldChange(work._id, "pax", e.target.value)}
+                    className="w-full border-gray-300 rounded px-2 py-1 text-sm"
+                  />
+                </td>
 
-          {/* Conditional Delivery Date */}
-          {status === "Pending More Info" && (
-            <div>
-              <label className="block font-semibold mb-1">Delivery Date</label>
-              <input
-                type="date"
-                value={deliveryDate}
-                onChange={(e) => setDeliveryDate(e.target.value)}
-                className="w-full border rounded px-3 py-2"
-                required
-              />
-            </div>
-          )}
+                <td className="px-4 py-2">
+                  <input
+                    type="text"
+                    value={work.country || ""}
+                    onChange={(e) => handleFieldChange(work._id, "country", e.target.value)}
+                    className="w-full border-gray-300 rounded px-2 py-1 text-sm"
+                  />
+                </td>
 
-          <button
-            type="submit"
-            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"
-          >
-            Submit Work Info
-          </button>
-        </form>
-      )}
+                <td className="px-4 py-2">
+                  <input
+                    type="date"
+                    value={work.submissionDate?.slice(0, 10) || ""}
+                    onChange={(e) => handleFieldChange(work._id, "submissionDate", e.target.value)}
+                    className="w-full border-gray-300 rounded px-2 py-1 text-sm"
+                  />
+                </td>
 
-      {/* Display Submitted Work List */}
-      {workList.length > 0 && (
-        <div className="mt-6 max-w-3xl">
-          <h3 className="text-lg font-semibold mb-4">Submitted Work</h3>
-          <div className="space-y-4">
-            {workList.map((work) => (
-              <div
-                key={work.id}
-                className="bg-white p-4 rounded shadow border"
-              >
-                <p className="font-semibold text-blue-600">
-                  {work.customer.name} ({work.customer.phone})
-                </p>
-                <p><strong>File:</strong> {work.fileName}</p>
-                <p><strong>Status:</strong> {work.status}</p>
-                {work.deliveryDate && (
-                  <p><strong>Delivery Date:</strong> {work.deliveryDate}</p>
-                )}
-              </div>
+                <td className="px-4 py-2">
+                  <input
+                    type="number"
+                    value={work.payment || ""}
+                    onChange={(e) => handleFieldChange(work._id, "payment", e.target.value)}
+                    className="w-full border-gray-300 rounded px-2 py-1 text-sm"
+                    disabled={userRole.toLowerCase() !== "account admin" && userRole.toLowerCase() !== "admin"}
+                  />
+                </td>
+
+                <td className="px-4 py-2">
+                  <select
+                    value={work.transfer || ""}
+                    onChange={(e) => handleFieldChange(work._id, "transfer", e.target.value)}
+                    className="w-full border-gray-300 rounded px-2 py-1 text-sm"
+                  >
+                    <option value="">Select</option>
+                    {employees.map(emp => (
+                      <option key={emp._id} value={emp.name}>{emp.name}</option>
+                    ))}
+                  </select>
+                </td>
+
+                <td className="px-4 py-2 text-center">
+                  <button
+                    onClick={() =>
+                      handleUpdate(work._id, {
+                        pax: work.pax,
+                        country: work.country,
+                        submissionDate: work.submissionDate,
+                        payment: work.payment,
+                        transfer: work.transfer,
+                      })
+                    }
+                    disabled={updatingId === work._id}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm flex items-center justify-center gap-1"
+                  >
+                    {updatingId === work._id ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Updating
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" /> Update
+                      </>
+                    )}
+                  </button>
+                </td>
+              </tr>
             ))}
-          </div>
-        </div>
-      )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
