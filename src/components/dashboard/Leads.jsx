@@ -129,7 +129,7 @@ const Leads = ({ userRole }) => {
           </div>
           <button
             type="submit"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+            className="bg-[#0F4F55] hover:bg-blue-700 text-white px-4 py-2 rounded"
           >
             Add Lead
           </button>
@@ -197,7 +197,7 @@ const Leads = ({ userRole }) => {
           placeholder="Search customer..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full border px-4 py-2 rounded-md mb-6 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="w-full border px-4 py-2 rounded-md mb-6 focus:outline-none focus:ring-2 focus:ring-[#0F4F55]"
         />
 
         {/* 🧾 Assignment Cards */}

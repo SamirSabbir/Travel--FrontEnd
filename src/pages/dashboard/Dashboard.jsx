@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Leads from "../../components/dashboard/Leads";
 import { FaUserCircle } from "react-icons/fa";
+import logo from "../../assets/travelLogo.png";
 import Sales from "../../components/dashboard/Sales";
 import Work from "../../components/dashboard/Work";
 import Pipeline from "../../components/dashboard/Pipeline";
@@ -11,6 +12,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Cookies from "js-cookie";
 import Approval from "../../components/dashboard/Approval";
+import AdminPipeline from "../../components/dashboard/AdminPipeline";
 
 // Tab mapping with role-based visibility
 const allTabs = [
@@ -18,14 +20,15 @@ const allTabs = [
   // { name: "Sales", component: Sales, roles: ["employee", "hr", "admin"] },
   { name: "Sales", component: Sales, roles: ["employee"] },
   { name: "Work", component: Work, roles: ["employee", "AccountAdmin"] },
-  { name: "Pipeline", component: Pipeline, roles: ["hr", "admin"] },
+  // { name: "Pipeline", component: Pipeline, roles: ["hr", "admin"] },
   {
     name: "Visa Processing",
     component: VisaProcessing,
     roles: ["hr", "admin"],
   },
   { name: "Invoice", component: Invoice, roles: ["admin"] },
-  { name: "Approval", component: Approval, roles: ["superAdmin"] }, // Add this new tab
+  { name: "Approval", component: Approval, roles: ["superAdmin"] },
+  { name: "Pipeline", component: AdminPipeline, roles: ["superAdmin"] },
 ];
 
 const Dashboard = () => {
@@ -85,9 +88,9 @@ const Dashboard = () => {
       <aside className="w-64 bg-white shadow-lg flex flex-col">
         {/* Header */}
         <div className="p-6 border-b border-gray-200 flex items-center gap-2">
-          <img src="/logo.png" alt="Logo" className="h-8 w-8" />
-          <span className="text-lg font-semibold text-blue-600">
-            CRM Dashboard
+          <img src={logo} alt="Logo" className="h-12 w-12" />
+          <span className="text-lg font-semibold text-[#0F4F55]">
+            Trip and Travel
           </span>
         </div>
 
@@ -99,7 +102,7 @@ const Dashboard = () => {
               onClick={() => setSelectedTab(tab.name)}
               className={`w-full text-left p-2 rounded transition ${
                 selectedTab === tab.name
-                  ? "bg-blue-500 text-white"
+                  ? "bg-[#0F4F55] text-white"
                   : "hover:bg-blue-100"
               }`}
             >
@@ -120,7 +123,7 @@ const Dashboard = () => {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col bg-[#ECF4FB]">
         {/* Top Header */}
 
         {/* Add this inside your Dashboard component's return statement */}
