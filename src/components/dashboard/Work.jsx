@@ -28,7 +28,9 @@ const Work = ({ userRole }) => {
   };
 
   useEffect(() => {
-    Promise.all([fetchWorks(), fetchEmployees()]).finally(() => setLoading(false));
+    Promise.all([fetchWorks(), fetchEmployees()]).finally(() =>
+      setLoading(false)
+    );
   }, []);
 
   const handleUpdate = async (id, updatedFields) => {
@@ -36,7 +38,7 @@ const Work = ({ userRole }) => {
     try {
       if (userRole.toLowerCase() === "account admin") {
         await axios.patch(`/works/update-work-account-admin/${id}`, {
-          payment: updatedFields.payment
+          payment: updatedFields.payment,
         });
       } else {
         await axios.patch(`/works/update-work-employee/${id}`, updatedFields);
@@ -51,8 +53,8 @@ const Work = ({ userRole }) => {
   };
 
   const handleFieldChange = (id, field, value) => {
-    setWorkData(prev =>
-      prev.map(w => (w._id === id ? { ...w, [field]: value } : w))
+    setWorkData((prev) =>
+      prev.map((w) => (w._id === id ? { ...w, [field]: value } : w))
     );
   };
 
@@ -71,8 +73,20 @@ const Work = ({ userRole }) => {
         <table className="min-w-full text-sm">
           <thead className="bg-gray-100 text-gray-700">
             <tr>
-              {["Name", "Pax", "Country", "Submission Date", "Payment", "Transfer", "Actions"].map(col => (
-                <th key={col} className="px-4 py-3 text-left font-semibold border-b">
+              {[
+                "Name",
+                "Pax",
+                "Country",
+                "Submission Date",
+                "Payment",
+                "Transfer",
+                "Status",
+                "Actions",
+              ].map((col) => (
+                <th
+                  key={col}
+                  className="px-4 py-3 text-left font-semibold border-b"
+                >
                   {col}
                 </th>
               ))}
@@ -80,14 +94,21 @@ const Work = ({ userRole }) => {
           </thead>
           <tbody className="bg-white">
             {workData.map((work) => (
-              <tr key={work._id} className="border-b hover:bg-gray-50 transition">
-                <td className="px-4 py-2 font-medium text-gray-900">{work.name}</td>
+              <tr
+                key={work._id}
+                className="border-b hover:bg-gray-50 transition"
+              >
+                <td className="px-4 py-2 font-medium text-gray-900">
+                  {work.name}
+                </td>
 
                 <td className="px-4 py-2">
                   <input
                     type="text"
                     value={work.pax || ""}
-                    onChange={(e) => handleFieldChange(work._id, "pax", e.target.value)}
+                    onChange={(e) =>
+                      handleFieldChange(work._id, "pax", e.target.value)
+                    }
                     className="w-full border-gray-300 rounded px-2 py-1 text-sm"
                   />
                 </td>
@@ -96,7 +117,9 @@ const Work = ({ userRole }) => {
                   <input
                     type="text"
                     value={work.country || ""}
-                    onChange={(e) => handleFieldChange(work._id, "country", e.target.value)}
+                    onChange={(e) =>
+                      handleFieldChange(work._id, "country", e.target.value)
+                    }
                     className="w-full border-gray-300 rounded px-2 py-1 text-sm"
                   />
                 </td>
@@ -105,7 +128,13 @@ const Work = ({ userRole }) => {
                   <input
                     type="date"
                     value={work.submissionDate?.slice(0, 10) || ""}
-                    onChange={(e) => handleFieldChange(work._id, "submissionDate", e.target.value)}
+                    onChange={(e) =>
+                      handleFieldChange(
+                        work._id,
+                        "submissionDate",
+                        e.target.value
+                      )
+                    }
                     className="w-full border-gray-300 rounded px-2 py-1 text-sm"
                   />
                 </td>
@@ -114,22 +143,47 @@ const Work = ({ userRole }) => {
                   <input
                     type="number"
                     value={work.payment || ""}
-                    onChange={(e) => handleFieldChange(work._id, "payment", e.target.value)}
+                    onChange={(e) =>
+                      handleFieldChange(work._id, "payment", e.target.value)
+                    }
                     className="w-full border-gray-300 rounded px-2 py-1 text-sm"
-                    disabled={userRole.toLowerCase() !== "account admin" && userRole.toLowerCase() !== "admin"}
+                    disabled={
+                      userRole.toLowerCase() !== "account admin" &&
+                      userRole.toLowerCase() !== "admin"
+                    }
                   />
                 </td>
 
                 <td className="px-4 py-2">
                   <select
                     value={work.transfer || ""}
-                    onChange={(e) => handleFieldChange(work._id, "transfer", e.target.value)}
+                    onChange={(e) =>
+                      handleFieldChange(work._id, "transfer", e.target.value)
+                    }
                     className="w-full border-gray-300 rounded px-2 py-1 text-sm"
                   >
                     <option value="">Select</option>
-                    {employees.map(emp => (
-                      <option key={emp._id} value={emp.name}>{emp.name}</option>
+                    {employees.map((emp) => (
+                      <option key={emp._id} value={emp.name}>
+                        {emp.name}
+                      </option>
                     ))}
+                  </select>
+                </td>
+
+                {/* ✅ NEW: Status column */}
+                <td className="px-4 py-2">
+                  <select
+                    value={work.status || "pending"}
+                    onChange={(e) =>
+                      handleFieldChange(work._id, "status", e.target.value)
+                    }
+                    className="w-full border-gray-300 rounded px-2 py-1 text-sm"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="completed">Completed</option>
+                    <option value="draft">Draft</option>
+                    <option value="more_info">Pending More Info</option>
                   </select>
                 </td>
 
@@ -142,6 +196,7 @@ const Work = ({ userRole }) => {
                         submissionDate: work.submissionDate,
                         payment: work.payment,
                         transfer: work.transfer,
+                        status: work.status, // ✅ Include status in update
                       })
                     }
                     disabled={updatingId === work._id}

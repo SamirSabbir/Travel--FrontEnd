@@ -6,13 +6,15 @@ import Sales from "../../components/dashboard/Sales";
 import Work from "../../components/dashboard/Work";
 import Pipeline from "../../components/dashboard/Pipeline";
 import VisaProcessing from "../../components/dashboard/VisaProcessing";
-import Invoice from "../../components/dashboard/Invoice";
+// import Invoice from "../../components/dashboard/Invoice";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Cookies from "js-cookie";
 import Approval from "../../components/dashboard/Approval";
 import AdminPipeline from "../../components/dashboard/AdminPipeline";
+import AccountInfo from "../../components/account-admin/AccountInfo";
+import Invoice from "../../components/account-admin/Invoice";
 
 // Tab mapping with role-based visibility
 const allTabs = [
@@ -26,9 +28,11 @@ const allTabs = [
     component: VisaProcessing,
     roles: ["hr", "admin"],
   },
-  { name: "Invoice", component: Invoice, roles: ["admin"] },
+  // { name: "Invoice", component: Invoice, roles: ["admin"] },
   { name: "Approval", component: Approval, roles: ["superAdmin"] },
   { name: "Pipeline", component: AdminPipeline, roles: ["superAdmin"] },
+  { name: "Account-Info", component: AccountInfo, roles: ["AccountAdmin"] },
+  {name:"Invoice", component: Invoice, roles:["AccountAdmin"]}
 ];
 
 const Dashboard = () => {
