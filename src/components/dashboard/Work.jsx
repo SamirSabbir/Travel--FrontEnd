@@ -11,7 +11,7 @@ const Work = ({ userRole }) => {
 
   const fetchWorks = async () => {
     try {
-      const res = await axios.get("/works/my-works");
+      const res = await axios.get("/works/employee-works");
       setWorkData(res.data.data);
     } catch (err) {
       toast.error("Failed to fetch work data");
@@ -36,11 +36,12 @@ const Work = ({ userRole }) => {
   const handleUpdate = async (id, updatedFields) => {
     setUpdatingId(id);
     try {
-      if (userRole.toLowerCase() === "account admin") {
+      if (userRole === "AccountAdmin") {
         await axios.patch(`/works/update-work-account-admin/${id}`, {
           payment: updatedFields.payment,
         });
       } else {
+        console.log(updatedFields);
         await axios.patch(`/works/update-work-employee/${id}`, updatedFields);
       }
       toast.success("Work updated successfully");
@@ -79,7 +80,7 @@ const Work = ({ userRole }) => {
                 "Country",
                 "Submission Date",
                 "Payment",
-                "Transfer",
+                "employeeEmail",
                 "Status",
                 "Actions",
               ].map((col) => (
@@ -148,23 +149,26 @@ const Work = ({ userRole }) => {
                     }
                     className="w-full border-gray-300 rounded px-2 py-1 text-sm"
                     disabled={
-                      userRole.toLowerCase() !== "account admin" &&
-                      userRole.toLowerCase() !== "admin"
+                      userRole !== "AccountAdmin" && userRole !== "Admin"
                     }
                   />
                 </td>
 
                 <td className="px-4 py-2">
                   <select
-                    value={work.transfer || ""}
+                    value={work.employeeEmail || ""}
                     onChange={(e) =>
-                      handleFieldChange(work._id, "transfer", e.target.value)
+                      handleFieldChange(
+                        work._id,
+                        "employeeEmail",
+                        e.target.value
+                      )
                     }
                     className="w-full border-gray-300 rounded px-2 py-1 text-sm"
                   >
                     <option value="">Select</option>
                     {employees.map((emp) => (
-                      <option key={emp._id} value={emp.name}>
+                      <option key={emp._id} value={emp.email}>
                         {emp.name}
                       </option>
                     ))}
@@ -195,7 +199,7 @@ const Work = ({ userRole }) => {
                         country: work.country,
                         submissionDate: work.submissionDate,
                         payment: work.payment,
-                        transfer: work.transfer,
+                        employeeEmail: work.employeeEmail,
                         status: work.status, // ✅ Include status in update
                       })
                     }
