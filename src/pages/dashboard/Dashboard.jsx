@@ -15,6 +15,8 @@ import Approval from "../../components/dashboard/Approval";
 import AdminPipeline from "../../components/dashboard/AdminPipeline";
 import AccountInfo from "../../components/account-admin/AccountInfo";
 import Invoice from "../../components/account-admin/Invoice";
+import MyBusiness from "../../components/dashboard/superAdmin/MyBusiness";
+import MyProfile from "../profile/MyProfile";
 
 // Tab mapping with role-based visibility
 const allTabs = [
@@ -32,7 +34,13 @@ const allTabs = [
   { name: "Approval", component: Approval, roles: ["superAdmin"] },
   { name: "Pipeline", component: AdminPipeline, roles: ["superAdmin"] },
   { name: "Account-Info", component: AccountInfo, roles: ["AccountAdmin"] },
-  {name:"Invoice", component: Invoice, roles:["AccountAdmin"]}
+  { name: "Invoice", component: Invoice, roles: ["AccountAdmin"] },
+  { name: "My-Business", component: MyBusiness, roles: ["superAdmin"] },
+  {
+    name: "My Profile",
+    component: MyProfile,
+    roles: ["employee", "AccountAdmin", "superAdmin"],
+  },
 ];
 
 const Dashboard = () => {
@@ -144,7 +152,10 @@ const Dashboard = () => {
           </h1>
 
           {/* Profile Info */}
-          <div className="flex items-center gap-3">
+          <div
+            className="flex items-center gap-3 cursor-pointer hover:bg-gray-100 p-2 rounded"
+            onClick={() => setSelectedTab("My Profile")}
+          >
             <FaUserCircle className="h-10 w-10 text-gray-400" />
             <div className="text-right">
               <p className="text-sm font-semibold">{user.name}</p>
