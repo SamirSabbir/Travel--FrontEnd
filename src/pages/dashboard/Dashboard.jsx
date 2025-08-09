@@ -138,13 +138,6 @@ const Dashboard = () => {
       <div className="flex-1 flex flex-col bg-[#ECF4FB]">
         {/* Top Header */}
 
-        {/* Add this inside your Dashboard component's return statement */}
-        {/* <div className="fixed bottom-0 left-0 p-4 bg-white shadow-lg rounded-tr-lg">
-        <div className="text-xs">
-          <p>User Data: {JSON.stringify(user)}</p>
-          <p>Available Tabs: {tabs.map((t) => t.name).join(", ")}</p>
-        </div>
-      </div> */}
 
         <header className="bg-white shadow px-6 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold text-gray-700">

@@ -1,10 +1,20 @@
 import React, { useState, useEffect } from "react";
 import axios from "../../api/axios";
 import { toast } from "react-toastify";
-import { FaUserEdit, FaSave, FaTimes, FaLock, FaUser, FaEnvelope, FaDollarSign, FaPercent, FaChartLine } from "react-icons/fa";
+import {
+  FaUserEdit,
+  FaSave,
+  FaTimes,
+  FaLock,
+  FaUser,
+  FaEnvelope,
+  FaDollarSign,
+  FaPercent,
+  FaChartLine,
+} from "react-icons/fa";
 import { motion } from "framer-motion";
 
-const MyProfile = () => {
+const MyProfile = ({ userRole }) => {
   const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -13,10 +23,19 @@ const MyProfile = () => {
   });
   const [loading, setLoading] = useState(true);
 
+  // Determine API endpoints based on role
+  const isEmployee = userRole?.toLowerCase() === "employee";
+  const profileUrl = isEmployee
+    ? "/users/employeeProfile"
+    : "/users/admin-profile";
+  const updateUrl = isEmployee
+    ? "/users/employeeProfileUpdate"
+    : "/users/admin-profile-update";
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await axios.get("/users/employeeProfile");
+        const response = await axios.get(profileUrl);
         setProfile(response.data.data);
         setFormData({
           name: response.data.data.name,
@@ -30,7 +49,7 @@ const MyProfile = () => {
     };
 
     fetchProfile();
-  }, []);
+  }, [profileUrl]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -42,9 +61,17 @@ const MyProfile = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      const response = await axios.patch("/users/employeeProfileUpdate", formData);
+      // Create a payload without an empty password
+      const payload = { name: formData.name };
+      if (formData.password.trim() !== "") {
+        payload.password = formData.password;
+      }
+
+      const response = await axios.patch(updateUrl, payload);
       toast.success("Profile updated successfully");
+
       setProfile((prev) => ({
         ...prev,
         name: formData.name,
@@ -78,7 +105,7 @@ const MyProfile = () => {
   return (
     <div className="max-w-5xl mx-auto p-6">
       {/* Profile Header */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4"
@@ -87,7 +114,7 @@ const MyProfile = () => {
           <h2 className="text-3xl font-bold text-gray-800">My Profile</h2>
           <p className="text-gray-500">Manage your personal information</p>
         </div>
-        
+
         {!isEditing ? (
           <motion.button
             whileHover={{ scale: 1.03 }}
@@ -112,7 +139,7 @@ const MyProfile = () => {
       </motion.div>
 
       {/* Profile Content */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
@@ -126,22 +153,34 @@ const MyProfile = () => {
                 <div className="p-3 bg-indigo-50 rounded-full">
                   <FaUser className="text-indigo-600 text-xl" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-800">Personal Information</h3>
+                <h3 className="text-xl font-semibold text-gray-800">
+                  Personal Information
+                </h3>
               </div>
-              
+
               <div className="space-y-5 pl-16">
                 <div className="flex flex-col gap-1">
-                  <span className="text-sm font-medium text-gray-500">Full Name</span>
-                  <p className="text-lg font-semibold text-gray-800">{profile.name}</p>
+                  <span className="text-sm font-medium text-gray-500">
+                    Full Name
+                  </span>
+                  <p className="text-lg font-semibold text-gray-800">
+                    {profile.name}
+                  </p>
                 </div>
-                
+
                 <div className="flex flex-col gap-1">
-                  <span className="text-sm font-medium text-gray-500">Email</span>
-                  <p className="text-lg font-semibold text-gray-800">{profile.email}</p>
+                  <span className="text-sm font-medium text-gray-500">
+                    Email
+                  </span>
+                  <p className="text-lg font-semibold text-gray-800">
+                    {profile.email}
+                  </p>
                 </div>
-                
+
                 <div className="flex flex-col gap-1">
-                  <span className="text-sm font-medium text-gray-500">Role</span>
+                  <span className="text-sm font-medium text-gray-500">
+                    Role
+                  </span>
                   <p className="text-lg font-semibold text-gray-800 capitalize">
                     {profile.role.toLowerCase()}
                   </p>
@@ -149,39 +188,49 @@ const MyProfile = () => {
               </div>
             </div>
 
-            {/* Financial Info Section */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-purple-50 rounded-full">
-                  <FaDollarSign className="text-purple-600 text-xl" />
+            {/* Conditional financial info section for employees only */}
+            {isEmployee && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-purple-50 rounded-full">
+                    <FaDollarSign className="text-purple-600 text-xl" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-800">
+                    Financial Information
+                  </h3>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-800">Financial Information</h3>
+
+                <div className="space-y-5 pl-16">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm font-medium text-gray-500">
+                      Salary
+                    </span>
+                    <p className="text-lg font-semibold text-gray-800">
+                      ${profile.salary?.toLocaleString() || "N/A"}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm font-medium text-gray-500">
+                      Commission
+                    </span>
+                    <p className="text-lg font-semibold text-gray-800">
+                      {profile.Commission}%
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm font-medium text-gray-500">
+                      KPI
+                    </span>
+                    <p className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                      <FaChartLine className="text-green-500" />
+                      {profile.KPI || "N/A"}
+                    </p>
+                  </div>
+                </div>
               </div>
-              
-              <div className="space-y-5 pl-16">
-                <div className="flex flex-col gap-1">
-                  <span className="text-sm font-medium text-gray-500">Salary</span>
-                  <p className="text-lg font-semibold text-gray-800">
-                    ${profile.salary?.toLocaleString() || "N/A"}
-                  </p>
-                </div>
-                
-                <div className="flex flex-col gap-1">
-                  <span className="text-sm font-medium text-gray-500">Commission</span>
-                  <p className="text-lg font-semibold text-gray-800">
-                    {profile.Commission}%
-                  </p>
-                </div>
-                
-                <div className="flex flex-col gap-1">
-                  <span className="text-sm font-medium text-gray-500">KPI</span>
-                  <p className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                    <FaChartLine className="text-green-500" />
-                    {profile.KPI || "N/A"}
-                  </p>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-8">
@@ -192,12 +241,16 @@ const MyProfile = () => {
                   <div className="p-3 bg-indigo-50 rounded-full">
                     <FaUserEdit className="text-indigo-600 text-xl" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-800">Update Information</h3>
+                  <h3 className="text-xl font-semibold text-gray-800">
+                    Update Information
+                  </h3>
                 </div>
-                
+
                 <div className="space-y-5 pl-16">
                   <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-700">Full Name</label>
+                    <label className="text-sm font-medium text-gray-700">
+                      Full Name
+                    </label>
                     <div className="relative">
                       <input
                         type="text"
@@ -210,7 +263,7 @@ const MyProfile = () => {
                       <FaUser className="absolute right-3 top-3 text-gray-400" />
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-col gap-2">
                     <label className="text-sm font-medium text-gray-700">
                       New Password (leave blank to keep current)
@@ -235,12 +288,16 @@ const MyProfile = () => {
                   <div className="p-3 bg-gray-100 rounded-full">
                     <FaEnvelope className="text-gray-600 text-xl" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-800">Account Details</h3>
+                  <h3 className="text-xl font-semibold text-gray-800">
+                    Account Details
+                  </h3>
                 </div>
-                
+
                 <div className="space-y-5 pl-16">
                   <div className="flex flex-col gap-1">
-                    <span className="text-sm font-medium text-gray-500">Email</span>
+                    <span className="text-sm font-medium text-gray-500">
+                      Email
+                    </span>
                     <div className="relative">
                       <input
                         type="email"
@@ -251,9 +308,11 @@ const MyProfile = () => {
                       <FaEnvelope className="absolute right-3 top-3 text-gray-400" />
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-col gap-1">
-                    <span className="text-sm font-medium text-gray-500">Role</span>
+                    <span className="text-sm font-medium text-gray-500">
+                      Role
+                    </span>
                     <div className="relative">
                       <input
                         type="text"
@@ -267,7 +326,7 @@ const MyProfile = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex justify-end mt-8">
               <motion.button
                 whileHover={{ scale: 1.03 }}
