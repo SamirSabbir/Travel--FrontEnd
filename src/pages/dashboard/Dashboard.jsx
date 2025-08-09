@@ -17,6 +17,7 @@ import AccountInfo from "../../components/account-admin/AccountInfo";
 import Invoice from "../../components/account-admin/Invoice";
 import MyBusiness from "../../components/dashboard/superAdmin/MyBusiness";
 import MyProfile from "../profile/MyProfile";
+import SalaryCommission from "../../components/dashboard/superAdmin/SalaryCommission";
 
 // Tab mapping with role-based visibility
 const allTabs = [
@@ -40,6 +41,11 @@ const allTabs = [
     name: "My Profile",
     component: MyProfile,
     roles: ["employee", "AccountAdmin", "superAdmin"],
+  },
+  {
+    name: "Commission-KPI",
+    component: SalaryCommission,
+    roles: ["superAdmin"],
   },
 ];
 
@@ -137,7 +143,6 @@ const Dashboard = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col bg-[#ECF4FB]">
         {/* Top Header */}
-
 
         <header className="bg-white shadow px-6 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold text-gray-700">
