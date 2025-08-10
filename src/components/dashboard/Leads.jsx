@@ -39,7 +39,7 @@ const Leads = ({ userRole }) => {
 
   const fetchEmployees = async () => {
     try {
-      const res = await axios.get("/users/findEmployeeUsers");
+      const res = await axios.get("/users/findAllUsers"); //use findAllUsers
       if (res.data.success) {
         setEmployees(res.data.data);
       } else {

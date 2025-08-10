@@ -18,13 +18,18 @@ import Invoice from "../../components/account-admin/Invoice";
 import MyBusiness from "../../components/dashboard/superAdmin/MyBusiness";
 import MyProfile from "../profile/MyProfile";
 import SalaryCommission from "../../components/dashboard/superAdmin/SalaryCommission";
+import SalesPipeline from "../../components/dashboard/superAdmin/SalesPipeline";
 
 // Tab mapping with role-based visibility
 const allTabs = [
   { name: "Leads", component: Leads, roles: ["superAdmin"] },
   // { name: "Sales", component: Sales, roles: ["employee", "hr", "admin"] },
-  { name: "Sales", component: Sales, roles: ["employee"] },
-  { name: "Work", component: Work, roles: ["employee", "AccountAdmin"] },
+  { name: "Sales", component: Sales, roles: ["employee", "superAdmin"] },
+  {
+    name: "Work",
+    component: Work,
+    roles: ["employee", "AccountAdmin", "superAdmin"],
+  },
   // { name: "Pipeline", component: Pipeline, roles: ["hr", "admin"] },
   {
     name: "Visa Processing",
@@ -43,9 +48,14 @@ const allTabs = [
     roles: ["employee", "AccountAdmin", "superAdmin"],
   },
   {
-    name: "Commission-KPI",
+    name: "Employees Performance",
     component: SalaryCommission,
     roles: ["superAdmin"],
+  },
+  {
+    name:"Sales Pipeline",
+    component: SalesPipeline,
+    roles:["superAdmin"]
   },
 ];
 
