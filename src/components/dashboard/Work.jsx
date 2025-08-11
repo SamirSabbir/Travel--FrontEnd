@@ -11,7 +11,7 @@ const Work = ({ userRole }) => {
 
   const fetchWorks = async () => {
     try {
-      const res = await axios.get("/works/employee-works");
+      const res = await axios.get("/works/my-works"); //previous /works/employee-works
       setWorkData(res.data.data);
     } catch (err) {
       toast.error("Failed to fetch work data");
