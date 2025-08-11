@@ -20,11 +20,16 @@ const Register = () => {
   const [profilePic, setProfilePic] = useState(null);
   const [preview, setPreview] = useState(null);
 
+  // Cloudinary configuration from environment variables
+  
+ const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+
   // Available roles with their display names
   const roles = [
     { value: "Employee", label: "Employee" },
     { value: "HR", label: "HR Manager" },
-    { value: "Admin", label: "Admin" },
+    { value: "AccountAdmin", label: "Account Admin" },
   ];
 
   const handleChange = (e) => {
@@ -36,12 +41,55 @@ const Register = () => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type and size
+    const validTypes = ["image/jpeg", "image/png", "image/gif"];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+
+    if (!validTypes.includes(file.type)) {
+      toast.error("Please upload a valid image (JPEG, PNG, GIF)");
+      return;
+    }
+
+    if (file.size > maxSize) {
+      toast.error("Image size should be less than 5MB");
+      return;
+    }
+
     setProfilePic(file);
 
     // For preview selected image
     const reader = new FileReader();
     reader.onloadend = () => setPreview(reader.result);
-    if (file) reader.readAsDataURL(file);
+    reader.readAsDataURL(file);
+  };
+
+  const uploadImageToCloudinary = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", uploadPreset);
+    formData.append("cloud_name", cloudName);
+
+    try {
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Image upload failed");
+      }
+
+      const data = await response.json();
+      return data.secure_url; // Return the secure URL of the uploaded image
+    } catch (error) {
+      console.error("Cloudinary upload error:", error);
+      throw error;
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -49,31 +97,28 @@ const Register = () => {
     setIsSubmitting(true);
 
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append("name", formData.name);
-      formDataToSend.append("email", formData.email);
-      formDataToSend.append("password", formData.password);
-      formDataToSend.append("role", formData.role);
+      let imageUrl = "";
+
+      // Upload image to Cloudinary if selected
       if (profilePic) {
-        formDataToSend.append("photo", profilePic);
+        imageUrl = await uploadImageToCloudinary(profilePic);
       }
 
-      const response = await axios.post("/users/register", formDataToSend);
+      // Send registration data to your backend
+      const response = await axios.post("/users/register", {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+        photo: imageUrl, // Send the Cloudinary URL
+      });
 
       toast.success(response.data.message);
 
-      // Handle different role-specific redirections
-      if (response.data.data.role === "HR" || response.data.data.role === "Admin") {
-        if (!response.data.data.isApproved) {
-          navigate("/pending"); // Approval needed for privileged roles
-        } else {
-          navigate("/login"); // If somehow already approved
-        }
-      } else {
-        setTimeout(() => {
-          navigate("/login"); // Employees can login immediately
-        }, 2000);
-      }
+      // All roles go to pending first
+      setTimeout(() => {
+        navigate("/pending");
+      }, 2000);
     } catch (error) {
       console.error("Registration error:", error);
       toast.error(
@@ -90,9 +135,12 @@ const Register = () => {
       {/* Left Side - Welcome Section */}
       <div className="hidden lg:flex w-1/2 items-center justify-center bg-gradient-to-br from-[#0F4F55] to-[#0c3d42] p-12">
         <div className="max-w-md text-white">
-          <h1 className="text-5xl font-bold mb-6">Welcome to Trip and Travel</h1>
+          <h1 className="text-5xl font-bold mb-6">
+            Welcome to Trip and Travel
+          </h1>
           <p className="text-xl opacity-90">
-            Discover amazing destinations and create unforgettable memories with our platform.
+            Discover amazing destinations and create unforgettable memories with
+            our platform.
           </p>
         </div>
       </div>
@@ -103,16 +151,14 @@ const Register = () => {
           <ToastContainer position="top-center" autoClose={3000} />
           <div className="bg-white p-8 rounded-xl shadow-lg border border-[#e0e6ed]">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-[#0F4F55]">Create Account</h2>
+              <h2 className="text-3xl font-bold text-[#0F4F55]">
+                Create Account
+              </h2>
               <p className="text-[#6b7280] mt-2">
                 Join us today and start your journey
               </p>
             </div>
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-5"
-              encType="multipart/form-data"
-            >
+            <form onSubmit={handleSubmit} className="space-y-5">
               {/* Name Field */}
               <div>
                 <label className="block text-sm font-medium text-[#374151] mb-1">
@@ -163,7 +209,11 @@ const Register = () => {
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                    {showPassword ? (
+                      <FiEyeOff size={18} />
+                    ) : (
+                      <FiEye size={18} />
+                    )}
                   </button>
                 </div>
               </div>
@@ -187,16 +237,14 @@ const Register = () => {
                   ))}
                 </select>
                 <p className="mt-1 text-xs text-[#6b7280]">
-                  {formData.role === "HR" || formData.role === "Admin"
-                    ? "Privileged roles require admin approval"
-                    : "Employees can access immediately"}
+                  All roles require admin approval before access is granted
                 </p>
               </div>
 
               {/* Profile Picture Upload */}
               <div>
                 <label className="block text-sm font-medium text-[#374151] mb-1">
-                  Profile Picture
+                  Profile Picture (Optional)
                 </label>
                 <div className="flex items-center justify-center w-full">
                   <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#e0e6ed] rounded-lg cursor-pointer hover:bg-[#f8fafc] transition">
@@ -223,16 +271,15 @@ const Register = () => {
                           ></path>
                         </svg>
                         <p className="text-xs text-[#6b7280]">
-                          Click to upload your photo
+                          Click to upload your photo (JPEG, PNG, GIF, max 5MB)
                         </p>
                       </div>
                     )}
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/jpeg, image/png, image/gif"
                       onChange={handleFileChange}
                       className="hidden"
-                      required
                     />
                   </label>
                 </div>

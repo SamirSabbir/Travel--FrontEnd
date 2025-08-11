@@ -47,6 +47,23 @@ const Approval = () => {
     }
   };
 
+  const handleDelete = async (userEmail) => {
+    try {
+      await axios.delete(`/users/delete/${userEmail}`);
+      toast.success("User deleted successfully");
+      setUnapprovedUsers((prev) =>
+        prev.filter((user) => user.email !== userEmail)
+      );
+    } catch (error) {
+      if (error.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+        navigate("/login");
+      } else {
+        toast.error(error.response?.data?.message || "Failed to delete user");
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">Loading...</div>
@@ -80,12 +97,18 @@ const Approval = () => {
                   <td className="py-3 px-4 capitalize">
                     {user.role.toLowerCase()}
                   </td>
-                  <td className="py-3 px-4">
+                  <td className="py-3 px-4 space-x-2">
                     <button
                       onClick={() => handleApprove(user.email)}
                       className="bg-green-500 hover:bg-green-600 text-white py-1 px-3 rounded transition"
                     >
                       Approve
+                    </button>
+                    <button
+                      onClick={() => handleDelete(user.email)}
+                      className="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded transition"
+                    >
+                      Delete
                     </button>
                   </td>
                 </tr>
