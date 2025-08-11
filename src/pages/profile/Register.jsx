@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "../../api/axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { FiEye, FiEyeOff } from "react-icons/fi";
+import { FiEye, FiEyeOff, FiX } from "react-icons/fi";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -14,18 +14,15 @@ const Register = () => {
     name: "",
     email: "",
     password: "",
-    role: "Employee", // Default role
+    role: "Employee",
   });
 
-  const [profilePic, setProfilePic] = useState(null);
-  const [preview, setPreview] = useState(null);
+  const [files, setFiles] = useState([]);
+  const [previews, setPreviews] = useState([]);
 
-  // Cloudinary configuration from environment variables
-  
- const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+  const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
-  // Available roles with their display names
   const roles = [
     { value: "Employee", label: "Employee" },
     { value: "HR", label: "HR Manager" },
@@ -40,56 +37,98 @@ const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
   };
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const selectedFiles = Array.from(e.target.files);
+    if (!selectedFiles.length) return;
 
-    // Validate file type and size
-    const validTypes = ["image/jpeg", "image/png", "image/gif"];
+    // Validate each file
+    const validTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "application/pdf",
+    ];
     const maxSize = 5 * 1024 * 1024; // 5MB
 
-    if (!validTypes.includes(file.type)) {
-      toast.error("Please upload a valid image (JPEG, PNG, GIF)");
-      return;
-    }
-
-    if (file.size > maxSize) {
-      toast.error("Image size should be less than 5MB");
-      return;
-    }
-
-    setProfilePic(file);
-
-    // For preview selected image
-    const reader = new FileReader();
-    reader.onloadend = () => setPreview(reader.result);
-    reader.readAsDataURL(file);
-  };
-
-  const uploadImageToCloudinary = async (file) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", uploadPreset);
-    formData.append("cloud_name", cloudName);
-
-    try {
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Image upload failed");
+    const validFiles = selectedFiles.filter((file) => {
+      if (!validTypes.includes(file.type)) {
+        toast.error(
+          `Invalid file type for ${file.name}. Only JPEG, PNG, GIF, or PDF allowed.`
+        );
+        return false;
       }
 
-      const data = await response.json();
-      return data.secure_url; // Return the secure URL of the uploaded image
-    } catch (error) {
-      console.error("Cloudinary upload error:", error);
-      throw error;
-    }
+      if (file.size > maxSize) {
+        toast.error(`${file.name} is too large. Max size is 5MB.`);
+        return false;
+      }
+
+      return true;
+    });
+
+    // Create previews for images
+    const newPreviews = validFiles.map((file) => {
+      if (file.type.startsWith("image/")) {
+        return {
+          type: "image",
+          url: URL.createObjectURL(file),
+          name: file.name,
+        };
+      } else {
+        return {
+          type: "file",
+          name: file.name,
+        };
+      }
+    });
+
+    setFiles((prev) => [...prev, ...validFiles]);
+    setPreviews((prev) => [...prev, ...newPreviews]);
+  };
+
+  const removeFile = (index) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setPreviews((prev) => {
+      const newPreviews = [...prev];
+      URL.revokeObjectURL(newPreviews[index].url); // Clean up memory
+      newPreviews.splice(index, 1);
+      return newPreviews;
+    });
+  };
+
+  const uploadFilesToCloudinary = async (files) => {
+    const uploadPromises = files.map(async (file) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", uploadPreset);
+      formData.append("cloud_name", cloudName);
+      console.log(cloudName);
+      try {
+        const response = await fetch(
+          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Upload failed for ${file.name}`);
+        }
+
+        const data = await response.json();
+        console.log(data);
+        return {
+          url: data.url,
+          type: file.type.startsWith("image/") ? "image" : "file",
+          name: file.name,
+        };
+      } catch (error) {
+        console.error(`Upload error for ${file.name}:`, error);
+        throw error;
+      }
+    });
+
+    return Promise.all(uploadPromises);
   };
 
   const handleSubmit = async (e) => {
@@ -97,25 +136,22 @@ const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
     setIsSubmitting(true);
 
     try {
-      let imageUrl = "";
+      let uploadedFiles = [];
 
-      // Upload image to Cloudinary if selected
-      if (profilePic) {
-        imageUrl = await uploadImageToCloudinary(profilePic);
+      if (files.length > 0) {
+        uploadedFiles = await uploadFilesToCloudinary(files);
       }
-
-      // Send registration data to your backend
+      console.log(uploadedFiles);
       const response = await axios.post("/users/register", {
         name: formData.name,
         email: formData.email,
         password: formData.password,
         role: formData.role,
-        photo: imageUrl, // Send the Cloudinary URL
+        photo: uploadedFiles[0].url, // Array of uploaded files
       });
 
       toast.success(response.data.message);
 
-      // All roles go to pending first
       setTimeout(() => {
         navigate("/pending");
       }, 2000);
@@ -241,48 +277,80 @@ const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
                 </p>
               </div>
 
-              {/* Profile Picture Upload */}
+              {/* File Upload Section */}
               <div>
                 <label className="block text-sm font-medium text-[#374151] mb-1">
-                  Profile Picture (Optional)
+                  Upload Files (Optional)
                 </label>
                 <div className="flex items-center justify-center w-full">
                   <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#e0e6ed] rounded-lg cursor-pointer hover:bg-[#f8fafc] transition">
-                    {preview ? (
-                      <img
-                        src={preview}
-                        alt="Profile Preview"
-                        className="h-full w-full object-cover rounded-lg"
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <svg
-                          className="w-8 h-8 mb-3 text-[#9ca3af]"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                          ></path>
-                        </svg>
-                        <p className="text-xs text-[#6b7280]">
-                          Click to upload your photo (JPEG, PNG, GIF, max 5MB)
-                        </p>
-                      </div>
-                    )}
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <svg
+                        className="w-8 h-8 mb-3 text-[#9ca3af]"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        ></path>
+                      </svg>
+                      <p className="text-xs text-[#6b7280]">
+                        Click to upload files (Images or PDF, max 5MB each)
+                      </p>
+                    </div>
                     <input
                       type="file"
-                      accept="image/jpeg, image/png, image/gif"
+                      multiple
+                      accept="image/jpeg, image/png, image/gif, application/pdf"
                       onChange={handleFileChange}
                       className="hidden"
                     />
                   </label>
                 </div>
+
+                {/* Preview Section */}
+                {previews.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    <p className="text-sm text-[#6b7280]">Selected files:</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {previews.map((preview, index) => (
+                        <div
+                          key={index}
+                          className="relative border rounded-md p-2 flex items-center"
+                        >
+                          {preview.type === "image" ? (
+                            <img
+                              src={preview.url}
+                              alt="Preview"
+                              className="h-16 w-16 object-cover rounded"
+                            />
+                          ) : (
+                            <div className="h-16 w-16 bg-gray-100 flex items-center justify-center rounded">
+                              <span className="text-xs text-gray-500 truncate w-full px-1">
+                                {preview.name}
+                              </span>
+                            </div>
+                          )}
+                          <span className="ml-2 text-sm truncate flex-1">
+                            {preview.name}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removeFile(index)}
+                            className="text-gray-500 hover:text-red-500 ml-2"
+                          >
+                            <FiX size={16} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <button

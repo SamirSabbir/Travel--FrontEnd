@@ -69,6 +69,7 @@ const Login = () => {
             formData.email.split("@")[0],
           role: userRole,
           email: decodedToken.email || formData.email,
+          photo:decodedToken.photo
         }),
         {
           expires,

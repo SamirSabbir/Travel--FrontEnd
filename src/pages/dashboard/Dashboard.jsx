@@ -53,9 +53,9 @@ const allTabs = [
     roles: ["superAdmin"],
   },
   {
-    name:"Sales Pipeline",
+    name: "Sales Pipeline",
     component: SalesPipeline,
-    roles:["superAdmin"]
+    roles: ["superAdmin"],
   },
 ];
 
@@ -164,7 +164,16 @@ const Dashboard = () => {
             className="flex items-center gap-3 cursor-pointer hover:bg-gray-100 p-2 rounded"
             onClick={() => setSelectedTab("My Profile")}
           >
-            <FaUserCircle className="h-10 w-10 text-gray-400" />
+            {user.photo ? (
+              <img
+                src={user.photo}
+                alt="Profile"
+                className="h-10 w-10 rounded-full object-cover"
+                loading="lazy"
+              />
+            ) : (
+              <FaUserCircle className="h-10 w-10 text-gray-400" />
+            )}
             <div className="text-right">
               <p className="text-sm font-semibold">{user.name}</p>
               <p className="text-xs text-gray-500 capitalize">{user.role}</p>

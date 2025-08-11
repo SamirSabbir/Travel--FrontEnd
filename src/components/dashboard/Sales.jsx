@@ -37,6 +37,7 @@ const Sales = ({ userRole }) => {
 
   // Fetch all data
   const fetchData = async () => {
+    console.log("current user role:", userRole);
     setIsLoading(true);
     try {
       // Fetch sales data
@@ -48,8 +49,12 @@ const Sales = ({ userRole }) => {
       const normalizedSales = normalizeSalesData(salesRes.data.data);
       setMySales(normalizedSales);
 
-      // Fetch pipeline data
-      const pipelineRes = await axios.get("/works/pipeline");
+      // Fetch pipeline data - different endpoint for superAdmin
+      const pipelineEndpoint =
+        userRole === "superAdmin" ? "/my-admin-pipeline" : "/works/pipeline";
+      console.log("fetching pipeline from:", pipelineEndpoint);
+
+      const pipelineRes = await axios.get(pipelineEndpoint);
       setPipeline(pipelineRes.data.data);
     } catch (err) {
       toast.error(err.response?.data?.message || err.message);
@@ -81,7 +86,10 @@ const Sales = ({ userRole }) => {
 
       // Update pipeline if needed
       if (newStatus === "Very Interested") {
-        const pipelineRes = await axios.get("/works/pipeline");
+        const pipelineEndpoint =
+          userRole === "superAdmin" ? "/my-admin-pipeline" : "/works/pipeline";
+        console.log("Updating pipeline from:", pipelineEndpoint);
+        const pipelineRes = await axios.get(pipelineEndpoint);
         setPipeline(pipelineRes.data.data);
       }
 
