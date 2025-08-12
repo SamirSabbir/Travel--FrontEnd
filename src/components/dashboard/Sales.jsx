@@ -41,8 +41,7 @@ const Sales = ({ userRole }) => {
     setIsLoading(true);
     try {
       // Fetch sales data
-      const salesEndpoint =
-        userRole === "superAdmin" ? "/sales/all-sales" : "/sales/my-sales";
+      const salesEndpoint = "/sales/my-sales";
       const salesRes = await axios.get(salesEndpoint);
 
       // Normalize the data to use consistent field names
@@ -51,7 +50,9 @@ const Sales = ({ userRole }) => {
 
       // Fetch pipeline data - different endpoint for superAdmin
       const pipelineEndpoint =
-        userRole === "superAdmin" ? "/my-admin-pipeline" : "/works/pipeline";
+        userRole === "SuperAdmin"
+          ? "/works/my-admin-pipeline"
+          : "/works/pipeline";
       console.log("fetching pipeline from:", pipelineEndpoint);
 
       const pipelineRes = await axios.get(pipelineEndpoint);
@@ -67,28 +68,31 @@ const Sales = ({ userRole }) => {
   const handleStatusChange = async (saleId, workId, newStatus) => {
     setUpdatingId(saleId);
     try {
-      // First update the backend
-      const endpoint =
-        userRole === "superAdmin"
-          ? `/works/update-work-super-admin/${workId}`
-          : `/sales/confirm-sales/${saleId}`;
+      let endpoint, payload;
 
-      await axios.patch(endpoint, {
-        isConfirmed: newStatus, // Send as isConfirmed to match backend
-      });
+      if (userRole === "SuperAdmin") {
+        endpoint = `/works/update-work-super-admin/${workId}`;
+        payload = { status: newStatus };
+      } else {
+        endpoint = `/sales/confirm-sales/${saleId}`;
+        payload = { status: newStatus }; // or isConfirmed: true/false if backend is boolean
+      }
 
-      // Then update local state
+      await axios.patch(endpoint, payload);
+
+      // Update state
       setMySales((prevSales) =>
         prevSales.map((sale) =>
           sale._id === saleId ? { ...sale, status: newStatus } : sale
         )
       );
 
-      // Update pipeline if needed
+      // Refresh pipeline if "Very Interested"
       if (newStatus === "Very Interested") {
         const pipelineEndpoint =
-          userRole === "superAdmin" ? "/my-admin-pipeline" : "/works/pipeline";
-        console.log("Updating pipeline from:", pipelineEndpoint);
+          userRole === "SuperAdmin"
+            ? "/works/my-admin-pipeline"
+            : "/works/pipeline";
         const pipelineRes = await axios.get(pipelineEndpoint);
         setPipeline(pipelineRes.data.data);
       }
@@ -96,7 +100,6 @@ const Sales = ({ userRole }) => {
       toast.success(`Status updated to "${newStatus}"`);
     } catch (err) {
       toast.error(err.response?.data?.message || err.message);
-      // Refresh data if update fails
       fetchData();
     } finally {
       setUpdatingId(null);
@@ -120,7 +123,7 @@ const Sales = ({ userRole }) => {
       {/* My Sales */}
       <section>
         <h2 className="text-2xl font-bold mb-4">
-          {userRole === "superAdmin" ? "All Sales" : "My Sales"}
+          {userRole === "SuperAdmin" ? "All Sales" : "My Sales"}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {mySales.map((sale) => {
@@ -136,7 +139,7 @@ const Sales = ({ userRole }) => {
                 <div className="text-sm text-gray-600">{sale.phoneNumber}</div>
                 <p className="text-gray-700 mt-2">{sale.description}</p>
 
-                {userRole === "superAdmin" && sale.employee && (
+                {userRole === "SuperAdmin" && sale.employee && (
                   <div className="text-sm text-gray-500 mt-1">
                     Employee: {sale.employee.name}
                   </div>
