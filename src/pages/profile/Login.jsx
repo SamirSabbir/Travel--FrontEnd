@@ -53,31 +53,26 @@ const Login = () => {
       const expires = new Date(decodedToken.exp * 1000); // Convert JWT exp (seconds) to Date
 
       Cookies.set("token", response.data.data.token, {
-        expires,
+        expires: new Date(decodedToken.exp * 1000),
         // eslint-disable-next-line no-undef
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
       });
 
+      const userData = {
+        name: decodedToken.name || formData.email.split("@")[0],
+        role: decodedToken.role || "employee",
+        email: decodedToken.email || formData.email,
+        photo: decodedToken.photo || null, // Ensure photo is always set
+      };
+
       // Store basic user info in cookie (optional)
-      Cookies.set(
-        "user",
-        JSON.stringify({
-          name:
-            decodedToken.name ||
-            decodedToken.userName ||
-            formData.email.split("@")[0],
-          role: userRole,
-          email: decodedToken.email || formData.email,
-          photo:decodedToken.photo
-        }),
-        {
-          expires,
-          // eslint-disable-next-line no-undef
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "strict",
-        }
-      );
+      Cookies.set("user", JSON.stringify(userData), {
+        expires: new Date(decodedToken.exp * 1000),
+        // eslint-disable-next-line no-undef
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      });
 
       toast.success("Login successful");
 
@@ -112,7 +107,9 @@ const Login = () => {
           <ToastContainer position="top-center" autoClose={3000} />
           <div className="bg-white p-8 rounded-xl shadow-2xl border border-[#e0e6ed] transform transition-all duration-300 hover:shadow-3xl">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-[#0F4F55]">Welcome Back</h2>
+              <h2 className="text-3xl font-bold text-[#0F4F55]">
+                Welcome Back
+              </h2>
               <p className="text-[#6b7280] mt-2">
                 Please enter your credentials to login
               </p>
@@ -154,7 +151,11 @@ const Login = () => {
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                    {showPassword ? (
+                      <FiEyeOff size={18} />
+                    ) : (
+                      <FiEye size={18} />
+                    )}
                   </button>
                 </div>
               </div>

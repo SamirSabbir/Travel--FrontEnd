@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "../../api/axios";
+import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 import {
   FaUserEdit,
@@ -11,17 +12,25 @@ import {
   FaDollarSign,
   FaPercent,
   FaChartLine,
+  FaCamera,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
+import { updateProfile } from "./UpdateProfile";
 
-const MyProfile = ({ userRole }) => {
+const MyProfile = ({ userRole, userData }) => {
   const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     password: "",
   });
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // Get user photo from cookies
+  // const userCookie = Cookies.get("user");
+  const userPhoto = userData?.photo || null;
 
   // Determine API endpoints based on role
   const isEmployee = userRole?.toLowerCase() === "employee";
@@ -59,24 +68,34 @@ const MyProfile = ({ userRole }) => {
     }));
   };
 
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPhotoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      // Create a payload without an empty password
-      const payload = { name: formData.name };
-      if (formData.password.trim() !== "") {
-        payload.password = formData.password;
-      }
-
-      const response = await axios.patch(updateUrl, payload);
+      await updateProfile(updateUrl, formData, photoFile);
       toast.success("Profile updated successfully");
 
+      // Update local state
       setProfile((prev) => ({
         ...prev,
         name: formData.name,
+        photo: photoPreview || prev.photo,
       }));
       setIsEditing(false);
+      setPhotoFile(null);
+      setPhotoPreview("");
     } catch (error) {
       toast.error(error.message || "Failed to update profile");
     }
@@ -129,7 +148,11 @@ const MyProfile = ({ userRole }) => {
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => setIsEditing(false)}
+              onClick={() => {
+                setIsEditing(false);
+                setPhotoFile(null);
+                setPhotoPreview("");
+              }}
               className="flex items-center gap-2 bg-gray-100 text-gray-700 px-5 py-2.5 rounded-lg shadow hover:bg-gray-200 transition-all"
             >
               <FaTimes /> Cancel
@@ -150,15 +173,27 @@ const MyProfile = ({ userRole }) => {
             {/* Personal Info Section */}
             <div className="space-y-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-indigo-50 rounded-full">
-                  <FaUser className="text-indigo-600 text-xl" />
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-indigo-100">
+                    {userPhoto ? (
+                      <img
+                        src={userPhoto}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-indigo-100 flex items-center justify-center">
+                        <FaUser className="text-indigo-400 text-2xl" />
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <h3 className="text-xl font-semibold text-gray-800">
                   Personal Information
                 </h3>
               </div>
 
-              <div className="space-y-5 pl-16">
+              <div className="space-y-5 pl-20">
                 <div className="flex flex-col gap-1">
                   <span className="text-sm font-medium text-gray-500">
                     Full Name
@@ -238,15 +273,46 @@ const MyProfile = ({ userRole }) => {
               {/* Editable Fields */}
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-indigo-50 rounded-full">
-                    <FaUserEdit className="text-indigo-600 text-xl" />
+                  <div className="relative">
+                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-indigo-100 relative">
+                      {photoPreview ? (
+                        <img
+                          src={photoPreview}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : userPhoto ? (
+                        <img
+                          src={userPhoto}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-indigo-100 flex items-center justify-center">
+                          <FaUser className="text-indigo-400 text-2xl" />
+                        </div>
+                      )}
+                      <label
+                        htmlFor="photo-upload"
+                        className="absolute bottom-0 right-0 bg-indigo-600 text-white p-1.5 rounded-full cursor-pointer hover:bg-indigo-700 transition-all"
+                      >
+                        <FaCamera className="text-xs" />
+                        <input
+                          id="photo-upload"
+                          type="file"
+                          accept="image/*"
+                          onChange={handlePhotoChange}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
                   </div>
                   <h3 className="text-xl font-semibold text-gray-800">
                     Update Information
                   </h3>
                 </div>
 
-                <div className="space-y-5 pl-16">
+                <div className="space-y-5 pl-20">
                   <div className="flex flex-col gap-2">
                     <label className="text-sm font-medium text-gray-700">
                       Full Name

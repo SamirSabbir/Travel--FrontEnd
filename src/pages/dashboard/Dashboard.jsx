@@ -67,9 +67,25 @@ const Dashboard = () => {
 
   useEffect(() => {
     const token = Cookies.get("token");
-    const userData = JSON.parse(Cookies.get("user"));
+    // const userData = JSON.parse(Cookies.get("user"));
+    const userCookie = Cookies.get("user");
 
-    if (!token || !userData) {
+    if (!token || !userCookie) {
+      navigate("/login");
+      return;
+    }
+
+    let userData;
+    try {
+      userData = JSON.parse(userCookie); // Always parse since we stringify when setting
+    } catch (error) {
+      console.error("Failed to parse user cookie:", error);
+      navigate("/login");
+      return;
+    }
+
+    if (!userData || !userData.role) {
+      console.error("Invalid user data:", userData);
       navigate("/login");
       return;
     }
@@ -183,7 +199,7 @@ const Dashboard = () => {
 
         {/* Page Content */}
         <main className="flex-1 p-6 overflow-y-auto">
-          <CurrentTabComponent userRole={user.role} />
+          <CurrentTabComponent userRole={user.role} userData={user} />
         </main>
       </div>
     </div>
