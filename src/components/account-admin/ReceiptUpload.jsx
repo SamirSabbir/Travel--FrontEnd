@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { FiLink, FiUpload, FiX, FiFile, FiImage, FiCheck } from "react-icons/fi";
+import {
+  FiLink,
+  FiUpload,
+  FiX,
+  FiFile,
+  FiImage,
+  FiCheck,
+} from "react-icons/fi";
 import { toast } from "react-toastify";
 
 const ReceiptUpload = ({ formData, setFormData }) => {
@@ -59,10 +66,11 @@ const ReceiptUpload = ({ formData, setFormData }) => {
     uploadData.append("upload_preset", uploadPreset);
     uploadData.append("cloud_name", cloudName);
     uploadData.append("resource_type", "auto");
+    // uploadData.append("access_mode", "public");
 
     try {
       const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloudName}/upload`,
+       `https://api.cloudinary.com/v1_1/${cloudName}/upload`,
         {
           method: "POST",
           body: uploadData,
@@ -74,8 +82,15 @@ const ReceiptUpload = ({ formData, setFormData }) => {
       }
 
       const data = await response.json();
-      setFormData((prev) => ({ ...prev, receipt: data.secure_url }));
-      setPreviewUrl(data.secure_url);
+
+      console.log("data retrive for cloud", data);
+
+        const fileUrl = data.url.replace('/raw/upload/', '/image/upload/');
+
+      setFormData((prev) => ({ ...prev, receipt: fileUrl }));
+
+
+      setPreviewUrl(data.url);
       toast.success("File uploaded successfully!");
     } catch (error) {
       console.error("Upload error:", error);
@@ -98,19 +113,25 @@ const ReceiptUpload = ({ formData, setFormData }) => {
       return <FiImage className="text-blue-500 text-xl mr-2" />;
     } else if (file.type === "application/pdf") {
       return <FiFile className="text-red-500 text-xl mr-2" />;
-    } else if (file.type.includes("excel") || file.type.includes("spreadsheetml")) {
+    } else if (
+      file.type.includes("excel") ||
+      file.type.includes("spreadsheetml")
+    ) {
       return <FiFile className="text-green-500 text-xl mr-2" />;
     } else {
       return <FiFile className="text-gray-500 text-xl mr-2" />;
     }
   };
 
+
   return (
     <div className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Receipt Upload{" "}
-          <span className="text-gray-500 text-xs">(PDF, Excel, or images up to 5MB)</span>
+          <span className="text-gray-500 text-xs">
+            (PDF, Excel, or images up to 5MB)
+          </span>
         </label>
 
         {!file ? (
@@ -142,13 +163,17 @@ const ReceiptUpload = ({ formData, setFormData }) => {
           <div className="mt-1">
             <div
               className={`p-4 border rounded-lg ${
-                previewUrl ? "border-green-200 bg-green-50" : "border-gray-200 bg-white"
+                previewUrl
+                  ? "border-green-200 bg-green-50"
+                  : "border-gray-200 bg-white"
               }`}
             >
               <div className="flex items-start">
                 {getFileIcon()}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {file.name}
+                  </p>
                   <p className="text-xs text-gray-500">
                     {(file.size / 1024).toFixed(1)} KB · {file.type}
                   </p>
@@ -234,6 +259,7 @@ const ReceiptUpload = ({ formData, setFormData }) => {
             <FiLink className="mr-1" />
             View uploaded file
           </a>
+        
         </div>
       )}
     </div>

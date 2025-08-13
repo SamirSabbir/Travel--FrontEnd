@@ -6,8 +6,15 @@ import SaleSelector from "./SaleSelector";
 import FinancialInfo from "./FinancialInfo";
 import CommissionDetails from "./CommissionDetails";
 import ReceiptUpload from "./ReceiptUpload";
-import { FiMail, FiDollarSign, FiUser, FiCalendar, FiFileText } from "react-icons/fi";
+import {
+  FiDollarSign,
+  FiUser,
+  FiCalendar,
+  FiFileText,
+  FiLink,
+} from "react-icons/fi";
 import { Tab } from "@headlessui/react";
+import Cookies from "js-cookie";
 
 const AccountInfo = () => {
   const [sales, setSales] = useState([]);
@@ -27,6 +34,15 @@ const AccountInfo = () => {
   const [accountsLoading, setAccountsLoading] = useState(true);
 
   useEffect(() => {
+    // Get user data from cookies
+    const userData = JSON.parse(Cookies.get("user"));
+    if (userData?.email) {
+      setFormData((prev) => ({
+        ...prev,
+        accountAdminEmail: userData.email,
+      }));
+    }
+
     fetchSales();
     fetchAccounts();
   }, []);
@@ -53,12 +69,11 @@ const AccountInfo = () => {
 
   const validateForm = () => {
     const requiredFields = [
-      'saleId',
-      'revenue',
-      'expense',
-      'commission',
-      'income',
-      'accountAdminEmail'
+      "saleId",
+      "revenue",
+      "expense",
+      "commission",
+      "income",
     ];
 
     for (const field of requiredFields) {
@@ -78,7 +93,7 @@ const AccountInfo = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -92,19 +107,19 @@ const AccountInfo = () => {
         expense: Number(formData.expense),
         commission: Number(formData.commission),
         income: Number(formData.income),
-        commissionDetails: formData.commissionDetails.map(detail => ({
+        commissionDetails: formData.commissionDetails.map((detail) => ({
           salesPersonEmail: detail.salesPersonEmail,
           commissionRate: Number(detail.commissionRate),
-          commissionAmount: Number(detail.commissionAmount)
+          commissionAmount: Number(detail.commissionAmount),
         })),
         receipt: formData.receipt,
-        accountAdminEmail: formData.accountAdminEmail
+        accountAdminEmail: formData.accountAdminEmail,
       };
 
       const response = await axios.post("/account", payload);
       toast.success(response.data.message);
       resetForm();
-      fetchAccounts(); // Refresh the account list after submission
+      fetchAccounts();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to create account");
     } finally {
@@ -121,7 +136,7 @@ const AccountInfo = () => {
       income: "",
       commissionDetails: [],
       receipt: "",
-      accountAdminEmail: "",
+      accountAdminEmail: JSON.parse(Cookies.get("user"))?.email || "", // Reset with email from cookies
     });
     setSelectedSale("");
   };
@@ -163,23 +178,11 @@ const AccountInfo = () => {
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Account Admin Email <span className="text-red-500">*</span>
+          Account Admin
         </label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FiMail className="text-gray-400" />
-          </div>
-          <input
-            type="email"
-            name="accountAdminEmail"
-            value={formData.accountAdminEmail}
-            onChange={(e) =>
-              setFormData({ ...formData, accountAdminEmail: e.target.value })
-            }
-            className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="admin@example.com"
-            required
-          />
+        <div className="flex items-center p-3 bg-gray-50 rounded-md">
+          <FiUser className="text-gray-500 mr-2" />
+          <span className="font-medium">{formData.accountAdminEmail}</span>
         </div>
       </div>
 
@@ -215,13 +218,18 @@ const AccountInfo = () => {
     return (
       <div className="space-y-4">
         {accounts.map((account) => (
-          <div key={account._id} className="bg-white p-6 rounded-lg shadow-md border border-gray-100">
+          <div
+            key={account._id}
+            className="bg-white p-6 rounded-lg shadow-md border border-gray-100"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="flex items-center space-x-3">
                 <FiDollarSign className="text-blue-500 text-xl" />
                 <div>
                   <p className="text-sm text-gray-500">Revenue</p>
-                  <p className="font-semibold">${account.revenue.toLocaleString()}</p>
+                  <p className="font-semibold">
+                    ${account.revenue.toLocaleString()}
+                  </p>
                 </div>
               </div>
 
@@ -229,7 +237,9 @@ const AccountInfo = () => {
                 <FiDollarSign className="text-red-500 text-xl" />
                 <div>
                   <p className="text-sm text-gray-500">Expense</p>
-                  <p className="font-semibold">${account.expense.toLocaleString()}</p>
+                  <p className="font-semibold">
+                    ${account.expense.toLocaleString()}
+                  </p>
                 </div>
               </div>
 
@@ -237,7 +247,9 @@ const AccountInfo = () => {
                 <FiDollarSign className="text-green-500 text-xl" />
                 <div>
                   <p className="text-sm text-gray-500">Income</p>
-                  <p className="font-semibold">${account.income.toLocaleString()}</p>
+                  <p className="font-semibold">
+                    ${account.income.toLocaleString()}
+                  </p>
                 </div>
               </div>
 
@@ -251,14 +263,19 @@ const AccountInfo = () => {
             </div>
 
             <div className="mt-6">
-              <h3 className="font-medium text-gray-700 mb-2">Commission Details</h3>
+              <h3 className="font-medium text-gray-700 mb-2">
+                Commission Details
+              </h3>
               <div className="space-y-3">
                 {account.commissionDetails.map((detail, index) => (
                   <div key={index} className="bg-gray-50 p-3 rounded-md">
                     <div className="flex justify-between">
-                      <span className="text-sm font-medium">{detail.salesPersonEmail}</span>
+                      <span className="text-sm font-medium">
+                        {detail.salesPersonEmail}
+                      </span>
                       <span className="text-sm">
-                        {detail.commissionRate}% (${detail.commissionAmount.toLocaleString()})
+                        {detail.commissionRate}% ($
+                        {detail.commissionAmount.toLocaleString()})
                       </span>
                     </div>
                   </div>
@@ -266,7 +283,7 @@ const AccountInfo = () => {
               </div>
             </div>
 
-            {account.receipt && (
+            {/* {account.receipt && (
               <div className="mt-4">
                 <a 
                   href={account.receipt} 
@@ -275,10 +292,57 @@ const AccountInfo = () => {
                   className="inline-flex items-center text-blue-600 hover:text-blue-800"
                 >
                   <FiFileText className="mr-2" />
-                  View Receipt
+                  Receipt
                 </a>
               </div>
-            )}
+            )} */}
+
+            <div className="bg-indigo-50 p-6 rounded-lg">
+              <h2 className="text-lg font-semibold text-indigo-800 mb-4 flex items-center">
+                <FiLink className="mr-2" /> Receipt
+              </h2>
+              {account.receipt ? (
+                <>
+                  {/\.(jpg|jpeg|png|gif|webp)$/i.test(account.receipt) ? (
+                    <div className="mt-2">
+                      <img
+                        src={account.receipt}
+                        alt="Receipt Preview"
+                        className="max-h-64 rounded border border-gray-300 shadow-sm"
+                      />
+                      <a
+                        href={account.receipt}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 inline-block text-indigo-600 hover:text-indigo-800 underline"
+                      >
+                        Open full size
+                      </a>
+                    </div>
+                  ) : (
+                    <div className="mt-2 space-x-4">
+                      <a
+                        href={account.receipt}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-indigo-600 hover:text-indigo-800 underline"
+                      >
+                        View File
+                      </a>
+                      <a
+                        href={account.receipt}
+                        download
+                        className="text-green-600 hover:text-green-800 underline"
+                      >
+                        Download
+                      </a>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-gray-500">No receipt uploaded</p>
+              )}
+            </div>
 
             <div className="mt-4 text-sm text-gray-500">
               <FiCalendar className="inline mr-2" />
@@ -298,7 +362,11 @@ const AccountInfo = () => {
             className={({ selected }) =>
               `w-full rounded-lg py-2.5 text-sm font-medium leading-5 text-blue-700
               ring-white ring-opacity-60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2
-              ${selected ? 'bg-white shadow' : 'text-blue-100 hover:bg-white/[0.12] hover:text-white'}`
+              ${
+                selected
+                  ? "bg-white shadow"
+                  : "text-blue-100 hover:bg-white/[0.12] hover:text-white"
+              }`
             }
           >
             Create Account
@@ -307,7 +375,11 @@ const AccountInfo = () => {
             className={({ selected }) =>
               `w-full rounded-lg py-2.5 text-sm font-medium leading-5 text-blue-700
               ring-white ring-opacity-60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2
-              ${selected ? 'bg-white shadow' : 'text-blue-100 hover:bg-white/[0.12] hover:text-white'}`
+              ${
+                selected
+                  ? "bg-white shadow"
+                  : "text-blue-100 hover:bg-white/[0.12] hover:text-white"
+              }`
             }
           >
             View Accounts
@@ -315,11 +387,15 @@ const AccountInfo = () => {
         </Tab.List>
         <Tab.Panels className="mt-2">
           <Tab.Panel className="bg-white p-6 rounded-lg shadow-lg">
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">Create Account</h1>
+            <h1 className="text-2xl font-bold text-gray-800 mb-6">
+              Create Account
+            </h1>
             {renderAccountForm()}
           </Tab.Panel>
           <Tab.Panel className="bg-white p-6 rounded-lg shadow-lg">
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">My Accounts</h1>
+            <h1 className="text-2xl font-bold text-gray-800 mb-6">
+              My Accounts
+            </h1>
             {renderAccountList()}
           </Tab.Panel>
         </Tab.Panels>
