@@ -34,7 +34,7 @@ const allTabs = [
   {
     name: "Visa Processing",
     component: VisaProcessing,
-    roles: ["hr", "admin"],
+    roles: ["employee"],
   },
   // { name: "Invoice", component: Invoice, roles: ["admin"] },
   { name: "Approval", component: Approval, roles: ["superAdmin"] },

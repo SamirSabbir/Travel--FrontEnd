@@ -46,6 +46,8 @@ const Work = ({ userRole }) => {
     setFilteredWorkData(filtered);
   }, [searchTerm, workData]);
 
+  console.log("work data",workData)
+
   const handleUpdate = async (id, updatedFields) => {
     setUpdatingId(id);
     try {
@@ -131,6 +133,7 @@ const Work = ({ userRole }) => {
               <tr>
                 {[
                   "Name",
+                  "Unique Name",
                   "Pax",
                   "Country",
                   "Submission Date",
@@ -156,6 +159,17 @@ const Work = ({ userRole }) => {
                     <div className="text-sm font-medium text-gray-900">
                       {work.name}
                     </div>
+                  </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap">
+                    <input
+                      type="text"
+                      value={work.uniqueName || ""}
+                      onChange={(e) =>
+                        handleFieldChange(work._id, "uniqueName", e.target.value)
+                      }
+                      className="w-20 px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    />
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -252,7 +266,7 @@ const Work = ({ userRole }) => {
 
                   <td className="px-6 py-4 whitespace-nowrap">
                     <select
-                      value={work.status || "pending"}
+                      value={work.status || "draft"}
                       onChange={(e) =>
                         handleFieldChange(work._id, "status", e.target.value)
                       }
@@ -269,6 +283,7 @@ const Work = ({ userRole }) => {
                     <button
                       onClick={() =>
                         handleUpdate(work._id, {
+                          uniqueName:work.uniqueName,
                           pax: work.pax,
                           country: work.country,
                           submissionDate: work.submissionDate,

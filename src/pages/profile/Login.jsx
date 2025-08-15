@@ -60,7 +60,7 @@ const Login = () => {
       });
 
       const userData = {
-        name: decodedToken.name || formData.email.split("@")[0],
+        name: decodedToken.userName,
         role: userRole,
         email: decodedToken.email || formData.email,
         photo: decodedToken.photo || null, // Ensure photo is always set
