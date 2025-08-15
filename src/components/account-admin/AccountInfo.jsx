@@ -329,13 +329,13 @@ const AccountInfo = () => {
                       >
                         View File
                       </a>
-                      <a
+                      {/* <a
                         href={account.receipt}
                         download
                         className="text-green-600 hover:text-green-800 underline"
                       >
                         Download
-                      </a>
+                      </a> */}
                     </div>
                   )}
                 </>

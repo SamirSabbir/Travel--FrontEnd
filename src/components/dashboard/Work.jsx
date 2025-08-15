@@ -58,13 +58,27 @@ const Work = ({ userRole }) => {
     }
   };
 
-  const handlePaymentDetailsClick = (work) => {
-    setPaymentDetails(work.paymentDetails || {
-      paymentStatus: "Draft",
-      uploadedDocument: []
-    });
-    setIsPaymentModalOpen(true);
-  };
+ const handlePaymentDetailsClick = (work) => {
+  setPaymentDetails(work.paymentDetails || {
+    agencyName: "",
+    createdBy: "",
+    paymentStatus: "Draft",
+    reference: "",
+    depositDate: new Date().toISOString().split('T')[0],
+    mode: "",
+    type: "",
+    depositedFrom: "",
+    branch: "",
+    depositReferenceIdentifier: "",
+    uploadedDocument: [],
+    depositedToAccount: "",
+    givenAmount: 0,
+    serviceCharge: 0,
+    amount: 0,
+    workId: work._id
+  });
+  setIsPaymentModalOpen(true);
+};
 
   const handlePaymentFieldChange = (field, value) => {
     setPaymentDetails(prev => ({
@@ -78,7 +92,7 @@ const Work = ({ userRole }) => {
     
     setUpdatingPayment(true);
     try {
-      await axios.patch(`/account/my-accounts/${paymentDetails._id}`, paymentDetails);
+      await axios.patch(`/payment-details/${paymentDetails._id}`, paymentDetails);
       toast.success("Payment details updated successfully");
       await fetchWorks();
       setIsPaymentModalOpen(false);
