@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "../../api/axios";
 import { toast } from "react-toastify";
 import { Loader2, Save, Search } from "lucide-react";
+import WorkRecordsModal from "../work/WorkRecordModal";
+import PaymentDetailsModal from "../work/PaymentDetailsModal";
 
 const Work = ({ userRole }) => {
   const [workData, setWorkData] = useState([]);
@@ -10,6 +12,16 @@ const Work = ({ userRole }) => {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Work Records Modal State
+  const [workRecords, setWorkRecords] = useState([]);
+  const [isRecordsModalOpen, setIsRecordsModalOpen] = useState(false);
+  const [recordsLoading, setRecordsLoading] = useState(false);
+  
+  // Payment Details Modal State
+  const [paymentDetails, setPaymentDetails] = useState(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [updatingPayment, setUpdatingPayment] = useState(false);
 
   const fetchWorks = async () => {
     try {
@@ -33,6 +45,50 @@ const Work = ({ userRole }) => {
     }
   };
 
+  const fetchWorkRecords = async (workId) => {
+    setRecordsLoading(true);
+    try {
+      const res = await axios.get(`/work-records/${workId}`);
+      setWorkRecords(res.data.data);
+      setIsRecordsModalOpen(true);
+    } catch (err) {
+      toast.error("Failed to fetch work records");
+    } finally {
+      setRecordsLoading(false);
+    }
+  };
+
+  const handlePaymentDetailsClick = (work) => {
+    setPaymentDetails(work.paymentDetails || {
+      paymentStatus: "Draft",
+      uploadedDocument: []
+    });
+    setIsPaymentModalOpen(true);
+  };
+
+  const handlePaymentFieldChange = (field, value) => {
+    setPaymentDetails(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handlePaymentUpdate = async () => {
+    if (!paymentDetails) return;
+    
+    setUpdatingPayment(true);
+    try {
+      await axios.patch(`/account/my-accounts/${paymentDetails._id}`, paymentDetails);
+      toast.success("Payment details updated successfully");
+      await fetchWorks();
+      setIsPaymentModalOpen(false);
+    } catch (err) {
+      toast.error("Failed to update payment details");
+    } finally {
+      setUpdatingPayment(false);
+    }
+  };
+
   useEffect(() => {
     Promise.all([fetchWorks(), fetchEmployees()]).finally(() =>
       setLoading(false)
@@ -45,8 +101,6 @@ const Work = ({ userRole }) => {
     );
     setFilteredWorkData(filtered);
   }, [searchTerm, workData]);
-
-  console.log("work data",workData)
 
   const handleUpdate = async (id, updatedFields) => {
     setUpdatingId(id);
@@ -110,6 +164,24 @@ const Work = ({ userRole }) => {
 
   return (
     <div className="p-6 space-y-6">
+      {/* Work Records Modal */}
+      <WorkRecordsModal
+        isOpen={isRecordsModalOpen}
+        onClose={() => setIsRecordsModalOpen(false)}
+        workRecords={workRecords}
+        isLoading={recordsLoading}
+      />
+
+      {/* Payment Details Modal */}
+      <PaymentDetailsModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        paymentDetails={paymentDetails}
+        onPaymentFieldChange={handlePaymentFieldChange}
+        onPaymentUpdate={handlePaymentUpdate}
+        updatingPayment={updatingPayment}
+      />
+
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h2 className="text-2xl font-bold text-gray-800">Assigned Works</h2>
         <div className="relative w-full md:w-64">
@@ -141,6 +213,8 @@ const Work = ({ userRole }) => {
                   "Payment Status",
                   "Assigned To",
                   "Status",
+                  "Work Records",
+                  "Payment Details",
                   "Actions",
                 ].map((col) => (
                   <th
@@ -161,7 +235,7 @@ const Work = ({ userRole }) => {
                     </div>
                   </td>
 
-                    <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <input
                       type="text"
                       value={work.uniqueName || ""}
@@ -279,11 +353,33 @@ const Work = ({ userRole }) => {
                     </select>
                   </td>
 
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <button
+                      onClick={() => fetchWorkRecords(work._id)}
+                      disabled={recordsLoading}
+                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50"
+                    >
+                      {recordsLoading ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : null}
+                      Records
+                    </button>
+                  </td>
+
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <button
+                      onClick={() => handlePaymentDetailsClick(work)}
+                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      Details
+                    </button>
+                  </td>
+
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
                       onClick={() =>
                         handleUpdate(work._id, {
-                          uniqueName:work.uniqueName,
+                          uniqueName: work.uniqueName,
                           pax: work.pax,
                           country: work.country,
                           submissionDate: work.submissionDate,
