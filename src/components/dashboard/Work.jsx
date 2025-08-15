@@ -12,22 +12,36 @@ const Work = ({ userRole }) => {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   // Work Records Modal State
   const [workRecords, setWorkRecords] = useState([]);
   const [isRecordsModalOpen, setIsRecordsModalOpen] = useState(false);
   const [recordsLoading, setRecordsLoading] = useState(false);
-  
+
   // Payment Details Modal State
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [updatingPayment, setUpdatingPayment] = useState(false);
 
+  //pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredWorkData.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+  const totalPages = Math.ceil(filteredWorkData.length / itemsPerPage);
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   const fetchWorks = async () => {
     try {
-      const endpoint = userRole === "AccountAdmin" 
-        ? "/works/employee-works" 
-        : "/works/my-works";
+      const endpoint =
+        userRole === "AccountAdmin"
+          ? "/works/employee-works"
+          : "/works/my-works";
       const res = await axios.get(endpoint);
       setWorkData(res.data.data);
       setFilteredWorkData(res.data.data);
@@ -58,41 +72,46 @@ const Work = ({ userRole }) => {
     }
   };
 
- const handlePaymentDetailsClick = (work) => {
-  setPaymentDetails(work.paymentDetails || {
-    agencyName: "",
-    createdBy: "",
-    paymentStatus: "Draft",
-    reference: "",
-    depositDate: new Date().toISOString().split('T')[0],
-    mode: "",
-    type: "",
-    depositedFrom: "",
-    branch: "",
-    depositReferenceIdentifier: "",
-    uploadedDocument: [],
-    depositedToAccount: "",
-    givenAmount: 0,
-    serviceCharge: 0,
-    amount: 0,
-    workId: work._id
-  });
-  setIsPaymentModalOpen(true);
-};
+  const handlePaymentDetailsClick = (work) => {
+    setPaymentDetails(
+      work.paymentDetails || {
+        agencyName: "",
+        createdBy: "",
+        paymentStatus: "Draft",
+        reference: "",
+        depositDate: new Date().toISOString().split("T")[0],
+        mode: "",
+        type: "",
+        depositedFrom: "",
+        branch: "",
+        depositReferenceIdentifier: "",
+        uploadedDocument: [],
+        depositedToAccount: "",
+        givenAmount: 0,
+        serviceCharge: 0,
+        amount: 0,
+        workId: work._id,
+      }
+    );
+    setIsPaymentModalOpen(true);
+  };
 
   const handlePaymentFieldChange = (field, value) => {
-    setPaymentDetails(prev => ({
+    setPaymentDetails((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const handlePaymentUpdate = async () => {
     if (!paymentDetails) return;
-    
+
     setUpdatingPayment(true);
     try {
-      await axios.patch(`/payment-details/${paymentDetails._id}`, paymentDetails);
+      await axios.patch(
+        `/payment-details/${paymentDetails._id}`,
+        paymentDetails
+      );
       toast.success("Payment details updated successfully");
       await fetchWorks();
       setIsPaymentModalOpen(false);
@@ -110,7 +129,7 @@ const Work = ({ userRole }) => {
   }, [userRole]);
 
   useEffect(() => {
-    const filtered = workData.filter(work =>
+    const filtered = workData.filter((work) =>
       work.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredWorkData(filtered);
@@ -241,8 +260,11 @@ const Work = ({ userRole }) => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredWorkData.map((work) => (
-                <tr key={work._id} className="hover:bg-gray-50 transition-colors">
+              {currentItems.map((work) => (
+                <tr
+                  key={work._id}
+                  className="hover:bg-gray-50 transition-colors"
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       {work.name}
@@ -254,7 +276,11 @@ const Work = ({ userRole }) => {
                       type="text"
                       value={work.uniqueName || ""}
                       onChange={(e) =>
-                        handleFieldChange(work._id, "uniqueName", e.target.value)
+                        handleFieldChange(
+                          work._id,
+                          "uniqueName",
+                          e.target.value
+                        )
                       }
                       className="w-20 px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
                     />
@@ -320,10 +346,18 @@ const Work = ({ userRole }) => {
                     <select
                       value={work.paymentStatus || ""}
                       onChange={(e) =>
-                        handleFieldChange(work._id, "paymentStatus", e.target.value)
+                        handleFieldChange(
+                          work._id,
+                          "paymentStatus",
+                          e.target.value
+                        )
                       }
-                      className={`px-3 py-1 rounded-md text-xs font-medium ${getPaymentStatusColor(work.paymentStatus)} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-                      disabled={userRole !== "AccountAdmin" && userRole !== "Admin"}
+                      className={`px-3 py-1 rounded-md text-xs font-medium ${getPaymentStatusColor(
+                        work.paymentStatus
+                      )} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                      disabled={
+                        userRole !== "AccountAdmin" && userRole !== "Admin"
+                      }
                     >
                       <option value="">Select Status</option>
                       <option value="Partial Payment">Partial Payment</option>
@@ -358,7 +392,9 @@ const Work = ({ userRole }) => {
                       onChange={(e) =>
                         handleFieldChange(work._id, "status", e.target.value)
                       }
-                      className={`px-3 py-1 rounded-md text-xs font-medium ${getStatusColor(work.status)} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                      className={`px-3 py-1 rounded-md text-xs font-medium ${getStatusColor(
+                        work.status
+                      )} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
                     >
                       <option value="pending">Pending</option>
                       <option value="completed">Completed</option>
@@ -422,6 +458,87 @@ const Work = ({ userRole }) => {
               ))}
             </tbody>
           </table>
+          <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-gray-200">
+            <div className="flex-1 flex justify-between sm:hidden">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              >
+                Next
+              </button>
+            </div>
+            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-gray-700">
+                  Showing{" "}
+                  <span className="font-medium">{indexOfFirstItem + 1}</span> to{" "}
+                  <span className="font-medium">
+                    {Math.min(indexOfLastItem, filteredWorkData.length)}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-medium">{filteredWorkData.length}</span>{" "}
+                  results
+                </p>
+              </div>
+              <div>
+                <nav
+                  className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                  aria-label="Pagination"
+                >
+                  <button
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                  >
+                    <span className="sr-only">Previous</span>
+                    {/* Previous icon */}
+                    &lt;
+                  </button>
+
+                  {/* Page numbers */}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (number) => (
+                      <button
+                        key={number}
+                        onClick={() => paginate(number)}
+                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                          currentPage === number
+                            ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
+                            : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
+                        }`}
+                      >
+                        {number}
+                      </button>
+                    )
+                  )}
+
+                  <button
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                    disabled={currentPage === totalPages}
+                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                  >
+                    <span className="sr-only">Next</span>
+                    {/* Next icon */}
+                    &gt;
+                  </button>
+                </nav>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

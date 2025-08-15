@@ -40,7 +40,7 @@ const allTabs = [
   { name: "Approval", component: Approval, roles: ["superAdmin"] },
   { name: "Pipeline", component: AdminPipeline, roles: ["superAdmin"] },
   { name: "Account-Info", component: AccountInfo, roles: ["AccountAdmin"] },
-  { name: "Invoice", component: Invoice, roles: ["AccountAdmin"] },
+  // { name: "Invoice", component: Invoice, roles: ["AccountAdmin"] },
   { name: "My-Business", component: MyBusiness, roles: ["superAdmin"] },
   {
     name: "My Profile",
