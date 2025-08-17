@@ -4,16 +4,18 @@ import { FiDollarSign, FiPercent } from "react-icons/fi";
 const FinancialInfo = ({ formData, setFormData }) => {
   const [autoCalculate, setAutoCalculate] = useState(false);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
+ const handleInputChange = (e) => {
+  const { name, value, type } = e.target;
 
-    // Allow empty value or valid number
+  if (type === "number") {
+    // Only allow numbers (or empty string)
     if (value === "" || !isNaN(value)) {
       setFormData((prev) => ({
         ...prev,
         [name]: value === "" ? "" : parseFloat(value),
       }));
 
+      // Auto calculate when income changes
       if (autoCalculate && name === "income") {
         const numericValue = value === "" ? 0 : parseFloat(value);
         const revenue = numericValue * 0.7;
@@ -27,14 +29,42 @@ const FinancialInfo = ({ formData, setFormData }) => {
         }));
       }
     }
-  };
+  } else {
+    // For text inputs (like accountName), just update directly
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+};
+
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
+         <label className="block text-sm font-medium text-gray-700 mb-1">
+          Account Name <span className="text-red-500">*</span>
+        </label>
+           <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <FiDollarSign className="text-gray-400" />
+          </div>
+          <input
+            type="text"
+            name="accountName"
+            value={formData.accountName}
+            onChange={handleInputChange}
+            className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter Account Name"
+            required
+            min="0"
+            step="0.01"
+          />
+        </div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Income <span className="text-red-500">*</span>
         </label>
+        
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <FiDollarSign className="text-gray-400" />

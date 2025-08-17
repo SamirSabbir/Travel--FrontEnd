@@ -27,13 +27,21 @@ const Sales = ({ userRole }) => {
     "Follow-up 2": "bg-red-100 text-red-800",
   };
 
+
+
   // Normalize the sales data to use 'status' field consistently
+ 
   const normalizeSalesData = (salesData) => {
+   
     return salesData.map((sale) => ({
       ...sale,
       status: sale.isConfirmed || "New lead", // Use isConfirmed as status
+       
     }));
+      
   };
+
+    
 
   // Fetch all data
   const fetchData = async () => {
@@ -71,7 +79,8 @@ const Sales = ({ userRole }) => {
       let endpoint, payload;
 
       if (userRole === "SuperAdmin") {
-        endpoint = `/works/update-work-super-admin/${workId}`;
+        endpoint = `/sales/confirm-sales/${saleId}`;
+        
         payload = { status: newStatus };
       } else {
         endpoint = `/sales/confirm-sales/${saleId}`;

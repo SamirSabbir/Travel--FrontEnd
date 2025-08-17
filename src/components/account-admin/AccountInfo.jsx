@@ -21,6 +21,7 @@ const AccountInfo = () => {
   const [selectedSale, setSelectedSale] = useState("");
   const [formData, setFormData] = useState({
     saleId: "",
+    accountName:"",
     revenue: "",
     expense: "",
     commission: "",
@@ -70,6 +71,7 @@ const AccountInfo = () => {
   const validateForm = () => {
     const requiredFields = [
       "saleId",
+      "accountName",
       "revenue",
       "expense",
       "commission",
@@ -103,6 +105,7 @@ const AccountInfo = () => {
     try {
       const payload = {
         saleId: formData.saleId,
+        accountName: formData.accountName,
         revenue: Number(formData.revenue),
         expense: Number(formData.expense),
         commission: Number(formData.commission),
@@ -130,6 +133,7 @@ const AccountInfo = () => {
   const resetForm = () => {
     setFormData({
       saleId: "",
+      accountName:"",
       revenue: "",
       expense: "",
       commission: "",
