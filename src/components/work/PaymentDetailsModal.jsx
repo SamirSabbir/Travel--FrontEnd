@@ -9,7 +9,8 @@ const PaymentDetailsModal = ({
   paymentDetails, 
   onPaymentFieldChange, 
   onPaymentUpdate,
-  updatingPayment 
+  updatingPayment,
+  userRole
 }) => {
   const [file, setFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -83,6 +84,8 @@ const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
     onPaymentFieldChange("uploadedDocument", updatedDocuments);
   };
 
+  const isEditable = userRole === "AccountAdmin"
+
   return (
     <Modal
       isOpen={isOpen}
@@ -113,6 +116,7 @@ const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
                   value={paymentDetails.agencyName || ""}
                   onChange={(e) => onPaymentFieldChange("agencyName", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  disabled = {!isEditable}
                 />
               </div>
 
@@ -125,6 +129,7 @@ const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
                   value={paymentDetails.reference || ""}
                   onChange={(e) => onPaymentFieldChange("reference", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  disabled = {!isEditable}
                 />
               </div>
 
@@ -137,6 +142,7 @@ const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
                   value={paymentDetails.depositDate?.slice(0, 10) || ""}
                   onChange={(e) => onPaymentFieldChange("depositDate", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  disabled = {!isEditable}
                 />
               </div>
 
@@ -148,6 +154,7 @@ const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
                   value={paymentDetails.paymentStatus || ""}
                   onChange={(e) => onPaymentFieldChange("paymentStatus", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  disabled = {!isEditable}
                 >
                   <option value="Draft">Draft</option>
                   <option value="Pending">Pending</option>
@@ -164,6 +171,7 @@ const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
                   value={paymentDetails.mode || ""}
                   onChange={(e) => onPaymentFieldChange("mode", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  disabled = {!isEditable}
                 >
                   <option value="">Select Mode</option>
                   <option value="Offline Payment">Offline Payment</option>
@@ -180,6 +188,7 @@ const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
                   value={paymentDetails.type || ""}
                   onChange={(e) => onPaymentFieldChange("type", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  disabled={!isEditable}
                 >
                   <option value="">Select Type</option>
                   <option value="Online Transfer">Online Transfer</option>
@@ -197,6 +206,7 @@ const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
                   value={paymentDetails.depositedFrom || ""}
                   onChange={(e) => onPaymentFieldChange("depositedFrom", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  disabled={!isEditable}
                 />
               </div>
 
@@ -209,6 +219,7 @@ const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
                   value={paymentDetails.branch || ""}
                   onChange={(e) => onPaymentFieldChange("branch", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  disabled={!isEditable}
                 />
               </div>
 
@@ -221,6 +232,7 @@ const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
                   value={paymentDetails.depositReferenceIdentifier || ""}
                   onChange={(e) => onPaymentFieldChange("depositReferenceIdentifier", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  disabled={!isEditable}
                 />
               </div>
 
@@ -233,6 +245,7 @@ const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
                   value={paymentDetails.depositedToAccount || ""}
                   onChange={(e) => onPaymentFieldChange("depositedToAccount", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  disabled={!isEditable}
                 />
               </div>
 
@@ -249,6 +262,7 @@ const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
                     value={paymentDetails.givenAmount || ""}
                     onChange={(e) => onPaymentFieldChange("givenAmount", e.target.value)}
                     className="pl-8 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    disabled={!isEditable}
                   />
                 </div>
               </div>
@@ -266,6 +280,7 @@ const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
                     value={paymentDetails.serviceCharge || ""}
                     onChange={(e) => onPaymentFieldChange("serviceCharge", e.target.value)}
                     className="pl-8 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    disabled={!isEditable}
                   />
                 </div>
               </div>
@@ -283,6 +298,7 @@ const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
                     value={paymentDetails.amount || ""}
                     onChange={(e) => onPaymentFieldChange("amount", e.target.value)}
                     className="pl-8 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    disabled={!isEditable}
                   />
                 </div>
               </div>
@@ -303,10 +319,12 @@ const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
                       onChange={handleFileChange}
                       className="hidden"
                       id="file-upload"
+                      disabled={!isEditable}
                     />
                     <label
                       htmlFor="file-upload"
                       className="cursor-pointer flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      
                     >
                       <Upload className="h-4 w-4 mr-2" />
                       Choose File
@@ -320,9 +338,12 @@ const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
                   </div>
                   <button
                     onClick={uploadToCloudinary}
-                    disabled={!file || isUploading}
+                    
+                    disabled={!file || isUploading || !isEditable}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                    
                   >
+                    
                     {isUploading ? (
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     ) : (
@@ -370,7 +391,8 @@ const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
               >
                 Cancel
               </button>
-              <button
+             {isEditable && (
+               <button
                 onClick={onPaymentUpdate}
                 disabled={updatingPayment}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
@@ -382,6 +404,7 @@ const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
                   </>
                 ) : "Update Payment"}
               </button>
+             )}
             </div>
           </div>
         )}

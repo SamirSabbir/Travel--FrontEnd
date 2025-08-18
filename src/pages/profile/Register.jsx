@@ -45,7 +45,7 @@ const Register = () => {
       "image/jpeg",
       "image/png",
       "image/gif",
-      "application/pdf",
+      // "application/pdf",
     ];
     const maxSize = 5 * 1024 * 1024; // 5MB
 
@@ -147,7 +147,7 @@ const Register = () => {
         email: formData.email,
         password: formData.password,
         role: formData.role,
-        photo: uploadedFiles[0].url, // Array of uploaded files
+        ...(uploadedFiles.length > 0 && { photo: uploadedFiles[0].url }), //only include if exists
       });
 
       toast.success(response.data.message);
@@ -280,7 +280,7 @@ const Register = () => {
               {/* File Upload Section */}
               <div>
                 <label className="block text-sm font-medium text-[#374151] mb-1">
-                  Upload Files (Optional)
+                  Upload Image (Optional)
                 </label>
                 <div className="flex items-center justify-center w-full">
                   <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#e0e6ed] rounded-lg cursor-pointer hover:bg-[#f8fafc] transition">
@@ -300,13 +300,13 @@ const Register = () => {
                         ></path>
                       </svg>
                       <p className="text-xs text-[#6b7280]">
-                        Click to upload files (Images or PDF, max 5MB each)
+                        Click to upload image (Images max 5MB each)
                       </p>
                     </div>
                     <input
                       type="file"
                       multiple
-                      accept="image/jpeg, image/png, image/gif, application/pdf"
+                      accept="image/jpeg, image/png, image/gif"
                       onChange={handleFileChange}
                       className="hidden"
                     />

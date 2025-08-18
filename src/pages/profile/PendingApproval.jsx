@@ -13,8 +13,8 @@ const PendingApproval = () => {
           Awaiting Approval
         </h2>
         <p className="text-sm text-gray-600 mb-6">
-          Your HR account has been submitted successfully. Please wait for the
-          admin to approve your account before logging in.
+          Your account has been submitted successfully. Please wait for the
+          Admin to approve your account before logging in.
         </p>
         <button
           onClick={() => navigate("/login")}

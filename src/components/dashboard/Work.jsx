@@ -213,6 +213,7 @@ const indexOfFirstItem = indexOfLastItem - itemsPerPage;
         onPaymentFieldChange={handlePaymentFieldChange}
         onPaymentUpdate={handlePaymentUpdate}
         updatingPayment={updatingPayment}
+        userRole = {userRole}
       />
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
