@@ -129,11 +129,17 @@ const LeadsTable = ({
                 <td className="px-6 py-4 whitespace-nowrap">
                   <select
                     onChange={(e) => handleAssignLead(lead._id, e.target.value)}
-                    defaultValue=""
-                    className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                    value={lead.assigns?.[0] || ""} // ✅ Show assigned employee if exists
+                    disabled={lead.assigns?.length > 0} // ✅ Disable if already assigned
+                    className={`block w-full pl-3 pr-10 py-2 text-base border-gray-300 
+      focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 
+      sm:text-sm rounded-md 
+      ${lead.assigns?.length > 0 ? "bg-gray-100 cursor-not-allowed" : ""}`}
                   >
                     <option value="" disabled>
-                      Select Employee
+                      {lead.assigns?.length > 0
+                        ? "Employee Assigned"
+                        : "Select Employee"}
                     </option>
                     {employees.map((emp) => (
                       <option key={emp._id} value={emp.email}>
@@ -142,6 +148,7 @@ const LeadsTable = ({
                     ))}
                   </select>
                 </td>
+
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {formatDate(lead.createdAt)}
                 </td>

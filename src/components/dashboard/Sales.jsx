@@ -118,7 +118,7 @@ const Sales = ({ userRole }) => {
             <tbody className="bg-white divide-y divide-gray-200">
               {currentItems.map((sale) => {
                 const isDisabled =
-                  updatingId === sale._id || sale.status === "Very Interested";
+                  updatingId === sale._id || sale.status === "Confirmed";
 
                 return (
                   <tr key={sale._id}>
@@ -165,7 +165,8 @@ const Sales = ({ userRole }) => {
                       </div>
                       {updatingId === sale._id && (
                         <div className="flex items-center gap-2 text-blue-600 text-xs mt-1">
-                          <Loader2 className="w-3 h-3 animate-spin" /> Updating...
+                          <Loader2 className="w-3 h-3 animate-spin" />{" "}
+                          Updating...
                         </div>
                       )}
                     </td>
@@ -178,8 +179,7 @@ const Sales = ({ userRole }) => {
           {/* Pagination Controls */}
           <div className="flex justify-between items-center px-6 py-3 bg-gray-50 border-t">
             <p className="text-sm text-gray-600">
-              Showing{" "}
-              <span className="font-medium">{startIndex + 1}</span>–
+              Showing <span className="font-medium">{startIndex + 1}</span>–
               <span className="font-medium">
                 {Math.min(startIndex + itemsPerPage, totalItems)}
               </span>{" "}
@@ -193,19 +193,21 @@ const Sales = ({ userRole }) => {
               >
                 Prev
               </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => goToPage(page)}
-                  className={`px-3 py-1 rounded-lg border text-sm ${
-                    page === currentPage
-                      ? "bg-blue-500 text-white border-blue-500"
-                      : "hover:bg-gray-100"
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <button
+                    key={page}
+                    onClick={() => goToPage(page)}
+                    className={`px-3 py-1 rounded-lg border text-sm ${
+                      page === currentPage
+                        ? "bg-blue-500 text-white border-blue-500"
+                        : "hover:bg-gray-100"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
               <button
                 onClick={() => goToPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
