@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from "react";
 import axios from "../../api/axios";
 import { toast } from "react-toastify";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronDown } from "lucide-react";
 
 const Sales = ({ userRole }) => {
   const [mySales, setMySales] = useState([]);
-  const [pipeline, setPipeline] = useState([]);
   const [updatingId, setUpdatingId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // You can adjust this
 
   const statusOptions = [
     "New lead",
@@ -27,44 +30,18 @@ const Sales = ({ userRole }) => {
     "Follow-up 2": "bg-red-100 text-red-800",
   };
 
-
-
-  // Normalize the sales data to use 'status' field consistently
- 
-  const normalizeSalesData = (salesData) => {
-   
-    return salesData.map((sale) => ({
+  const normalizeSalesData = (salesData) =>
+    salesData.map((sale) => ({
       ...sale,
-      status: sale.isConfirmed || "New lead", // Use isConfirmed as status
-       
+      status: sale.isConfirmed || "New lead",
     }));
-      
-  };
 
-    
-
-  // Fetch all data
-  const fetchData = async () => {
-    console.log("current user role:", userRole);
+  const fetchSales = async () => {
     setIsLoading(true);
     try {
-      // Fetch sales data
-      const salesEndpoint = "/sales/my-sales";
-      const salesRes = await axios.get(salesEndpoint);
-
-      // Normalize the data to use consistent field names
+      const salesRes = await axios.get("/leads/my-leads");
       const normalizedSales = normalizeSalesData(salesRes.data.data);
       setMySales(normalizedSales);
-
-      // Fetch pipeline data - different endpoint for superAdmin
-      const pipelineEndpoint =
-        userRole === "SuperAdmin"
-          ? "/works/my-admin-pipeline"
-          : "/works/pipeline";
-      console.log("fetching pipeline from:", pipelineEndpoint);
-
-      const pipelineRes = await axios.get(pipelineEndpoint);
-      setPipeline(pipelineRes.data.data);
     } catch (err) {
       toast.error(err.response?.data?.message || err.message);
     } finally {
@@ -72,52 +49,38 @@ const Sales = ({ userRole }) => {
     }
   };
 
-  // Handle Status Change
   const handleStatusChange = async (saleId, workId, newStatus) => {
     setUpdatingId(saleId);
     try {
-      let endpoint, payload;
-
-      if (userRole === "SuperAdmin") {
-        endpoint = `/sales/confirm-sales/${saleId}`;
-        
-        payload = { status: newStatus };
-      } else {
-        endpoint = `/sales/confirm-sales/${saleId}`;
-        payload = { status: newStatus }; // or isConfirmed: true/false if backend is boolean
-      }
+      const endpoint = `/leads/confirm-leads/${saleId}`;
+      const payload = { status: newStatus };
 
       await axios.patch(endpoint, payload);
-
-      // Update state
-      setMySales((prevSales) =>
-        prevSales.map((sale) =>
-          sale._id === saleId ? { ...sale, status: newStatus } : sale
-        )
-      );
-
-      // Refresh pipeline if "Very Interested"
-      if (newStatus === "Very Interested") {
-        const pipelineEndpoint =
-          userRole === "SuperAdmin"
-            ? "/works/my-admin-pipeline"
-            : "/works/pipeline";
-        const pipelineRes = await axios.get(pipelineEndpoint);
-        setPipeline(pipelineRes.data.data);
-      }
+      await fetchSales();
 
       toast.success(`Status updated to "${newStatus}"`);
     } catch (err) {
       toast.error(err.response?.data?.message || err.message);
-      fetchData();
+      fetchSales();
     } finally {
       setUpdatingId(null);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    fetchSales();
   }, []);
+
+  // Pagination logic
+  const totalItems = mySales.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentItems = mySales.slice(startIndex, startIndex + itemsPerPage);
+
+  const goToPage = (page) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+  };
 
   if (isLoading) {
     return (
@@ -129,96 +92,130 @@ const Sales = ({ userRole }) => {
 
   return (
     <div className="p-6 space-y-10">
-      {/* My Sales */}
+      {/* My Sales Table */}
       <section>
         <h2 className="text-2xl font-bold mb-4">
-          {userRole === "SuperAdmin" ? "All Sales" : "My Sales"}
+          {userRole === "SuperAdmin" ? "My lead" : "My Sales"}
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {mySales.map((sale) => {
-            const isDisabled =
-              updatingId === sale._id || sale.status === "Very Interested";
+        <div className="bg-white shadow-lg rounded-2xl overflow-hidden border border-gray-200">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Customer Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Phone Number
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Description
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {currentItems.map((sale) => {
+                const isDisabled =
+                  updatingId === sale._id || sale.status === "Very Interested";
 
-            return (
-              <div
-                key={sale._id}
-                className="bg-white shadow-lg rounded-2xl p-5 border border-gray-200"
+                return (
+                  <tr key={sale._id}>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                      {sale.customerName}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {sale.phoneNumber}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {sale.description}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      <div className="relative">
+                        <select
+                          value={sale.status}
+                          onChange={(e) =>
+                            handleStatusChange(
+                              sale._id,
+                              sale.workId,
+                              e.target.value
+                            )
+                          }
+                          disabled={isDisabled}
+                          className={`appearance-none border rounded-lg px-3 py-2 text-sm w-40 focus:outline-none focus:ring-2 focus:ring-blue-300
+                            ${statusColors[sale.status]}
+                            ${
+                              isDisabled
+                                ? "cursor-not-allowed opacity-70"
+                                : "cursor-pointer"
+                            }`}
+                        >
+                          {statusOptions.map((status) => (
+                            <option
+                              key={status}
+                              value={status}
+                              className={statusColors[status]}
+                            >
+                              {status}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute right-2 top-3 h-4 w-4 pointer-events-none" />
+                      </div>
+                      {updatingId === sale._id && (
+                        <div className="flex items-center gap-2 text-blue-600 text-xs mt-1">
+                          <Loader2 className="w-3 h-3 animate-spin" /> Updating...
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          {/* Pagination Controls */}
+          <div className="flex justify-between items-center px-6 py-3 bg-gray-50 border-t">
+            <p className="text-sm text-gray-600">
+              Showing{" "}
+              <span className="font-medium">{startIndex + 1}</span>–
+              <span className="font-medium">
+                {Math.min(startIndex + itemsPerPage, totalItems)}
+              </span>{" "}
+              of <span className="font-medium">{totalItems}</span> results
+            </p>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-1 rounded-lg border text-sm disabled:opacity-50 hover:bg-gray-100"
               >
-                <div className="text-lg font-semibold">{sale.customerName}</div>
-                <div className="text-sm text-gray-600">{sale.phoneNumber}</div>
-                <p className="text-gray-700 mt-2">{sale.description}</p>
-
-                {userRole === "SuperAdmin" && sale.employee && (
-                  <div className="text-sm text-gray-500 mt-1">
-                    Employee: {sale.employee.name}
-                  </div>
-                )}
-
-                {/* Status Dropdown */}
-                <div className="mt-4">
-                  <select
-                    value={sale.status}
-                    onChange={(e) =>
-                      handleStatusChange(sale._id, sale.workId, e.target.value)
-                    }
-                    disabled={isDisabled}
-                    className={`
-                      border rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-300
-                      ${statusColors[sale.status]}
-                      ${
-                        isDisabled
-                          ? "cursor-not-allowed opacity-70"
-                          : "cursor-pointer"
-                      }
-                    `}
-                  >
-                    {statusOptions.map((status) => (
-                      <option
-                        key={status}
-                        value={status}
-                        className={statusColors[status]}
-                      >
-                        {status}
-                      </option>
-                    ))}
-                  </select>
-
-                  {updatingId === sale._id && (
-                    <div className="flex items-center gap-2 text-blue-600 text-sm mt-2">
-                      <Loader2 className="w-4 h-4 animate-spin" /> Updating...
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+                Prev
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => goToPage(page)}
+                  className={`px-3 py-1 rounded-lg border text-sm ${
+                    page === currentPage
+                      ? "bg-blue-500 text-white border-blue-500"
+                      : "hover:bg-gray-100"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 rounded-lg border text-sm disabled:opacity-50 hover:bg-gray-100"
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </div>
-      </section>
-
-      {/* Pipeline View */}
-      <section>
-        <h2 className="text-2xl font-bold mb-4">Pipeline</h2>
-        {pipeline.length === 0 ? (
-          <div className="text-gray-500 text-center py-8">
-            No items in pipeline yet. Mark sales as "Very Interested" to add
-            them here.
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-            {pipeline.map((item) => (
-              <div
-                key={item._id}
-                className="bg-slate-100 border border-gray-300 rounded-xl p-4 shadow-sm"
-              >
-                <h3 className="text-lg font-medium">{item.name}</h3>
-                <p className="text-gray-600 text-sm">{item.phone}</p>
-                <span className="inline-block mt-2 text-xs font-semibold text-white bg-purple-500 px-2 py-1 rounded-full capitalize">
-                  {item.status}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
       </section>
     </div>
   );

@@ -26,7 +26,7 @@ const Leads = ({ userRole }) => {
 
   const fetchLeads = async () => {
     try {
-      const res = await axios.get("/leads/");
+      const res = await axios.get("/leads-manage/");
       if (res.data.success) {
         setLeads(res.data.data);
       } else {
@@ -62,7 +62,7 @@ const Leads = ({ userRole }) => {
     }
 
     try {
-      const res = await axios.post("/leads/create-lead", formData);
+      const res = await axios.post("/leads-manage/create-lead", formData);
       if (res.data.success) {
         setLeads((prev) => [...prev, res.data.data]);
         toast.success("Lead created successfully!");
@@ -79,7 +79,7 @@ const Leads = ({ userRole }) => {
   const handleAssignLead = async (leadId, email) => {
     setAssigningId(leadId);
     try {
-      await axios.patch(`/leads/assign/${leadId}`, { email });
+      await axios.patch(`/leads-manage/assign/${leadId}`, { email });
       toast.success("Lead assigned successfully!");
       fetchLeads();
     } catch (err) {

@@ -12,19 +12,21 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Cookies from "js-cookie";
 import Approval from "../../components/dashboard/Approval";
-import AdminPipeline from "../../components/dashboard/AdminPipeline";
+// import AdminPipeline from "../../components/dashboard/AdminPipeline";
 import AccountInfo from "../../components/account-admin/AccountInfo";
 import Invoice from "../../components/account-admin/Invoice";
 import MyBusiness from "../../components/dashboard/superAdmin/MyBusiness";
 import MyProfile from "../profile/MyProfile";
 import SalaryCommission from "../../components/dashboard/superAdmin/SalaryCommission";
 import SalesPipeline from "../../components/dashboard/superAdmin/SalesPipeline";
+import PipelineTable from "../../components/PiplelineTable";
 
 // Tab mapping with role-based visibility
 const allTabs = [
-  { name: "Leads", component: Leads, roles: ["superAdmin"] },
+  { name: "Leads Management", component: Leads, roles: ["superAdmin"] },
   // { name: "Sales", component: Sales, roles: ["employee", "hr", "admin"] },
-  { name: "Sales", component: Sales, roles: ["employee", "superAdmin"] },
+  { name: "Leads", component: Sales, roles: ["employee", "superAdmin"] },
+  {name: "Pipeline", component: PipelineTable, roles:["employee", "superAdmin"]},
   {
     name: "Work",
     component: Work,
@@ -38,7 +40,7 @@ const allTabs = [
   },
   // { name: "Invoice", component: Invoice, roles: ["admin"] },
   { name: "Approval", component: Approval, roles: ["superAdmin"] },
-  { name: "Pipeline", component: AdminPipeline, roles: ["superAdmin"] },
+  // { name: "Pipeline", component: AdminPipeline, roles: ["superAdmin"] },
   { name: "Account-Info", component: AccountInfo, roles: ["AccountAdmin"] },
   // { name: "Invoice", component: Invoice, roles: ["AccountAdmin"] },
   { name: "My-Business", component: MyBusiness, roles: ["superAdmin"] },
