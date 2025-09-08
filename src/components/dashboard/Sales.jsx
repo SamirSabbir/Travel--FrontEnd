@@ -51,6 +51,7 @@ const Sales = ({ userRole }) => {
 
   const handleStatusChange = async (saleId, workId, newStatus) => {
     setUpdatingId(saleId);
+    console.log("item id from Leads", saleId);
     try {
       const endpoint = `/leads/confirm-leads/${saleId}`;
       const payload = { status: newStatus };
