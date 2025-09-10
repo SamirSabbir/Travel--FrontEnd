@@ -13,6 +13,214 @@ const Work = ({ userRole }) => {
   const [updatingId, setUpdatingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const countries = [
+    "Afghanistan",
+    "Albania",
+    "Algeria",
+    "Andorra",
+    "Angola",
+    "Antigua and Barbuda",
+    "Argentina",
+    "Armenia",
+    "Australia",
+    "Austria",
+    "Azerbaijan",
+    "Bahamas",
+    "Bahrain",
+    "Bangladesh",
+    "Barbados",
+    "Belarus",
+    "Belgium",
+    "Belize",
+    "Benin",
+    "Bhutan",
+    "Bolivia",
+    "Bosnia and Herzegovina",
+    "Botswana",
+    "Brazil",
+    "Brunei",
+    "Bulgaria",
+    "Burkina Faso",
+    "Burundi",
+    "Cabo Verde",
+    "Cambodia",
+    "Cameroon",
+    "Canada",
+    "Central African Republic",
+    "Chad",
+    "Chile",
+    "China",
+    "Colombia",
+    "Comoros",
+    "Congo (Congo-Brazzaville)",
+    "Costa Rica",
+    "Croatia",
+    "Cuba",
+    "Cyprus",
+    "Czechia (Czech Republic)",
+    "Democratic Republic of the Congo",
+    "Denmark",
+    "Djibouti",
+    "Dominica",
+    "Dominican Republic",
+    "Ecuador",
+    "Egypt",
+    "El Salvador",
+    "Equatorial Guinea",
+    "Eritrea",
+    "Estonia",
+    "Eswatini (fmr. Swaziland)",
+    "Ethiopia",
+    "Fiji",
+    "Finland",
+    "France",
+    "Gabon",
+    "Gambia",
+    "Georgia",
+    "Germany",
+    "Ghana",
+    "Greece",
+    "Grenada",
+    "Guatemala",
+    "Guinea",
+    "Guinea-Bissau",
+    "Guyana",
+    "Haiti",
+    "Holy See",
+    "Honduras",
+    "Hungary",
+    "Iceland",
+    "India",
+    "Indonesia",
+    "Iran",
+    "Iraq",
+    "Ireland",
+    "Israel",
+    "Italy",
+    "Jamaica",
+    "Japan",
+    "Jordan",
+    "Kazakhstan",
+    "Kenya",
+    "Kiribati",
+    "Kuwait",
+    "Kyrgyzstan",
+    "Laos",
+    "Latvia",
+    "Lebanon",
+    "Lesotho",
+    "Liberia",
+    "Libya",
+    "Liechtenstein",
+    "Lithuania",
+    "Luxembourg",
+    "Madagascar",
+    "Malawi",
+    "Malaysia",
+    "Maldives",
+    "Mali",
+    "Malta",
+    "Marshall Islands",
+    "Mauritania",
+    "Mauritius",
+    "Mexico",
+    "Micronesia",
+    "Moldova",
+    "Monaco",
+    "Mongolia",
+    "Montenegro",
+    "Morocco",
+    "Mozambique",
+    "Myanmar (Burma)",
+    "Namibia",
+    "Nauru",
+    "Nepal",
+    "Netherlands",
+    "New Zealand",
+    "Nicaragua",
+    "Niger",
+    "Nigeria",
+    "North Korea",
+    "North Macedonia",
+    "Norway",
+    "Oman",
+    "Pakistan",
+    "Palau",
+    "Palestine State",
+    "Panama",
+    "Papua New Guinea",
+    "Paraguay",
+    "Peru",
+    "Philippines",
+    "Poland",
+    "Portugal",
+    "Qatar",
+    "Romania",
+    "Russia",
+    "Rwanda",
+    "Saint Kitts and Nevis",
+    "Saint Lucia",
+    "Saint Vincent and the Grenadines",
+    "Samoa",
+    "San Marino",
+    "Sao Tome and Principe",
+    "Saudi Arabia",
+    "Senegal",
+    "Serbia",
+    "Seychelles",
+    "Sierra Leone",
+    "Singapore",
+    "Slovakia",
+    "Slovenia",
+    "Solomon Islands",
+    "Somalia",
+    "South Africa",
+    "South Korea",
+    "South Sudan",
+    "Spain",
+    "Sri Lanka",
+    "Sudan",
+    "Suriname",
+    "Sweden",
+    "Switzerland",
+    "Syria",
+    "Taiwan",
+    "Tajikistan",
+    "Tanzania",
+    "Thailand",
+    "Timor-Leste",
+    "Togo",
+    "Tonga",
+    "Trinidad and Tobago",
+    "Tunisia",
+    "Turkey",
+    "Turkmenistan",
+    "Tuvalu",
+    "Uganda",
+    "Ukraine",
+    "United Arab Emirates",
+    "United Kingdom",
+    "United States of America",
+    "Uruguay",
+    "Uzbekistan",
+    "Vanuatu",
+    "Venezuela",
+    "Vietnam",
+    "Yemen",
+    "Zambia",
+    "Zimbabwe",
+  ];
+
+  const serviceOptions = [
+    "Choose a service",
+    "Visa Processing",
+    "Hotel",
+    "Air Ticket",
+    "Transfer",
+    "Tour Package",
+    "Appointment Date",
+  ];
+
   // Work Records Modal State
   const [workRecords, setWorkRecords] = useState([]);
   const [isRecordsModalOpen, setIsRecordsModalOpen] = useState(false);
@@ -28,7 +236,7 @@ const Work = ({ userRole }) => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const indexOfLastItem = currentPage * itemsPerPage;
-const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredWorkData.slice(
     indexOfFirstItem,
     indexOfLastItem
@@ -213,7 +421,7 @@ const indexOfFirstItem = indexOfLastItem - itemsPerPage;
         onPaymentFieldChange={handlePaymentFieldChange}
         onPaymentUpdate={handlePaymentUpdate}
         updatingPayment={updatingPayment}
-        userRole = {userRole}
+        userRole={userRole}
       />
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -239,14 +447,17 @@ const indexOfFirstItem = indexOfLastItem - itemsPerPage;
               <tr>
                 {[
                   "Name",
-                  "Unique Name",
+                  "Unique ID",
+                  "Service",
+
                   "Pax",
                   "Country",
                   "Submission Date",
                   "Payment",
                   "Payment Status",
+
+                  "Work Status",
                   "Assigned To",
-                  "Status",
                   "Work Records",
                   "Payment Details",
                   "Actions",
@@ -271,20 +482,26 @@ const indexOfFirstItem = indexOfLastItem - itemsPerPage;
                       {work.name}
                     </div>
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-700">
+                      {work.uuId || "—"}
+                    </div>
+                  </td>
 
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <input
-                      type="text"
-                      value={work.uniqueName || ""}
+                    <select
+                      value={work.service || "Choose a service"}
                       onChange={(e) =>
-                        handleFieldChange(
-                          work._id,
-                          "uniqueName",
-                          e.target.value
-                        )
+                        handleFieldChange(work._id, "service", e.target.value)
                       }
-                      className="w-20 px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
+                      className=" px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    >
+                      {serviceOptions.map((service) => (
+                        <option key={service} value={service}>
+                          {service}
+                        </option>
+                      ))}
+                    </select>
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -299,14 +516,24 @@ const indexOfFirstItem = indexOfLastItem - itemsPerPage;
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <input
-                      type="text"
-                      value={work.country || ""}
-                      onChange={(e) =>
-                        handleFieldChange(work._id, "country", e.target.value)
-                      }
-                      className="w-24 px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
+                    <select
+                      multiple
+                      value={Array.isArray(work.country) ? work.country : []}
+                      onChange={(e) => {
+                        const selectedOptions = Array.from(
+                          e.target.selectedOptions,
+                          (option) => option.value
+                        );
+                        handleFieldChange(work._id, "country", selectedOptions);
+                      }}
+                      className="w-40 h-24 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm overflow-y-auto"
+                    >
+                      {countries.map((country) => (
+                        <option key={country} value={country}>
+                          {country}
+                        </option>
+                      ))}
+                    </select>
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -327,7 +554,7 @@ const indexOfFirstItem = indexOfLastItem - itemsPerPage;
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="relative">
                       <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-                        $
+                        ৳
                       </span>
                       <input
                         type="number"
@@ -368,27 +595,6 @@ const indexOfFirstItem = indexOfLastItem - itemsPerPage;
 
                   <td className="px-6 py-4 whitespace-nowrap">
                     <select
-                      value={work.employeeEmail || ""}
-                      onChange={(e) =>
-                        handleFieldChange(
-                          work._id,
-                          "employeeEmail",
-                          e.target.value
-                        )
-                      }
-                      className="w-full px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    >
-                      <option value="">Select</option>
-                      {employees.map((emp) => (
-                        <option key={emp._id} value={emp.email}>
-                          {emp.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <select
                       value={work.status || "draft"}
                       onChange={(e) =>
                         handleFieldChange(work._id, "status", e.target.value)
@@ -399,8 +605,29 @@ const indexOfFirstItem = indexOfLastItem - itemsPerPage;
                     >
                       <option value="pending">Pending</option>
                       <option value="completed">Completed</option>
-                      <option value="draft">Draft</option>
-                      <option value="more_info">Pending More Info</option>
+                      {/* <option value="draft">Draft</option>
+                      <option value="more_info">Pending More Info</option> */}
+                    </select>
+                  </td>
+
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <select
+                      value={work.employeeEmail || ""}
+                      onChange={(e) =>
+                        handleFieldChange(
+                          work._id,
+                          "employeeEmail",
+                          e.target.value
+                        )
+                      }
+                      className="px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    >
+                      <option value="">Select</option>
+                      {employees.map((emp) => (
+                        <option key={emp._id} value={emp.email}>
+                          {emp.name}
+                        </option>
+                      ))}
                     </select>
                   </td>
 
@@ -431,6 +658,7 @@ const indexOfFirstItem = indexOfLastItem - itemsPerPage;
                       onClick={() =>
                         handleUpdate(work._id, {
                           uniqueName: work.uniqueName,
+                          service: work.service,
                           pax: work.pax,
                           country: work.country,
                           submissionDate: work.submissionDate,

@@ -30,7 +30,14 @@ const PipelineTable = ({ userRole }) => {
           : "/works/pipeline";
 
       const res = await axios.get(pipelineEndpoint);
-      setPipeline(res.data.data);
+      const normalized = res.data.data.map((item) => ({
+        ...item,
+        status: pipelineStatusOptions.includes(item.status)
+          ? item.status
+          : "choose an option",
+      }));
+
+      setPipeline(normalized);
     } catch (err) {
       toast.error(err.response?.data?.message || err.message);
     } finally {
@@ -38,15 +45,17 @@ const PipelineTable = ({ userRole }) => {
     }
   };
 
-  const handleStatusChange = async (itemId, workId, newStatus) => {
+  const handleStatusChange = async (itemId, newStatus) => {
+    if (newStatus === "choose an option") return; // ignore invalid updates
+
     setUpdatingId(itemId);
 
-    console.log("item id from pipeline: :", itemId);
     try {
       await axios.patch(`/leads/confirm-Leads-workId/${itemId}`, {
         status: newStatus,
       });
 
+      // Update the local state immediately
       setPipeline((prev) =>
         prev.map((item) =>
           item._id === itemId ? { ...item, status: newStatus } : item
@@ -56,6 +65,7 @@ const PipelineTable = ({ userRole }) => {
       toast.success(`Status updated to "${newStatus}"`);
     } catch (err) {
       toast.error(err.response?.data?.message || err.message);
+      // Refresh the data if there was an error
       fetchPipeline();
     } finally {
       setUpdatingId(null);
@@ -105,6 +115,9 @@ const PipelineTable = ({ userRole }) => {
         <tbody className="bg-white divide-y divide-gray-200">
           {pipeline.map((item) => {
             const isDisabled = updatingId === item._id;
+            const displayStatus = pipelineStatusOptions.includes(item.status)
+              ? item.status
+              : "choose an option";
 
             return (
               <tr key={item._id}>
@@ -120,31 +133,21 @@ const PipelineTable = ({ userRole }) => {
                       statusColors[item.status] || "bg-gray-100 text-gray-800"
                     }`}
                   >
-                    {item.status}
+                    {displayStatus}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-500">
                   <div className="relative">
                     <select
-                      value={item.status}
+                      value={displayStatus}
                       onChange={(e) =>
-                        handleStatusChange(
-                          item._id,
-                          item.workId,
-                          e.target.value
-                        )
+                        handleStatusChange(item._id, e.target.value)
                       }
                       disabled={isDisabled}
                       className={`appearance-none border rounded-lg px-3 py-2 text-sm w-40 focus:outline-none focus:ring-2 focus:ring-blue-300
-                        ${
-                          statusColors[item.status] ||
-                          "bg-gray-100 text-gray-800"
-                        }
-                        ${
-                          isDisabled
-                            ? "cursor-not-allowed opacity-70"
-                            : "cursor-pointer"
-                        }`}
+    ${statusColors[item.status] || "bg-gray-100 text-gray-800"}
+    ${isDisabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"}
+  `}
                     >
                       {pipelineStatusOptions.map((status) => (
                         <option key={status} value={status}>
@@ -152,6 +155,7 @@ const PipelineTable = ({ userRole }) => {
                         </option>
                       ))}
                     </select>
+
                     <ChevronDown className="absolute right-2 top-3 h-4 w-4 pointer-events-none" />
                   </div>
                   {updatingId === item._id && (
