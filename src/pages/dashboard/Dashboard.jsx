@@ -21,6 +21,8 @@ import SalaryCommission from "../../components/dashboard/superAdmin/SalaryCommis
 import SalesPipeline from "../../components/dashboard/superAdmin/SalesPipeline";
 import PipelineTable from "../../components/PiplelineTable";
 import PaymentApprove from "../../components/dashboard/superAdmin/PaymentApprove";
+import NotificationPanel from "../../components/NotificationPanel";
+import { FaBell } from "react-icons/fa";
 
 // Tab mapping with role-based visibility
 const allTabs = [
@@ -76,6 +78,7 @@ const Dashboard = () => {
   const [selectedTab, setSelectedTab] = useState("Leads");
   const [user, setUser] = useState(null);
   const [tabs, setTabs] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     const token = Cookies.get("token");
@@ -187,24 +190,47 @@ const Dashboard = () => {
             Welcome, {user.name}
           </h1>
 
-          {/* Profile Info */}
-          <div
-            className="flex items-center gap-3 cursor-pointer hover:bg-gray-100 p-2 rounded"
-            onClick={() => setSelectedTab("My Profile")}
-          >
-            {user.photo ? (
-              <img
-                src={user.photo}
-                alt="Profile"
-                className="h-10 w-10 rounded-full object-cover"
-                loading="lazy"
-              />
-            ) : (
-              <FaUserCircle className="h-10 w-10 text-gray-400" />
-            )}
-            <div className="text-right">
-              <p className="text-sm font-semibold">{user.name}</p>
-              <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+          <div className="flex items-center gap-4">
+            {/* Notification Bell */}
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="p-2 rounded-full hover:bg-gray-100 relative"
+              >
+                <FaBell className="h-5 w-5 text-gray-600" />
+                {/* Notification badge - optional */}
+                <span className="absolute top-0 right-0 bg-red-500 text-white rounded-full text-xs w-4 h-4 flex items-center justify-center">
+                  3
+                </span>
+              </button>
+
+              {/* Notification Panel */}
+              {showNotifications && (
+                <NotificationPanel
+                  onClose={() => setShowNotifications(false)}
+                />
+              )}
+            </div>
+
+            {/* Profile Info */}
+            <div
+              className="flex items-center gap-3 cursor-pointer hover:bg-gray-100 p-2 rounded"
+              onClick={() => setSelectedTab("My Profile")}
+            >
+              {user.photo ? (
+                <img
+                  src={user.photo}
+                  alt="Profile"
+                  className="h-10 w-10 rounded-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <FaUserCircle className="h-10 w-10 text-gray-400" />
+              )}
+              <div className="text-right">
+                <p className="text-sm font-semibold">{user.name}</p>
+                <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+              </div>
             </div>
           </div>
         </header>
