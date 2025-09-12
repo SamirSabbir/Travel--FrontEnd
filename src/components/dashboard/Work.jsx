@@ -422,6 +422,7 @@ const Work = ({ userRole }) => {
         onPaymentUpdate={handlePaymentUpdate}
         updatingPayment={updatingPayment}
         userRole={userRole}
+        workId={paymentDetails?.workId} // Add this line
       />
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
