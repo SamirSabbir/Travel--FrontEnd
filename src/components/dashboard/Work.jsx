@@ -343,25 +343,25 @@ const Work = ({ userRole }) => {
     setFilteredWorkData(filtered);
   }, [searchTerm, workData]);
 
-  const handleUpdate = async (id, updatedFields) => {
-    setUpdatingId(id);
-    try {
-      if (userRole === "AccountAdmin") {
-        await axios.patch(`/works/update-work-account-admin/${id}`, {
-          payment: updatedFields.payment,
-          paymentStatus: updatedFields.paymentStatus,
-        });
-      } else {
-        await axios.patch(`/works/update-work-employee/${id}`, updatedFields);
-      }
-      toast.success("Work updated successfully");
-      await fetchWorks();
-    } catch (err) {
-      toast.error("Failed to update work");
-    } finally {
-      setUpdatingId(null);
-    }
-  };
+  // const handleUpdate = async (id, updatedFields) => {
+  //   setUpdatingId(id);
+  //   try {
+  //     if (userRole === "AccountAdmin") {
+  //       await axios.patch(`/works/update-work-account-admin/${id}`, {
+  //         payment: updatedFields.payment,
+  //         paymentStatus: updatedFields.paymentStatus,
+  //       });
+  //     } else {
+  //       await axios.patch(`/works/update-work-employee/${id}`, updatedFields);
+  //     }
+  //     toast.success("Work updated successfully");
+  //     await fetchWorks();
+  //   } catch (err) {
+  //     toast.error("Failed to update work");
+  //   } finally {
+  //     setUpdatingId(null);
+  //   }
+  // };
 
   const handleFieldChange = (id, field, value) => {
     setWorkData((prev) =>
@@ -557,41 +557,24 @@ const Work = ({ userRole }) => {
                       <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
                         ৳
                       </span>
-                      <input
-                        type="number"
-                        value={work.payment || ""}
-                        onChange={(e) =>
-                          handleFieldChange(work._id, "payment", e.target.value)
-                        }
-                        className="pl-7 w-24 px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        disabled={
-                          userRole !== "AccountAdmin" && userRole !== "Admin"
-                        }
-                      />
+                      <span
+                        className={`px-3 py-1 rounded-md text-xs font-medium ${getStatusColor(
+                          work.payment
+                        )}`}
+                      >
+                        {work.payment || "N/A"}
+                      </span>
                     </div>
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <select
-                      value={work.paymentStatus || ""}
-                      onChange={(e) =>
-                        handleFieldChange(
-                          work._id,
-                          "paymentStatus",
-                          e.target.value
-                        )
-                      }
-                      className={`px-3 py-1 rounded-md text-xs font-medium ${getPaymentStatusColor(
+                    <span
+                      className={`px-3 py-1 rounded-md text-xs font-medium ${getStatusColor(
                         work.paymentStatus
-                      )} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-                      disabled={
-                        userRole !== "AccountAdmin" && userRole !== "Admin"
-                      }
+                      )}`}
                     >
-                      <option value="">Select Status</option>
-                      <option value="Partial Payment">Partial Payment</option>
-                      <option value="Full Payment">Full Payment</option>
-                    </select>
+                      {work.paymentStatus || "N/A"}
+                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
@@ -653,19 +636,19 @@ const Work = ({ userRole }) => {
 
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
-                      onClick={() =>
-                        handleUpdate(work._id, {
-                          uniqueName: work.uniqueName,
-                          service: work.service,
-                          pax: work.pax,
-                          country: work.country,
-                          submissionDate: work.submissionDate,
-                          payment: work.payment,
-                          paymentStatus: work.paymentStatus,
-                          employeeEmail: work.employeeEmail,
-                          status: work.status,
-                        })
-                      }
+                      // onClick={() =>
+                      //   handleUpdate(work._id, {
+                      //     uniqueName: work.uniqueName,
+                      //     service: work.service,
+                      //     pax: work.pax,
+                      //     country: work.country,
+                      //     submissionDate: work.submissionDate,
+                      //     payment: work.payment,
+                      //     paymentStatus: work.paymentStatus,
+                      //     employeeEmail: work.employeeEmail,
+                      //     status: work.status,
+                      //   })
+                      // }
                       disabled={updatingId === work._id}
                       className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                     >
