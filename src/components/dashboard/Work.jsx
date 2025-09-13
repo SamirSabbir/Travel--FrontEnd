@@ -593,22 +593,14 @@ const Work = ({ userRole }) => {
                       <option value="Full Payment">Full Payment</option>
                     </select>
                   </td>
-
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <select
-                      value={work.status || "draft"}
-                      onChange={(e) =>
-                        handleFieldChange(work._id, "status", e.target.value)
-                      }
+                    <span
                       className={`px-3 py-1 rounded-md text-xs font-medium ${getStatusColor(
-                        work.status
-                      )} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                        work.workStatus
+                      )}`}
                     >
-                      <option value="pending">Pending</option>
-                      <option value="completed">Completed</option>
-                      {/* <option value="draft">Draft</option>
-                      <option value="more_info">Pending More Info</option> */}
-                    </select>
+                      {work.workStatus || "N/A"}
+                    </span>
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -621,7 +613,12 @@ const Work = ({ userRole }) => {
                           e.target.value
                         )
                       }
-                      className="px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      disabled={work.workStatus !== "Completed"}
+                      className={`px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm ${
+                        work.workStatus !== "Completed"
+                          ? "bg-gray-100 cursor-not-allowed"
+                          : ""
+                      }`}
                     >
                       <option value="">Select</option>
                       {employees.map((emp) => (
