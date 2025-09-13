@@ -6,13 +6,11 @@ import Sales from "../../components/dashboard/Sales";
 import Work from "../../components/dashboard/Work";
 import Pipeline from "../../components/dashboard/Pipeline";
 import VisaProcessing from "../../components/dashboard/VisaProcessing";
-// import Invoice from "../../components/dashboard/Invoice";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Cookies from "js-cookie";
 import Approval from "../../components/dashboard/Approval";
-// import AdminPipeline from "../../components/dashboard/AdminPipeline";
 import AccountInfo from "../../components/account-admin/AccountInfo";
 import Invoice from "../../components/account-admin/Invoice";
 import MyBusiness from "../../components/dashboard/superAdmin/MyBusiness";
@@ -23,11 +21,11 @@ import PipelineTable from "../../components/PiplelineTable";
 import PaymentApprove from "../../components/dashboard/superAdmin/PaymentApprove";
 import NotificationPanel from "../../components/NotificationPanel";
 import { FaBell } from "react-icons/fa";
+import { io } from "socket.io-client";
 
 // Tab mapping with role-based visibility
 const allTabs = [
   { name: "Leads Management", component: Leads, roles: ["superAdmin"] },
-  // { name: "Sales", component: Sales, roles: ["employee", "hr", "admin"] },
   { name: "Leads", component: Sales, roles: ["employee", "superAdmin"] },
   {
     name: "Pipeline",
@@ -39,22 +37,18 @@ const allTabs = [
     component: Work,
     roles: ["employee", "AccountAdmin", "superAdmin"],
   },
-  // { name: "Pipeline", component: Pipeline, roles: ["hr", "admin"] },
   {
     name: "Visa Processing",
     component: VisaProcessing,
     roles: ["employee"],
   },
-  // { name: "Invoice", component: Invoice, roles: ["admin"] },
   { name: "Approval", component: Approval, roles: ["superAdmin"] },
-  // { name: "Pipeline", component: AdminPipeline, roles: ["superAdmin"] },
   {
     name: "Payment Approve",
     component: PaymentApprove,
     roles: ["superAdmin", "AccountAdmin"],
   },
   { name: "Account-Info", component: AccountInfo, roles: ["AccountAdmin"] },
-  // { name: "Invoice", component: Invoice, roles: ["AccountAdmin"] },
   { name: "My-Business", component: MyBusiness, roles: ["superAdmin"] },
   {
     name: "My Profile",
@@ -79,10 +73,11 @@ const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [tabs, setTabs] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [socket, setSocket] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const token = Cookies.get("token");
-    // const userData = JSON.parse(Cookies.get("user"));
     const userCookie = Cookies.get("user");
 
     if (!token || !userCookie) {
@@ -92,7 +87,7 @@ const Dashboard = () => {
 
     let userData;
     try {
-      userData = JSON.parse(userCookie); // Always parse since we stringify when setting
+      userData = JSON.parse(userCookie);
     } catch (error) {
       console.error("Failed to parse user cookie:", error);
       navigate("/login");
@@ -105,7 +100,6 @@ const Dashboard = () => {
       return;
     }
 
-    // Normalize role for comparison (handle both "Admin" and "admin")
     const normalizedUserRole = userData.role.toLowerCase();
     setUser(userData);
 
@@ -115,13 +109,37 @@ const Dashboard = () => {
 
     setTabs(availableTabs);
 
-    // Reset to first available tab if current selection not available
     if (!availableTabs.some((tab) => tab.name === selectedTab)) {
       setSelectedTab(availableTabs[0]?.name || "");
+    }
+
+    // Initialize Socket.IO connection
+    if (userData.email) {
+      const newSocket = io("http://localhost:5000");
+      setSocket(newSocket);
+
+      // Join user's room for targeted notifications
+      newSocket.emit("join-user-room", userData.email);
+
+      // Listen for new notifications
+      newSocket.on("new-notification", (notification) => {
+        setUnreadCount((prev) => prev + 1);
+        toast.info(notification.message, {
+          position: "top-right",
+          autoClose: 5000,
+        });
+      });
+
+      return () => {
+        newSocket.close();
+      };
     }
   }, [navigate]);
 
   const handleLogout = () => {
+    if (socket) {
+      socket.close();
+    }
     Cookies.remove("token");
     Cookies.remove("user");
     toast.success("Logged out successfully");
@@ -153,7 +171,7 @@ const Dashboard = () => {
           </span>
         </div>
 
-        {/* Tab List - Make this scrollable */}
+        {/* Tab List */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-2">
           {tabs.map((tab) => (
             <button
@@ -170,7 +188,7 @@ const Dashboard = () => {
           ))}
         </nav>
 
-        {/* Logout Button - Ensure it stays at bottom */}
+        {/* Logout Button */}
         <div className="p-4 border-t border-gray-200 mt-auto">
           <button
             onClick={handleLogout}
@@ -184,7 +202,6 @@ const Dashboard = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col bg-[#ECF4FB]">
         {/* Top Header */}
-
         <header className="bg-white shadow px-6 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold text-gray-700">
             Welcome, {user.name}
@@ -198,16 +215,20 @@ const Dashboard = () => {
                 className="p-2 rounded-full hover:bg-gray-100 relative"
               >
                 <FaBell className="h-5 w-5 text-gray-600" />
-                {/* Notification badge - optional */}
-                <span className="absolute top-0 right-0 bg-red-500 text-white rounded-full text-xs w-4 h-4 flex items-center justify-center">
-                  3
-                </span>
+                {unreadCount > 0 && (
+                  <span className="absolute top-0 right-0 bg-red-500 text-white rounded-full text-xs w-4 h-4 flex items-center justify-center">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
               </button>
 
               {/* Notification Panel */}
               {showNotifications && (
                 <NotificationPanel
                   onClose={() => setShowNotifications(false)}
+                  userEmail={user.email}
+                  socket={socket}
+                  setUnreadCount={setUnreadCount}
                 />
               )}
             </div>
