@@ -416,7 +416,7 @@ const PaymentDetailsModal = ({
                       {" "}
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {" "}
-                        Net Amount{" "}
+                        Payment{" "}
                       </label>{" "}
                       <div className="relative">
                         {" "}

@@ -22,6 +22,10 @@ import PaymentApprove from "../../components/dashboard/superAdmin/PaymentApprove
 import NotificationPanel from "../../components/NotificationPanel";
 import { FaBell } from "react-icons/fa";
 import { io } from "socket.io-client";
+import Hotel from "../../components/dashboard/Hotel";
+import AirTicket from "../../components/dashboard/AirTicket";
+import TourPackage from "../../components/dashboard/TourPackage";
+import AppointmentDate from "../../components/dashboard/AppointmentDate";
 
 // Tab mapping with role-based visibility
 const allTabs = [
@@ -37,12 +41,35 @@ const allTabs = [
     component: Work,
     roles: ["employee", "AccountAdmin", "superAdmin"],
   },
+
+  { name: "Approval", component: Approval, roles: ["superAdmin"] },
   {
     name: "Visa Processing",
     component: VisaProcessing,
-    roles: ["employee"],
+    roles: ["employee", "superAdmin"],
   },
-  { name: "Approval", component: Approval, roles: ["superAdmin"] },
+  {
+    name: "Hotel",
+    component: Hotel,
+    roles: ["employee", "superAdmin"],
+  },
+  {
+    name: "Air Ticket",
+    component: AirTicket,
+    roles: ["employee", "superAdmin"],
+  },
+  {
+    name: "Tour Package",
+    component: TourPackage,
+    roles: ["employee", "superAdmin"],
+  },
+
+  {
+    name: "Appointment Date",
+    component: AppointmentDate,
+    roles: ["employee", "superAdmin"],
+  },
+
   {
     name: "Payment Approve",
     component: PaymentApprove,

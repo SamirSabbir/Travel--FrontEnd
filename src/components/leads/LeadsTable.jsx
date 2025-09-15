@@ -55,6 +55,8 @@ const LeadsTable = ({
   const currentLeads = sortedLeads.slice(indexOfFirstLead, indexOfLastLead);
   const totalPages = Math.ceil(sortedLeads.length / pageSize);
 
+  console.log("unique id", leads);
+
   return (
     <div className="bg-white rounded-xl shadow-md border overflow-hidden">
       <div className="overflow-x-auto">
@@ -74,6 +76,9 @@ const LeadsTable = ({
                     </span>
                   )}
                 </div>
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Unique ID
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Phone
@@ -119,6 +124,9 @@ const LeadsTable = ({
               <tr key={lead._id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {lead.customerName}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {lead.uuId || "—"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {lead.customerPhone}
