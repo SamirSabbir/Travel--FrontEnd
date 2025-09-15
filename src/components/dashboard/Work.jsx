@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { Loader2, Save, Search } from "lucide-react";
 import WorkRecordsModal from "../work/WorkRecordModal";
 import PaymentDetailsModal from "../work/PaymentDetailsModal";
+import Select from "react-select";
 
 const Work = ({ userRole }) => {
   const [workData, setWorkData] = useState([]);
@@ -14,217 +15,223 @@ const Work = ({ userRole }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const countries = [
-    "Afghanistan",
-    "Albania",
-    "Algeria",
-    "Andorra",
-    "Angola",
-    "Antigua and Barbuda",
-    "Argentina",
-    "Armenia",
-    "Australia",
-    "Austria",
-    "Azerbaijan",
-    "Bahamas",
-    "Bahrain",
-    "Bangladesh",
-    "Barbados",
-    "Belarus",
-    "Belgium",
-    "Belize",
-    "Benin",
-    "Bhutan",
-    "Bolivia",
-    "Bosnia and Herzegovina",
-    "Botswana",
-    "Brazil",
-    "Brunei",
-    "Bulgaria",
-    "Burkina Faso",
-    "Burundi",
-    "Cabo Verde",
-    "Cambodia",
-    "Cameroon",
-    "Canada",
-    "Central African Republic",
-    "Chad",
-    "Chile",
-    "China",
-    "Colombia",
-    "Comoros",
-    "Congo (Congo-Brazzaville)",
-    "Costa Rica",
-    "Croatia",
-    "Cuba",
-    "Cyprus",
-    "Czechia (Czech Republic)",
-    "Democratic Republic of the Congo",
-    "Denmark",
-    "Djibouti",
-    "Dominica",
-    "Dominican Republic",
-    "Ecuador",
-    "Egypt",
-    "El Salvador",
-    "Equatorial Guinea",
-    "Eritrea",
-    "Estonia",
-    "Eswatini (fmr. Swaziland)",
-    "Ethiopia",
-    "Fiji",
-    "Finland",
-    "France",
-    "Gabon",
-    "Gambia",
-    "Georgia",
-    "Germany",
-    "Ghana",
-    "Greece",
-    "Grenada",
-    "Guatemala",
-    "Guinea",
-    "Guinea-Bissau",
-    "Guyana",
-    "Haiti",
-    "Holy See",
-    "Honduras",
-    "Hungary",
-    "Iceland",
-    "India",
-    "Indonesia",
-    "Iran",
-    "Iraq",
-    "Ireland",
-    "Israel",
-    "Italy",
-    "Jamaica",
-    "Japan",
-    "Jordan",
-    "Kazakhstan",
-    "Kenya",
-    "Kiribati",
-    "Kuwait",
-    "Kyrgyzstan",
-    "Laos",
-    "Latvia",
-    "Lebanon",
-    "Lesotho",
-    "Liberia",
-    "Libya",
-    "Liechtenstein",
-    "Lithuania",
-    "Luxembourg",
-    "Madagascar",
-    "Malawi",
-    "Malaysia",
-    "Maldives",
-    "Mali",
-    "Malta",
-    "Marshall Islands",
-    "Mauritania",
-    "Mauritius",
-    "Mexico",
-    "Micronesia",
-    "Moldova",
-    "Monaco",
-    "Mongolia",
-    "Montenegro",
-    "Morocco",
-    "Mozambique",
-    "Myanmar (Burma)",
-    "Namibia",
-    "Nauru",
-    "Nepal",
-    "Netherlands",
-    "New Zealand",
-    "Nicaragua",
-    "Niger",
-    "Nigeria",
-    "North Korea",
-    "North Macedonia",
-    "Norway",
-    "Oman",
-    "Pakistan",
-    "Palau",
-    "Palestine State",
-    "Panama",
-    "Papua New Guinea",
-    "Paraguay",
-    "Peru",
-    "Philippines",
-    "Poland",
-    "Portugal",
-    "Qatar",
-    "Romania",
-    "Russia",
-    "Rwanda",
-    "Saint Kitts and Nevis",
-    "Saint Lucia",
-    "Saint Vincent and the Grenadines",
-    "Samoa",
-    "San Marino",
-    "Sao Tome and Principe",
-    "Saudi Arabia",
-    "Senegal",
-    "Serbia",
-    "Seychelles",
-    "Sierra Leone",
-    "Singapore",
-    "Slovakia",
-    "Slovenia",
-    "Solomon Islands",
-    "Somalia",
-    "South Africa",
-    "South Korea",
-    "South Sudan",
-    "Spain",
-    "Sri Lanka",
-    "Sudan",
-    "Suriname",
-    "Sweden",
-    "Switzerland",
-    "Syria",
-    "Taiwan",
-    "Tajikistan",
-    "Tanzania",
-    "Thailand",
-    "Timor-Leste",
-    "Togo",
-    "Tonga",
-    "Trinidad and Tobago",
-    "Tunisia",
-    "Turkey",
-    "Turkmenistan",
-    "Tuvalu",
-    "Uganda",
-    "Ukraine",
-    "United Arab Emirates",
-    "United Kingdom",
-    "United States of America",
-    "Uruguay",
-    "Uzbekistan",
-    "Vanuatu",
-    "Venezuela",
-    "Vietnam",
-    "Yemen",
-    "Zambia",
-    "Zimbabwe",
+    { value: "Afghanistan", label: "Afghanistan" },
+    { value: "Albania", label: "Albania" },
+    { value: "Algeria", label: "Algeria" },
+    { value: "Andorra", label: "Andorra" },
+    { value: "Angola", label: "Angola" },
+    { value: "Antigua and Barbuda", label: "Antigua and Barbuda" },
+    { value: "Argentina", label: "Argentina" },
+    { value: "Armenia", label: "Armenia" },
+    { value: "Australia", label: "Australia" },
+    { value: "Austria", label: "Austria" },
+    { value: "Azerbaijan", label: "Azerbaijan" },
+    { value: "Bahamas", label: "Bahamas" },
+    { value: "Bahrain", label: "Bahrain" },
+    { value: "Bangladesh", label: "Bangladesh" },
+    { value: "Barbados", label: "Barbados" },
+    { value: "Belarus", label: "Belarus" },
+    { value: "Belgium", label: "Belgium" },
+    { value: "Belize", label: "Belize" },
+    { value: "Benin", label: "Benin" },
+    { value: "Bhutan", label: "Bhutan" },
+    { value: "Bolivia", label: "Bolivia" },
+    { value: "Bosnia and Herzegovina", label: "Bosnia and Herzegovina" },
+    { value: "Botswana", label: "Botswana" },
+    { value: "Brazil", label: "Brazil" },
+    { value: "Brunei", label: "Brunei" },
+    { value: "Bulgaria", label: "Bulgaria" },
+    { value: "Burkina Faso", label: "Burkina Faso" },
+    { value: "Burundi", label: "Burundi" },
+    { value: "Cabo Verde", label: "Cabo Verde" },
+    { value: "Cambodia", label: "Cambodia" },
+    { value: "Cameroon", label: "Cameroon" },
+    { value: "Canada", label: "Canada" },
+    { value: "Central African Republic", label: "Central African Republic" },
+    { value: "Chad", label: "Chad" },
+    { value: "Chile", label: "Chile" },
+    { value: "China", label: "China" },
+    { value: "Colombia", label: "Colombia" },
+    { value: "Comoros", label: "Comoros" },
+    { value: "Congo (Congo-Brazzaville)", label: "Congo (Congo-Brazzaville)" },
+    { value: "Costa Rica", label: "Costa Rica" },
+    { value: "Croatia", label: "Croatia" },
+    { value: "Cuba", label: "Cuba" },
+    { value: "Cyprus", label: "Cyprus" },
+    { value: "Czechia (Czech Republic)", label: "Czechia (Czech Republic)" },
+    {
+      value: "Democratic Republic of the Congo",
+      label: "Democratic Republic of the Congo",
+    },
+    { value: "Denmark", label: "Denmark" },
+    { value: "Djibouti", label: "Djibouti" },
+    { value: "Dominica", label: "Dominica" },
+    { value: "Dominican Republic", label: "Dominican Republic" },
+    { value: "Ecuador", label: "Ecuador" },
+    { value: "Egypt", label: "Egypt" },
+    { value: "El Salvador", label: "El Salvador" },
+    { value: "Equatorial Guinea", label: "Equatorial Guinea" },
+    { value: "Eritrea", label: "Eritrea" },
+    { value: "Estonia", label: "Estonia" },
+    { value: "Eswatini (fmr. Swaziland)", label: "Eswatini (fmr. Swaziland)" },
+    { value: "Ethiopia", label: "Ethiopia" },
+    { value: "Fiji", label: "Fiji" },
+    { value: "Finland", label: "Finland" },
+    { value: "France", label: "France" },
+    { value: "Gabon", label: "Gabon" },
+    { value: "Gambia", label: "Gambia" },
+    { value: "Georgia", label: "Georgia" },
+    { value: "Germany", label: "Germany" },
+    { value: "Ghana", label: "Ghana" },
+    { value: "Greece", label: "Greece" },
+    { value: "Grenada", label: "Grenada" },
+    { value: "Guatemala", label: "Guatemala" },
+    { value: "Guinea", label: "Guinea" },
+    { value: "Guinea-Bissau", label: "Guinea-Bissau" },
+    { value: "Guyana", label: "Guyana" },
+    { value: "Haiti", label: "Haiti" },
+    { value: "Holy See", label: "Holy See" },
+    { value: "Honduras", label: "Honduras" },
+    { value: "Hungary", label: "Hungary" },
+    { value: "Iceland", label: "Iceland" },
+    { value: "India", label: "India" },
+    { value: "Indonesia", label: "Indonesia" },
+    { value: "Iran", label: "Iran" },
+    { value: "Iraq", label: "Iraq" },
+    { value: "Ireland", label: "Ireland" },
+    { value: "Israel", label: "Israel" },
+    { value: "Italy", label: "Italy" },
+    { value: "Jamaica", label: "Jamaica" },
+    { value: "Japan", label: "Japan" },
+    { value: "Jordan", label: "Jordan" },
+    { value: "Kazakhstan", label: "Kazakhstan" },
+    { value: "Kenya", label: "Kenya" },
+    { value: "Kiribati", label: "Kiribati" },
+    { value: "Kuwait", label: "Kuwait" },
+    { value: "Kyrgyzstan", label: "Kyrgyzstan" },
+    { value: "Laos", label: "Laos" },
+    { value: "Latvia", label: "Latvia" },
+    { value: "Lebanon", label: "Lebanon" },
+    { value: "Lesotho", label: "Lesotho" },
+    { value: "Liberia", label: "Liberia" },
+    { value: "Libya", label: "Libya" },
+    { value: "Liechtenstein", label: "Liechtenstein" },
+    { value: "Lithuania", label: "Lithuania" },
+    { value: "Luxembourg", label: "Luxembourg" },
+    { value: "Madagascar", label: "Madagascar" },
+    { value: "Malawi", label: "Malawi" },
+    { value: "Malaysia", label: "Malaysia" },
+    { value: "Maldives", label: "Maldives" },
+    { value: "Mali", label: "Mali" },
+    { value: "Malta", label: "Malta" },
+    { value: "Marshall Islands", label: "Marshall Islands" },
+    { value: "Mauritania", label: "Mauritania" },
+    { value: "Mauritius", label: "Mauritius" },
+    { value: "Mexico", label: "Mexico" },
+    { value: "Micronesia", label: "Micronesia" },
+    { value: "Moldova", label: "Moldova" },
+    { value: "Monaco", label: "Monaco" },
+    { value: "Mongolia", label: "Mongolia" },
+    { value: "Montenegro", label: "Montenegro" },
+    { value: "Morocco", label: "Morocco" },
+    { value: "Mozambique", label: "Mozambique" },
+    { value: "Myanmar (Burma)", label: "Myanmar (Burma)" },
+    { value: "Namibia", label: "Namibia" },
+    { value: "Nauru", label: "Nauru" },
+    { value: "Nepal", label: "Nepal" },
+    { value: "Netherlands", label: "Netherlands" },
+    { value: "New Zealand", label: "New Zealand" },
+    { value: "Nicaragua", label: "Nicaragua" },
+    { value: "Niger", label: "Niger" },
+    { value: "Nigeria", label: "Nigeria" },
+    { value: "North Korea", label: "North Korea" },
+    { value: "North Macedonia", label: "North Macedonia" },
+    { value: "Norway", label: "Norway" },
+    { value: "Oman", label: "Oman" },
+    { value: "Pakistan", label: "Pakistan" },
+    { value: "Palau", label: "Palau" },
+    { value: "Palestine State", label: "Palestine State" },
+    { value: "Panama", label: "Panama" },
+    { value: "Papua New Guinea", label: "Papua New Guinea" },
+    { value: "Paraguay", label: "Paraguay" },
+    { value: "Peru", label: "Peru" },
+    { value: "Philippines", label: "Philippines" },
+    { value: "Poland", label: "Poland" },
+    { value: "Portugal", label: "Portugal" },
+    { value: "Qatar", label: "Qatar" },
+    { value: "Romania", label: "Romania" },
+    { value: "Russia", label: "Russia" },
+    { value: "Rwanda", label: "Rwanda" },
+    { value: "Saint Kitts and Nevis", label: "Saint Kitts and Nevis" },
+    { value: "Saint Lucia", label: "Saint Lucia" },
+    {
+      value: "Saint Vincent and the Grenadines",
+      label: "Saint Vincent and the Grenadines",
+    },
+    { value: "Samoa", label: "Samoa" },
+    { value: "San Marino", label: "San Marino" },
+    { value: "Sao Tome and Principe", label: "Sao Tome and Principe" },
+    { value: "Saudi Arabia", label: "Saudi Arabia" },
+    { value: "Senegal", label: "Senegal" },
+    { value: "Serbia", label: "Serbia" },
+    { value: "Seychelles", label: "Seychelles" },
+    { value: "Sierra Leone", label: "Sierra Leone" },
+    { value: "Singapore", label: "Singapore" },
+    { value: "Slovakia", label: "Slovakia" },
+    { value: "Slovenia", label: "Slovenia" },
+    { value: "Solomon Islands", label: "Solomon Islands" },
+    { value: "Somalia", label: "Somalia" },
+    { value: "South Africa", label: "South Africa" },
+    { value: "South Korea", label: "South Korea" },
+    { value: "South Sudan", label: "South Sudan" },
+    { value: "Spain", label: "Spain" },
+    { value: "Sri Lanka", label: "Sri Lanka" },
+    { value: "Sudan", label: "Sudan" },
+    { value: "Suriname", label: "Suriname" },
+    { value: "Sweden", label: "Sweden" },
+    { value: "Switzerland", label: "Switzerland" },
+    { value: "Syria", label: "Syria" },
+    { value: "Taiwan", label: "Taiwan" },
+    { value: "Tajikistan", label: "Tajikistan" },
+    { value: "Tanzania", label: "Tanzania" },
+    { value: "Thailand", label: "Thailand" },
+    { value: "Timor-Leste", label: "Timor-Leste" },
+    { value: "Togo", label: "Togo" },
+    { value: "Tonga", label: "Tonga" },
+    { value: "Trinidad and Tobago", label: "Trinidad and Tobago" },
+    { value: "Tunisia", label: "Tunisia" },
+    { value: "Turkey", label: "Turkey" },
+    { value: "Turkmenistan", label: "Turkmenistan" },
+    { value: "Tuvalu", label: "Tuvalu" },
+    { value: "Uganda", label: "Uganda" },
+    { value: "Ukraine", label: "Ukraine" },
+    { value: "United Arab Emirates", label: "United Arab Emirates" },
+    { value: "United Kingdom", label: "United Kingdom" },
+    { value: "United States of America", label: "United States of America" },
+    { value: "Uruguay", label: "Uruguay" },
+    { value: "Uzbekistan", label: "Uzbekistan" },
+    { value: "Vanuatu", label: "Vanuatu" },
+    { value: "Venezuela", label: "Venezuela" },
+    { value: "Vietnam", label: "Vietnam" },
+    { value: "Yemen", label: "Yemen" },
+    { value: "Zambia", label: "Zambia" },
+    { value: "Zimbabwe", label: "Zimbabwe" },
   ];
 
   const serviceOptions = [
-    "Choose a service",
-    "Visa Processing",
-    "Hotel",
-    "Air Ticket",
-    "Transfer",
-    "Tour Package",
-    "Appointment Date",
+    { value: "Visa Processing", label: "Visa Processing" },
+    { value: "Hotel", label: "Hotel" },
+    { value: "Air Ticket", label: "Air Ticket" },
+    { value: "Transfer", label: "Transfer" },
+    { value: "Tour Package", label: "Tour Package" },
+    { value: "Appointment Date", label: "Appointment Date" },
   ];
 
   // Work Records Modal State
   const [workRecords, setWorkRecords] = useState([]);
   const [isRecordsModalOpen, setIsRecordsModalOpen] = useState(false);
   const [recordsLoading, setRecordsLoading] = useState(false);
+  const [assignServiceUsers, setAssignServiceUsers] = useState([]);
 
   // Payment Details Modal State
   const [paymentDetails, setPaymentDetails] = useState(null);
@@ -280,6 +287,15 @@ const Work = ({ userRole }) => {
     }
   };
 
+  const fetchAssignServiceUsers = async () => {
+    try {
+      const res = await axios.get("/users/findAllUsers");
+      setAssignServiceUsers(res.data.data);
+    } catch (err) {
+      toast.error("Failed to fetch assign service users");
+    }
+  };
+
   const handlePaymentDetailsClick = (work) => {
     setPaymentDetails(
       work.paymentDetails || {
@@ -331,9 +347,11 @@ const Work = ({ userRole }) => {
   };
 
   useEffect(() => {
-    Promise.all([fetchWorks(), fetchEmployees()]).finally(() =>
-      setLoading(false)
-    );
+    Promise.all([
+      fetchWorks(),
+      fetchEmployees(),
+      fetchAssignServiceUsers(),
+    ]).finally(() => setLoading(false));
   }, [userRole]);
 
   useEffect(() => {
@@ -450,6 +468,7 @@ const Work = ({ userRole }) => {
                   "Name",
                   "Unique ID",
                   "Service",
+                  "Assign Service",
 
                   "Pax",
                   "Country",
@@ -488,18 +507,49 @@ const Work = ({ userRole }) => {
                       {work.uuId || "—"}
                     </div>
                   </td>
-
                   <td className="px-6 py-4 whitespace-nowrap">
+                    <Select
+                      isMulti
+                      options={serviceOptions}
+                      value={serviceOptions.filter((option) =>
+                        Array.isArray(work.service)
+                          ? work.service.includes(option.value)
+                          : work.service === option.value
+                      )}
+                      onChange={(selectedOptions) => {
+                        const selectedValues = selectedOptions
+                          ? selectedOptions.map((option) => option.value)
+                          : [];
+                        handleFieldChange(work._id, "service", selectedValues);
+                      }}
+                      className=" w-48 text-sm"
+                      classNamePrefix="select"
+                      placeholder="Select services..."
+                      closeMenuOnSelect={false}
+                      hideSelectedOptions={false}
+                    />
+                  </td>
+                  <td className="px-2 py-4 whitespace-nowrap">
                     <select
-                      value={work.service || "Choose a service"}
+                      value={work.assignedServiceUser || ""}
                       onChange={(e) =>
-                        handleFieldChange(work._id, "service", e.target.value)
+                        handleFieldChange(
+                          work._id,
+                          "assignedServiceUser",
+                          e.target.value
+                        )
                       }
-                      className=" px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      disabled={work.workStatus !== "Completed"}
+                      className={`px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm ${
+                        work.workStatus !== "Completed"
+                          ? "bg-gray-100 cursor-not-allowed"
+                          : ""
+                      }`}
                     >
-                      {serviceOptions.map((service) => (
-                        <option key={service} value={service}>
-                          {service}
+                      <option value="">Select User</option>
+                      {assignServiceUsers.map((user) => (
+                        <option key={user._id} value={user._id}>
+                          {user.name} ({user.email})
                         </option>
                       ))}
                     </select>
@@ -517,24 +567,27 @@ const Work = ({ userRole }) => {
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <select
-                      multiple
-                      value={Array.isArray(work.country) ? work.country : []}
-                      onChange={(e) => {
-                        const selectedOptions = Array.from(
-                          e.target.selectedOptions,
-                          (option) => option.value
-                        );
-                        handleFieldChange(work._id, "country", selectedOptions);
+                    <Select
+                      isMulti
+                      options={countries}
+                      value={countries.filter((option) =>
+                        Array.isArray(work.country)
+                          ? work.country.includes(option.value)
+                          : work.country === option.value
+                      )}
+                      onChange={(selectedOptions) => {
+                        const selectedValues = selectedOptions
+                          ? selectedOptions.map((option) => option.value)
+                          : [];
+                        handleFieldChange(work._id, "country", selectedValues);
                       }}
-                      className="w-40 h-24 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm overflow-y-auto"
-                    >
-                      {countries.map((country) => (
-                        <option key={country} value={country}>
-                          {country}
-                        </option>
-                      ))}
-                    </select>
+                      className="w-48 text-sm"
+                      classNamePrefix="select"
+                      placeholder="Select countries..."
+                      closeMenuOnSelect={false}
+                      hideSelectedOptions={false}
+                      isSearchable={true}
+                    />
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap">
