@@ -219,12 +219,12 @@ const Work = ({ userRole }) => {
   ];
 
   const serviceOptions = [
-    { value: "Visa Processing", label: "Visa Processing" },
-    { value: "Hotel", label: "Hotel" },
-    { value: "Air Ticket", label: "Air Ticket" },
-    { value: "Transfer", label: "Transfer" },
-    { value: "Tour Package", label: "Tour Package" },
-    { value: "Appointment Date", label: "Appointment Date" },
+    { value: "visa", label: "Visa Processing" },
+    { value: "hotel", label: "Hotel" },
+    { value: "ticket", label: "Air Ticket" },
+    { value: "transfer", label: "Transfer" },
+    { value: "tourPackage", label: "Tour Package" },
+    { value: "appointmentDate", label: "Appointment Date" },
   ];
 
   // Work Records Modal State
@@ -361,26 +361,6 @@ const Work = ({ userRole }) => {
     setFilteredWorkData(filtered);
   }, [searchTerm, workData]);
 
-  // const handleUpdate = async (id, updatedFields) => {
-  //   setUpdatingId(id);
-  //   try {
-  //     if (userRole === "AccountAdmin") {
-  //       await axios.patch(`/works/update-work-account-admin/${id}`, {
-  //         payment: updatedFields.payment,
-  //         paymentStatus: updatedFields.paymentStatus,
-  //       });
-  //     } else {
-  //       await axios.patch(`/works/update-work-employee/${id}`, updatedFields);
-  //     }
-  //     toast.success("Work updated successfully");
-  //     await fetchWorks();
-  //   } catch (err) {
-  //     toast.error("Failed to update work");
-  //   } finally {
-  //     setUpdatingId(null);
-  //   }
-  // };
-
   const handleFieldChange = (id, field, value) => {
     setWorkData((prev) =>
       prev.map((w) => (w._id === id ? { ...w, [field]: value } : w))
@@ -420,6 +400,20 @@ const Work = ({ userRole }) => {
       </div>
     );
   }
+
+  const handleUpdate = async (workId, updateData) => {
+    setUpdatingId(workId);
+    console.log(updateData);
+    try {
+      await axios.patch(`/works/assign-services/${workId}`, updateData);
+      toast.success("Work updated successfully");
+      await fetchWorks(); // Refresh the data
+    } catch (err) {
+      toast.error("Failed to update work");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -522,11 +516,16 @@ const Work = ({ userRole }) => {
                           : [];
                         handleFieldChange(work._id, "service", selectedValues);
                       }}
-                      className=" w-48 text-sm"
+                      className="w-48 text-sm"
                       classNamePrefix="select"
                       placeholder="Select services..."
                       closeMenuOnSelect={false}
                       hideSelectedOptions={false}
+                      maxMenuHeight={200}
+                      menuPortalTarget={document.body} // Add this line
+                      styles={{
+                        menuPortal: (base) => ({ ...base, zIndex: 9999 }), // Ensure high z-index
+                      }}
                     />
                   </td>
                   <td className="px-2 py-4 whitespace-nowrap">
@@ -548,7 +547,7 @@ const Work = ({ userRole }) => {
                     >
                       <option value="">Select User</option>
                       {assignServiceUsers.map((user) => (
-                        <option key={user._id} value={user._id}>
+                        <option key={user._id} value={user.email}>
                           {user.name} ({user.email})
                         </option>
                       ))}
@@ -689,20 +688,20 @@ const Work = ({ userRole }) => {
 
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
-                      // onClick={() =>
-                      //   handleUpdate(work._id, {
-                      //     uniqueName: work.uniqueName,
-                      //     service: work.service,
-                      //     pax: work.pax,
-                      //     country: work.country,
-                      //     submissionDate: work.submissionDate,
-                      //     payment: work.payment,
-                      //     paymentStatus: work.paymentStatus,
-                      //     employeeEmail: work.employeeEmail,
-                      //     status: work.status,
-                      //   })
-                      // }
-                      disabled={updatingId === work._id}
+                      onClick={() =>
+                        handleUpdate(work._id, {
+                          services: work.service,
+                          assignedTo: work.assignedServiceUser,
+                          pax: work.pax,
+                          country: work.country,
+                          submissionDate: work.submissionDate,
+                          payment: work.payment,
+                          paymentStatus: work.paymentStatus,
+                          employeeEmail: work.employeeEmail,
+                          workStatus: work.workStatus,
+                        })
+                      }
+                      // disabled={updatingId === work._id}
                       className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                     >
                       {updatingId === work._id ? (
