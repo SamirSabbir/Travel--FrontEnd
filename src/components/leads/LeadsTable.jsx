@@ -55,7 +55,6 @@ const LeadsTable = ({
   const currentLeads = sortedLeads.slice(indexOfFirstLead, indexOfLastLead);
   const totalPages = Math.ceil(sortedLeads.length / pageSize);
 
-  console.log("unique id", leads);
 
   return (
     <div className="bg-white rounded-xl shadow-md border overflow-hidden">
