@@ -380,9 +380,9 @@ const Hotel = () => {
                     )}
                   </td>
 
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
                     <select
-                      className="border rounded px-2 py-1 w-full"
+                      className="border rounded px-2 py-1"
                       value={item.roomType || ""}
                       onChange={(e) =>
                         handleRoomChange(item._id, e.target.value)
@@ -426,7 +426,7 @@ const Hotel = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <div className="flex items-center">
-                      <span className="pr-1">$</span>
+                      <span className="pr-1">৳</span>
                       <input
                         type="number"
                         className="border rounded px-2 py-1 w-20"
@@ -444,7 +444,7 @@ const Hotel = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <div className="flex items-center">
-                      <span className="pr-1">$</span>
+                      <span className="pr-1">৳</span>
                       <input
                         type="number"
                         className="border rounded px-2 py-1 w-20"

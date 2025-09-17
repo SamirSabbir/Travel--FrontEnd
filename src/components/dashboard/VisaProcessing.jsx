@@ -9,6 +9,22 @@ const VisaProcessing = () => {
   const [error, setError] = useState(null);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedApplication, setSelectedApplication] = useState(null);
+  //pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  //search
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredData = visaData.filter((item) =>
+    item.workId.uuId.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  //pagination calculation
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const currentItems = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   // Fetch visa data on component mount
   useEffect(() => {
@@ -137,7 +153,18 @@ const VisaProcessing = () => {
 
   return (
     <div className="w-full p-4">
-      <h1 className="text-2xl font-bold mb-6">Visa Processing</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Visa Processing</h1>
+        <div className="flex items-center space-x-2">
+          <input
+            type="text"
+            placeholder="Search by Unique ID..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="border rounded px-3 py-2 w-64"
+          />
+        </div>
+      </div>
 
       <div className="w-full overflow-x-auto">
         <table className="w-full bg-white border border-gray-200">
@@ -159,7 +186,7 @@ const VisaProcessing = () => {
             </tr>
           </thead>
           <tbody>
-            {visaData.map((item, index) => (
+            {currentItems.map((item, index) => (
               <tr key={item._id} className="hover:bg-gray-50">
                 {/* Name Column */}
                 <td className="py-4 px-6 border-b whitespace-nowrap">
@@ -316,6 +343,51 @@ const VisaProcessing = () => {
             ))}
           </tbody>
         </table>
+        {/* Pagination */}
+        <div className="flex justify-between items-center mt-4">
+          <div>
+            <span className="text-sm text-gray-700">
+              Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+              {Math.min(currentPage * itemsPerPage, filteredData.length)} of{" "}
+              {filteredData.length} entries
+            </span>
+          </div>
+
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Previous
+            </button>
+
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const pageNum = i + 1;
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`px-3 py-1 border rounded ${
+                    currentPage === pageNum ? "bg-blue-500 text-white" : ""
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+
+            <button
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Customer Modal */}
