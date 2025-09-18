@@ -43,7 +43,7 @@ const AirTicket = () => {
   const handleSave = async (index) => {
     try {
       const ticket = tickets[index];
-      await axios.put(`/ticket/${ticket._id}`, ticket);
+      await axios.patch(`/ticket/${ticket._id}`, ticket);
       alert("Ticket updated successfully!");
     } catch (err) {
       alert("Error updating ticket: " + err.message);
@@ -58,11 +58,11 @@ const AirTicket = () => {
     return <div className="text-red-500 text-center">Error: {error}</div>;
 
   return (
-    <div className="w-full p-4">
+    <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">Air Ticket Management</h1>
 
-      <div className="w-full overflow-x-auto">
-        <table className="w-full bg-white border border-gray-200">
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white border border-gray-200">
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">

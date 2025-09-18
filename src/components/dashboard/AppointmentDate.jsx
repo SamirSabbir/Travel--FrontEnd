@@ -49,7 +49,7 @@ const AppointmentDate = () => {
   const handleSave = async (index) => {
     try {
       const appointment = appointments[index];
-      await axios.put(`/appointmentDate/${appointment._id}`, appointment);
+      await axios.patch(`/appointmentDate/${appointment._id}`, appointment);
       alert("Appointment updated successfully!");
     } catch (err) {
       alert("Error updating appointment: " + err.message);

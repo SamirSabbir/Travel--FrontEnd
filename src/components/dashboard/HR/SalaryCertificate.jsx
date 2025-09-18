@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "../../../api/axios"; // Adjust the path as needed
 
 const SalaryCertificate = () => {
   const [formData, setFormData] = useState({
@@ -9,19 +10,68 @@ const SalaryCertificate = () => {
     requestDate: "",
     email: "",
   });
+  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSave = () => {
-    // Call your API here (Save as draft or create request)
-    console.log("Saving certificate:", formData);
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      
+      const response = await axios.post("/salaryCertificate", {
+        ...formData,
+        status: "draft" // Indicate this is a draft
+      });
+      
+      console.log("Saved as draft:", response.data);
+      alert("Salary certificate saved as draft successfully!");
+    } catch (err) {
+      console.error("Error saving draft:", err);
+      setError("Failed to save as draft. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSend = () => {
-    // API call for sending certificate (approved flow)
-    console.log("Sending certificate:", formData);
+  const handleSend = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      
+      // Basic validation
+      if (!formData.name || !formData.position || !formData.monthlySalary || !formData.email) {
+        setError("Please fill in all required fields");
+        return;
+      }
+      
+      const response = await axios.post("/salaryCertificate", {
+        ...formData,
+        status: "sent" // Indicate this is being sent
+      });
+      
+      console.log("Certificate sent:", response.data);
+      alert("Salary certificate sent successfully!");
+      
+      // Reset form after successful submission if needed
+      setFormData({
+        name: "",
+        position: "",
+        joiningDate: "",
+        monthlySalary: "",
+        requestDate: "",
+        email: "",
+      });
+    } catch (err) {
+      console.error("Error sending certificate:", err);
+      setError("Failed to send certificate. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -31,6 +81,13 @@ const SalaryCertificate = () => {
         <h1 className="text-2xl font-bold">Trip & Travel</h1>
         <p className="text-gray-500">Salary Certificate</p>
       </div>
+
+      {/* Error message */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+      )}
 
       {/* Form Inputs */}
       <div className="grid grid-cols-2 gap-4 mb-6">
@@ -48,7 +105,8 @@ const SalaryCertificate = () => {
           value={formData.name}
           onChange={handleChange}
           className="border p-2 rounded w-full"
-          placeholder="Employee Name"
+          placeholder="Employee Name*"
+          required
         />
         <input
           type="text"
@@ -56,7 +114,8 @@ const SalaryCertificate = () => {
           value={formData.position}
           onChange={handleChange}
           className="border p-2 rounded w-full"
-          placeholder="Position"
+          placeholder="Position*"
+          required
         />
         <input
           type="date"
@@ -64,6 +123,7 @@ const SalaryCertificate = () => {
           value={formData.joiningDate}
           onChange={handleChange}
           className="border p-2 rounded w-full"
+          placeholder="Joining Date"
         />
         <input
           type="number"
@@ -71,7 +131,8 @@ const SalaryCertificate = () => {
           value={formData.monthlySalary}
           onChange={handleChange}
           className="border p-2 rounded w-full"
-          placeholder="Monthly Salary"
+          placeholder="Monthly Salary*"
+          required
         />
         <input
           type="email"
@@ -79,7 +140,8 @@ const SalaryCertificate = () => {
           value={formData.email}
           onChange={handleChange}
           className="border p-2 rounded w-full"
-          placeholder="Employee Email"
+          placeholder="Employee Email*"
+          required
         />
       </div>
 
@@ -124,15 +186,17 @@ const SalaryCertificate = () => {
       <div className="flex justify-end gap-4">
         {/* <button
           onClick={handleSave}
-          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
+          disabled={loading}
+          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg disabled:bg-gray-400"
         >
-          Save
+          {loading ? "Processing..." : "Save as Draft"}
         </button> */}
         <button
           onClick={handleSend}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+          disabled={loading}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg disabled:bg-blue-400"
         >
-          Send
+          {loading ? "Processing..." : "Send"}
         </button>
       </div>
     </div>

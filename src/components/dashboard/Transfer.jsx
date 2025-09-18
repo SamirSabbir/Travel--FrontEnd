@@ -113,7 +113,7 @@ const Transfer = () => {
   const handleSave = async (index) => {
     try {
       const transfer = transfers[index];
-      await axios.put(`/transfer/${transfer._id}`, transfer);
+      await axios.patch(`/transfer/${transfer._id}`, transfer);
       alert('Transfer updated successfully!');
     } catch (err) {
       alert('Error updating transfer: ' + err.message);

@@ -32,6 +32,7 @@ import NOC from "../../components/dashboard/HR/NOC";
 import SalaryCertificate from "../../components/dashboard/HR/SalaryCertificate";
 import SpecialRequest from "../../components/dashboard/HR/SpecialRequest";
 import DropdownTab from "../../components/dashboard/HR/DropdownTab";
+import HRApproval from "../../components/dashboard/HR-Approval/HRApproval";
 
 // Tab mapping with role-based visibility
 const allTabs = [
@@ -108,6 +109,11 @@ const allTabs = [
     name: "Payment Approve",
     component: PaymentApprove,
     roles: ["superAdmin", "AccountAdmin"],
+  },
+  {
+    name: "HR Approval",
+    component: HRApproval,
+    roles: ["AccountAdmin", "superAdmin"],
   },
   { name: "Account-Info", component: AccountInfo, roles: ["AccountAdmin"] },
   { name: "My-Business", component: MyBusiness, roles: ["superAdmin"] },

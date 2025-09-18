@@ -35,7 +35,7 @@ const Hotel = () => {
   const handleAdultChange = (id, value) => {
     const updatedData = hotelData.map((item) => {
       if (item._id === id) {
-        return { ...item, adults: Math.max(0, value) };
+        return { ...item, adult: Math.max(0, value) };
       }
       return item;
     });
@@ -46,7 +46,17 @@ const Hotel = () => {
   const handleChildChange = (id, value) => {
     const updatedData = hotelData.map((item) => {
       if (item._id === id) {
-        return { ...item, children: Math.max(0, value) };
+        return { ...item, child: Math.max(0, value) };
+      }
+      return item;
+    });
+    setHotelData(updatedData);
+  };
+
+  const handleRoomsChange = (id, value) => {
+    const updatedData = hotelData.map((item) => {
+      if (item._id === id) {
+        return { ...item, room: Math.max(0, value) };
       }
       return item;
     });
@@ -60,9 +70,9 @@ const Hotel = () => {
         if (item._id === id) {
           return {
             ...item,
-            dates: {
-              ...item.dates,
-              [field]: value, // keep as Date object
+            night: {
+              ...item.night,
+              [field]: value,
             },
           };
         }
@@ -70,7 +80,6 @@ const Hotel = () => {
       })
     );
   };
-  
 
   // Handle room type change
   const handleRoomChange = (id, value) => {
@@ -96,6 +105,32 @@ const Hotel = () => {
 
   // Handle price change
   const handlePriceChange = (id, field, value) => {
+    const updatedData = hotelData.map((item) => {
+      if (item._id === id) {
+        return {
+          ...item,
+          [field]: value,
+        };
+      }
+      return item;
+    });
+    setHotelData(updatedData);
+  };
+
+   const handlePerNightPriceChange = (id, field, value) => {
+    const updatedData = hotelData.map((item) => {
+      if (item._id === id) {
+        return {
+          ...item,
+          [field]: value,
+        };
+      }
+      return item;
+    });
+    setHotelData(updatedData);
+  };
+
+  const handleHotelNameChange = (id, field, value) => {
     const updatedData = hotelData.map((item) => {
       if (item._id === id) {
         return {
@@ -156,31 +191,32 @@ const Hotel = () => {
     );
   }
 
-  
-
-  
-
   // Handle save action
   const handleSave = async (id) => {
     try {
       const item = hotelData.find((item) => item._id === id);
-  
+
       const itemToSave = {
         ...item,
-        dates: {
-          from: item.dates?.from?.toISOString().split("T")[0],
-          to: item.dates?.to?.toISOString().split("T")[0],
+        night: {
+          from: item.night?.from
+            ? new Date(item.night.from).toISOString().split("T")[0]
+            : null,
+          to: item.night?.to
+            ? new Date(item.night.to).toISOString().split("T")[0]
+            : null,
         },
       };
-  
-      await axios.put(`/hotel/user/${id}`, itemToSave);
+
+      console.log(itemToSave);
+
+      await axios.patch(`/hotel/${id}`, itemToSave);
       alert("Changes saved successfully!");
     } catch (err) {
       console.error("Error saving data:", err);
       alert("Failed to save changes");
     }
   };
-  
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -209,6 +245,12 @@ const Hotel = () => {
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
+                  Hotel Name
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
                   Adults
                 </th>
                 <th
@@ -222,6 +264,12 @@ const Hotel = () => {
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
                   Nights
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Room
                 </th>
                 <th
                   scope="col"
@@ -265,23 +313,41 @@ const Hotel = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {item.workId?.uuId || "N/A"}
                   </td>
+
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div className="flex items-center">
+                      <input
+                        type="text"
+                        className="border rounded px-2 py-1 w-20"
+                        value={item.hotelName || ""}
+                        onChange={(e) =>
+                          handleHotelNameChange(
+                            item._id,
+                            "hotelName",
+                            e.target.value
+                          )
+                        }
+                      />
+                    </div>
+                  </td>
+
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <div className="flex items-center">
                       <button
                         className="bg-gray-200 hover:bg-gray-300 rounded-l px-2 py-1"
                         onClick={() =>
-                          handleAdultChange(item._id, (item.adults || 0) - 1)
+                          handleAdultChange(item._id, (item.adult || 0) - 1)
                         }
                       >
                         -
                       </button>
                       <span className="px-3 py-1 border-t border-b border-gray-200">
-                        {item.adults || 0}
+                        {item.adult || 0}
                       </span>
                       <button
                         className="bg-gray-200 hover:bg-gray-300 rounded-r px-2 py-1"
                         onClick={() =>
-                          handleAdultChange(item._id, (item.adults || 0) + 1)
+                          handleAdultChange(item._id, (item.adult || 0) + 1)
                         }
                       >
                         +
@@ -293,18 +359,18 @@ const Hotel = () => {
                       <button
                         className="bg-gray-200 hover:bg-gray-300 rounded-l px-2 py-1"
                         onClick={() =>
-                          handleChildChange(item._id, (item.children || 0) - 1)
+                          handleChildChange(item._id, (item.child || 0) - 1)
                         }
                       >
                         -
                       </button>
                       <span className="px-3 py-1 border-t border-b border-gray-200">
-                        {item.children || 0}
+                        {item.child || 0}
                       </span>
                       <button
                         className="bg-gray-200 hover:bg-gray-300 rounded-r px-2 py-1"
                         onClick={() =>
-                          handleChildChange(item._id, (item.children || 0) + 1)
+                          handleChildChange(item._id, (item.child || 0) + 1)
                         }
                       >
                         +
@@ -321,9 +387,12 @@ const Hotel = () => {
                         )
                       }
                     >
-                      {item.dates?.from && item.dates?.to
-                        ? `${format(item.dates.from, "MMM d, yyyy")} → ${format(
-                            item.dates.to,
+                      {item.night?.from && item.night?.to
+                        ? `${format(
+                            new Date(item.night.from),
+                            "MMM d, yyyy"
+                          )} → ${format(
+                            new Date(item.night.to),
                             "MMM d, yyyy"
                           )}`
                         : "Select dates"}
@@ -336,11 +405,11 @@ const Hotel = () => {
                           <DateRange
                             ranges={[
                               {
-                                startDate: item.dates?.from
-                                  ? new Date(item.dates.from)
+                                startDate: item.night?.from
+                                  ? new Date(item.night.from)
                                   : new Date(),
-                                endDate: item.dates?.to
-                                  ? new Date(item.dates.to)
+                                endDate: item.night?.to
+                                  ? new Date(item.night.to)
                                   : new Date(),
                                 key: "selection",
                               },
@@ -350,17 +419,13 @@ const Hotel = () => {
                                 item._id,
                                 "from",
                                 ranges.selection.startDate
-                                // .toISOString()
-                                // .split("T")[0]
                               );
                               handleDateChange(
                                 item._id,
                                 "to",
                                 ranges.selection.endDate
-                                // .toISOString()
-                                // .split("T")[0]
                               );
-                              setOpenCalendarId(null); // close calendar after picking
+                              setOpenCalendarId(null); // close after picking
                             }}
                             moveRangeOnFirstSelection={false}
                             rangeColors={["#2563eb"]}
@@ -378,6 +443,30 @@ const Hotel = () => {
                         </div>
                       </div>
                     )}
+                  </td>
+
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div className="flex items-center">
+                      <button
+                        className="bg-gray-200 hover:bg-gray-300 rounded-l px-2 py-1"
+                        onClick={() =>
+                          handleRoomsChange(item._id, (item.room || 0) - 1)
+                        }
+                      >
+                        -
+                      </button>
+                      <span className="px-3 py-1 border-t border-b border-gray-200">
+                        {item.room || 0}
+                      </span>
+                      <button
+                        className="bg-gray-200 hover:bg-gray-300 rounded-r px-2 py-1"
+                        onClick={() =>
+                          handleRoomsChange(item._id, (item.room || 0) + 1)
+                        }
+                      >
+                        +
+                      </button>
+                    </div>
                   </td>
 
                   <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
@@ -430,11 +519,11 @@ const Hotel = () => {
                       <input
                         type="number"
                         className="border rounded px-2 py-1 w-20"
-                        value={item.nightPrice || ""}
+                        value={item.perNightPrice || ""}
                         onChange={(e) =>
-                          handlePriceChange(
+                          handlePerNightPriceChange(
                             item._id,
-                            "nightPrice",
+                            "perNightPrice",
                             e.target.value
                           )
                         }
