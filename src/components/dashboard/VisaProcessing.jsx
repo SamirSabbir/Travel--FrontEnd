@@ -189,6 +189,23 @@ const VisaProcessing = () => {
             {currentItems.map((item, index) => (
               <tr key={item._id} className="hover:bg-gray-50">
                 {/* Name Column */}
+                {selectedCustomer && (
+                  <CustomerModal
+                    customer={selectedCustomer}
+                    onClose={handleCustomerClose}
+                    // currentItems= {currentItems}
+                    item={item}
+                  />
+                )}
+
+                {/* Application Modal */}
+                {selectedApplication && (
+                  <ApplicationModal
+                    application={selectedApplication}
+                    onClose={handleApplicationClose}
+                    item={item}
+                  />
+                )}
                 <td className="py-4 px-6 border-b whitespace-nowrap">
                   <div className="flex items-center">
                     <span>{item.workId.name}</span>
@@ -391,20 +408,22 @@ const VisaProcessing = () => {
       </div>
 
       {/* Customer Modal */}
-      {selectedCustomer && (
+      {/* {selectedCustomer && (
         <CustomerModal
           customer={selectedCustomer}
           onClose={handleCustomerClose}
+          // currentItems= {currentItems}
+          
         />
-      )}
+      )} */}
 
       {/* Application Modal */}
-      {selectedApplication && (
+      {/* {selectedApplication && (
         <ApplicationModal
           application={selectedApplication}
           onClose={handleApplicationClose}
         />
-      )}
+      )} */}
     </div>
   );
 };

@@ -33,6 +33,9 @@ import SalaryCertificate from "../../components/dashboard/HR/SalaryCertificate";
 import SpecialRequest from "../../components/dashboard/HR/SpecialRequest";
 import DropdownTab from "../../components/dashboard/HR/DropdownTab";
 import HRApproval from "../../components/dashboard/HR-Approval/HRApproval";
+import Notary from "../../components/dashboard/Office-Boy/Notary";
+import Lunch from "../../components/dashboard/Office-Boy/Lunch";
+import OfficeSupplies from "../../components/dashboard/Office-Boy/OfficeSupplies";
 
 // Tab mapping with role-based visibility
 const allTabs = [
@@ -131,6 +134,21 @@ const allTabs = [
     name: "Sales Pipeline",
     component: SalesPipeline,
     roles: ["superAdmin"],
+  },
+  {
+    name: "Notary",
+    component: Notary,
+    roles: ["OfficeBoy"],
+  },
+  {
+    name: "Lunch",
+    component: Lunch,
+    roles: ["OfficeBoy"],
+  },
+  {
+    name: "Office-Supplies",
+    component: OfficeSupplies,
+    roles: ["OfficeBoy"],
   },
 ];
 

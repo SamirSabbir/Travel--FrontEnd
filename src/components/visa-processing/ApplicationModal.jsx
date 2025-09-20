@@ -1,6 +1,7 @@
 import React, { useState } from "react";
+import axios from "../../api/axios";
 
-const ApplicationModal = ({ onClose }) => {
+const ApplicationModal = ({ onClose, application, item }) => {
   const [selectedCountry, setSelectedCountry] = useState("usa");
   const [formData, setFormData] = useState({
     // Common fields
@@ -30,11 +31,60 @@ const ApplicationModal = ({ onClose }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Application data:", formData);
-    alert("Application information saved!");
-    onClose();
+
+    try {
+      if (selectedCountry === "usa") {
+        // Construct payload for USA visa
+        const payload = {
+          visaType: "USA",
+          fullName: formData.name || item.name,
+          email: formData.email || item.email,
+          usaDetails: {
+            applicationId: formData.applicationId || item.applicationId,
+            fiveLettersOfSurname:
+              formData.surnameFirstFive || item.surnameFirstFive,
+            yearOfBirth: formData.yearOfBirth || item.yearOfBirth,
+            motherGivenName: formData.motherGivenName || item.motherGivenName,
+            userName: formData.username || item.userName,
+            password: formData.password || item.password,
+            sq1: formData.securityQuestion1 || item.securityQuestion1,
+            sq2: formData.securityQuestion2 || item.securityQuestion2,
+            sq3: formData.securityQuestion3 || item.securityQuestion3,
+          },
+        };
+        console.log(payload);
+
+        await axios.patch(
+          `/visa/update-customer-details-usa/${application._id}`,
+          payload
+        );
+      } else if (selectedCountry === "schengen") {
+        // Construct payload for Schengen visa
+        const payload = {
+          visaType: "Schengen",
+          fullName: formData.name || item.name,
+          email: formData.email || item.email,
+          phone: formData.phone || item.phone,
+          schengenDetails: {
+            userName: formData.schengenUsername || item.schengenUsername,
+            password: formData.schengenPassword || item.schengenPassword,
+          },
+        };
+
+        await axios.patch(
+          `/visa/update-customer-details-schengen/${application._id}`,
+          payload
+        );
+      }
+
+      alert("Application information saved!");
+      onClose();
+    } catch (err) {
+      console.error(err);
+      alert("Error saving application information: " + err);
+    }
   };
 
   return (
@@ -81,14 +131,19 @@ const ApplicationModal = ({ onClose }) => {
 
         <form onSubmit={handleSubmit} className="p-4">
           <h3 className="text-lg font-medium mb-4">
-            {selectedCountry === "usa" ? "USA Visa Application" : "Schengen Country Visa Application"}
+            {selectedCountry === "usa"
+              ? "USA Visa Application"
+              : "Schengen Country Visa Application"}
           </h3>
 
           <div className="overflow-x-auto">
             <table className="w-full border-collapse border border-gray-300 bg-white shadow-sm rounded-lg overflow-hidden">
               <thead className="bg-gray-100">
                 <tr>
-                  <th colSpan={2} className="border border-gray-300 px-4 py-3 text-left font-semibold">
+                  <th
+                    colSpan={2}
+                    className="border border-gray-300 px-4 py-3 text-left font-semibold"
+                  >
                     Personal Information
                   </th>
                 </tr>
@@ -103,7 +158,7 @@ const ApplicationModal = ({ onClose }) => {
                       type="text"
                       id="name"
                       name="name"
-                      value={formData.name}
+                      value={formData.name || item.name}
                       onChange={handleChange}
                       className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
@@ -119,19 +174,22 @@ const ApplicationModal = ({ onClose }) => {
                       type="email"
                       id="email"
                       name="email"
-                      value={formData.email}
+                      value={formData.email || item.email}
                       onChange={handleChange}
                       className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     />
                   </td>
                 </tr>
-                
+
                 {selectedCountry === "usa" ? (
                   <>
                     {/* USA Specific Fields */}
                     <tr className="bg-blue-50">
-                      <th colSpan={2} className="border border-gray-300 px-4 py-3 text-left font-semibold">
+                      <th
+                        colSpan={2}
+                        className="border border-gray-300 px-4 py-3 text-left font-semibold"
+                      >
                         Retrieve a DS-160 Application
                       </th>
                     </tr>
@@ -144,7 +202,7 @@ const ApplicationModal = ({ onClose }) => {
                           type="text"
                           id="applicationId"
                           name="applicationId"
-                          value={formData.applicationId}
+                          value={formData.applicationId || item.applicationId}
                           onChange={handleChange}
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
@@ -153,7 +211,9 @@ const ApplicationModal = ({ onClose }) => {
                     </tr>
                     <tr>
                       <td className="border border-gray-300 px-4 py-3 font-medium">
-                        <label htmlFor="surnameFirstFive">First 5 Letters of Surname</label>
+                        <label htmlFor="surnameFirstFive">
+                          First 5 Letters of Surname
+                        </label>
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
                         <input
@@ -161,7 +221,9 @@ const ApplicationModal = ({ onClose }) => {
                           id="surnameFirstFive"
                           name="surnameFirstFive"
                           maxLength="5"
-                          value={formData.surnameFirstFive}
+                          value={
+                            formData.surnameFirstFive || item.surnameFirstFive
+                          }
                           onChange={handleChange}
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
@@ -179,7 +241,7 @@ const ApplicationModal = ({ onClose }) => {
                           name="yearOfBirth"
                           min="1900"
                           max="2100"
-                          value={formData.yearOfBirth}
+                          value={formData.yearOfBirth || item.yearOfBirth}
                           onChange={handleChange}
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
@@ -188,23 +250,30 @@ const ApplicationModal = ({ onClose }) => {
                     </tr>
                     <tr>
                       <td className="border border-gray-300 px-4 py-3 font-medium">
-                        <label htmlFor="motherGivenName">Mother's Given Name</label>
+                        <label htmlFor="motherGivenName">
+                          Mother's Given Name
+                        </label>
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
                         <input
                           type="text"
                           id="motherGivenName"
                           name="motherGivenName"
-                          value={formData.motherGivenName}
+                          value={
+                            formData.motherGivenName || item.motherGivenName
+                          }
                           onChange={handleChange}
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
                         />
                       </td>
                     </tr>
-                    
+
                     <tr className="bg-blue-50">
-                      <th colSpan={2} className="border border-gray-300 px-4 py-3 text-left font-semibold">
+                      <th
+                        colSpan={2}
+                        className="border border-gray-300 px-4 py-3 text-left font-semibold"
+                      >
                         Application for a US visa - Payment & Date
                       </th>
                     </tr>
@@ -217,7 +286,7 @@ const ApplicationModal = ({ onClose }) => {
                           type="text"
                           id="username"
                           name="username"
-                          value={formData.username}
+                          value={formData.username || item.username}
                           onChange={handleChange}
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
@@ -230,10 +299,10 @@ const ApplicationModal = ({ onClose }) => {
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
                         <input
-                          type="password"
+                          type="text"
                           id="password"
                           name="password"
-                          value={formData.password}
+                          value={formData.password || item.password}
                           onChange={handleChange}
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
@@ -242,14 +311,18 @@ const ApplicationModal = ({ onClose }) => {
                     </tr>
                     <tr>
                       <td className="border border-gray-300 px-4 py-3 font-medium">
-                        <label htmlFor="securityQuestion1">Security Question 1</label>
+                        <label htmlFor="securityQuestion1">
+                          Security Question 1
+                        </label>
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
                         <input
                           type="text"
                           id="securityQuestion1"
                           name="securityQuestion1"
-                          value={formData.securityQuestion1}
+                          value={
+                            formData.securityQuestion1 || item.securityQuestion1
+                          }
                           onChange={handleChange}
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
@@ -258,14 +331,18 @@ const ApplicationModal = ({ onClose }) => {
                     </tr>
                     <tr>
                       <td className="border border-gray-300 px-4 py-3 font-medium">
-                        <label htmlFor="securityQuestion2">Security Question 2</label>
+                        <label htmlFor="securityQuestion2">
+                          Security Question 2
+                        </label>
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
                         <input
                           type="text"
                           id="securityQuestion2"
                           name="securityQuestion2"
-                          value={formData.securityQuestion2}
+                          value={
+                            formData.securityQuestion2 || item.securityQuestion2
+                          }
                           onChange={handleChange}
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
@@ -274,14 +351,18 @@ const ApplicationModal = ({ onClose }) => {
                     </tr>
                     <tr>
                       <td className="border border-gray-300 px-4 py-3 font-medium">
-                        <label htmlFor="securityQuestion3">Security Question 3</label>
+                        <label htmlFor="securityQuestion3">
+                          Security Question 3
+                        </label>
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
                         <input
                           type="text"
                           id="securityQuestion3"
                           name="securityQuestion3"
-                          value={formData.securityQuestion3}
+                          value={
+                            formData.securityQuestion3 || item.securityQuestion3
+                          }
                           onChange={handleChange}
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
@@ -293,7 +374,10 @@ const ApplicationModal = ({ onClose }) => {
                   <>
                     {/* Schengen Specific Fields */}
                     <tr className="bg-blue-50">
-                      <th colSpan={2} className="border border-gray-300 px-4 py-3 text-left font-semibold">
+                      <th
+                        colSpan={2}
+                        className="border border-gray-300 px-4 py-3 text-left font-semibold"
+                      >
                         Schengen Visa Application Details
                       </th>
                     </tr>
@@ -306,7 +390,7 @@ const ApplicationModal = ({ onClose }) => {
                           type="tel"
                           id="phone"
                           name="phone"
-                          value={formData.phone}
+                          value={formData.phone || item.phone}
                           onChange={handleChange}
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
@@ -322,7 +406,9 @@ const ApplicationModal = ({ onClose }) => {
                           type="text"
                           id="schengenUsername"
                           name="schengenUsername"
-                          value={formData.schengenUsername}
+                          value={
+                            formData.schengenUsername || item.schengenUsername
+                          }
                           onChange={handleChange}
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
@@ -338,7 +424,9 @@ const ApplicationModal = ({ onClose }) => {
                           type="password"
                           id="schengenPassword"
                           name="schengenPassword"
-                          value={formData.schengenPassword}
+                          value={
+                            formData.schengenPassword || item.schengenPassword
+                          }
                           onChange={handleChange}
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
