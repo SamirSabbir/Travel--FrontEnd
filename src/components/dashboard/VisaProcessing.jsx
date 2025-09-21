@@ -15,8 +15,10 @@ const VisaProcessing = () => {
   //search
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredData = visaData.filter((item) =>
-    item.workId.uuId.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredData = visaData.filter(
+    (item) =>
+      item && // make sure item is not null
+      (item.workId?.uuId || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   //pagination calculation
