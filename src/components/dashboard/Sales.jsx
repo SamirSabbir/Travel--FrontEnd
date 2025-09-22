@@ -96,7 +96,7 @@ const Sales = ({ userRole }) => {
       {/* My Sales Table */}
       <section>
         <h2 className="text-2xl font-bold mb-4">
-          {userRole === "SuperAdmin" ? "My lead" : "My Sales"}
+          {userRole === "SuperAdmin" ? "My lead" : "My leads"}
         </h2>
         <div className="bg-white shadow-lg rounded-2xl overflow-hidden border border-gray-200">
           <table className="min-w-full divide-y divide-gray-200">

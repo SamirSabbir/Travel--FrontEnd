@@ -26,6 +26,16 @@ import Hotel from "../../components/dashboard/Hotel";
 import AirTicket from "../../components/dashboard/AirTicket";
 import TourPackage from "../../components/dashboard/TourPackage";
 import AppointmentDate from "../../components/dashboard/AppointmentDate";
+import Transfer from "../../components/dashboard/Transfer";
+import HR from "../../components/dashboard/HR/HR";
+import NOC from "../../components/dashboard/HR/NOC";
+import SalaryCertificate from "../../components/dashboard/HR/SalaryCertificate";
+import SpecialRequest from "../../components/dashboard/HR/SpecialRequest";
+import DropdownTab from "../../components/dashboard/HR/DropdownTab";
+import HRApproval from "../../components/dashboard/HR-Approval/HRApproval";
+import Notary from "../../components/dashboard/Office-Boy/Notary";
+import Lunch from "../../components/dashboard/Office-Boy/Lunch";
+import OfficeSupplies from "../../components/dashboard/Office-Boy/OfficeSupplies";
 
 // Tab mapping with role-based visibility
 const allTabs = [
@@ -59,6 +69,12 @@ const allTabs = [
     roles: ["employee", "superAdmin"],
   },
   {
+    name: "Transfer",
+    component: Transfer,
+    roles: ["employee", "superAdmin"],
+  },
+
+  {
     name: "Tour Package",
     component: TourPackage,
     roles: ["employee", "superAdmin"],
@@ -69,11 +85,38 @@ const allTabs = [
     component: AppointmentDate,
     roles: ["employee", "superAdmin"],
   },
+  {
+    name: "HR",
+    roles: ["employee","OfficeBoy","AccountAdmin"],
+    component: HR,
+    subTabs: [
+      {
+        name: "Salary Certificate",
+        component: SalaryCertificate,
+        roles: ["employee","OfficeBoy","AccountAdmin"],
+      },
+      {
+        name: "NOC",
+        component: NOC,
+        roles: ["employee","OfficeBoy","AccountAdmin"],
+      },
+      {
+        name: "Special Request",
+        component: SpecialRequest,
+        roles: ["employee","OfficeBoy","AccountAdmin"],
+      },
+    ],
+  },
 
   {
     name: "Payment Approve",
     component: PaymentApprove,
     roles: ["superAdmin", "AccountAdmin"],
+  },
+  {
+    name: "HR Approval",
+    component: HRApproval,
+    roles: ["AccountAdmin", "superAdmin"],
   },
   { name: "Account-Info", component: AccountInfo, roles: ["AccountAdmin"] },
   { name: "My-Business", component: MyBusiness, roles: ["superAdmin"] },
@@ -91,6 +134,21 @@ const allTabs = [
     name: "Sales Pipeline",
     component: SalesPipeline,
     roles: ["superAdmin"],
+  },
+  {
+    name: "Notary",
+    component: Notary,
+    roles: ["OfficeBoy"],
+  },
+  {
+    name: "Lunch",
+    component: Lunch,
+    roles: ["OfficeBoy"],
+  },
+  {
+    name: "Office-Supplies",
+    component: OfficeSupplies,
+    roles: ["OfficeBoy"],
   },
 ];
 
@@ -130,15 +188,49 @@ const Dashboard = () => {
     const normalizedUserRole = userData.role.toLowerCase();
     setUser(userData);
 
-    const availableTabs = allTabs.filter((tab) =>
-      tab.roles.some((tabRole) => tabRole.toLowerCase() === normalizedUserRole)
-    );
+    // const availableTabs = allTabs.filter((tab) =>
+    //   tab.roles.some((tabRole) => tabRole.toLowerCase() === normalizedUserRole)
+    // );
+    const availableTabs = allTabs.filter((tab) => {
+      const hasAccess = tab.roles.some(
+        (tabRole) => tabRole.toLowerCase() === normalizedUserRole
+      );
 
-    setTabs(availableTabs);
+      // setTabs(availableTabs);
 
-    if (!availableTabs.some((tab) => tab.name === selectedTab)) {
-      setSelectedTab(availableTabs[0]?.name || "");
-    }
+      // if (!availableTabs.some((tab) => tab.name === selectedTab)) {
+      //   setSelectedTab(availableTabs[0]?.name || "");
+      // }
+
+      if (tab.subTabs) {
+        const filteredSubTabs = tab.subTabs.filter((subTab) =>
+          subTab.roles.some(
+            (subTabRole) => subTabRole.toLowerCase() === normalizedUserRole
+          )
+        );
+
+        // Only show the tab if it has accessible sub-tabs
+        return hasAccess && filteredSubTabs.length > 0;
+      }
+
+      return hasAccess;
+    });
+
+    const filteredTabsWithSubTabs = availableTabs.map((tab) => {
+      if (tab.subTabs) {
+        return {
+          ...tab,
+          subTabs: tab.subTabs.filter((subTab) =>
+            subTab.roles.some(
+              (subTabRole) => subTabRole.toLowerCase() === normalizedUserRole
+            )
+          ),
+        };
+      }
+      return tab;
+    });
+
+    setTabs(filteredTabsWithSubTabs);
 
     // Initialize Socket.IO connection
     if (userData.email) {
@@ -180,9 +272,28 @@ const Dashboard = () => {
       </div>
     );
 
-  const CurrentTabComponent =
-    tabs.find((tab) => tab.name === selectedTab)?.component ||
-    (() => <div>Not Found</div>);
+  // Find the appropriate component based on selected tab
+  const findComponent = () => {
+    // First check if it's a main tab with a component
+    const mainTab = tabs.find((tab) => tab.name === selectedTab);
+    if (mainTab && mainTab.component) return mainTab.component;
+
+    // If not found, check if it's a sub-tab from any dropdown
+    for (const tab of tabs) {
+      if (tab.subTabs) {
+        const subTab = tab.subTabs.find((st) => st.name === selectedTab);
+        if (subTab) return subTab.component;
+      }
+    }
+
+    return () => <div>Component Not Found</div>;
+  };
+
+  const CurrentTabComponent = findComponent();
+
+  // const CurrentTabComponent =
+  //   tabs.find((tab) => tab.name === selectedTab)?.component ||
+  //   (() => <div>Not Found</div>);
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -200,19 +311,28 @@ const Dashboard = () => {
 
         {/* Tab List */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab.name}
-              onClick={() => setSelectedTab(tab.name)}
-              className={`w-full text-left p-2 rounded transition ${
-                selectedTab === tab.name
-                  ? "bg-[#0F4F55] text-white"
-                  : "hover:bg-blue-100"
-              }`}
-            >
-              {tab.name}
-            </button>
-          ))}
+          {tabs.map((tab) =>
+            tab.subTabs ? (
+              <DropdownTab
+                key={tab.name}
+                tab={tab}
+                selectedTab={selectedTab}
+                setSelectedTab={setSelectedTab}
+              />
+            ) : (
+              <button
+                key={tab.name}
+                onClick={() => setSelectedTab(tab.name)}
+                className={`w-full text-left p-2 rounded transition ${
+                  selectedTab === tab.name
+                    ? "bg-[#0F4F55] text-white"
+                    : "hover:bg-blue-100"
+                }`}
+              >
+                {tab.name}
+              </button>
+            )
+          )}
         </nav>
 
         {/* Logout Button */}
