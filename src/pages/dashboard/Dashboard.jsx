@@ -87,23 +87,23 @@ const allTabs = [
   },
   {
     name: "HR",
-    roles: ["employee"],
+    roles: ["employee","OfficeBoy","AccountAdmin"],
     component: HR,
     subTabs: [
       {
         name: "Salary Certificate",
         component: SalaryCertificate,
-        roles: ["employee"],
+        roles: ["employee","OfficeBoy","AccountAdmin"],
       },
       {
         name: "NOC",
         component: NOC,
-        roles: ["employee"],
+        roles: ["employee","OfficeBoy","AccountAdmin"],
       },
       {
         name: "Special Request",
         component: SpecialRequest,
-        roles: ["employee"],
+        roles: ["employee","OfficeBoy","AccountAdmin"],
       },
     ],
   },

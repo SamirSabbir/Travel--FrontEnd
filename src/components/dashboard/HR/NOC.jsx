@@ -1,17 +1,19 @@
 import React, { useState } from "react";
-import axios from "../../../api/axios"; // Adjust the path as needed
+import axios from "../../../api/axios"; 
+import Cookies from "js-cookie"; 
 
 const NOC = () => {
+  const user = JSON.parse(Cookies.get("user") || "{}");
   const [formData, setFormData] = useState({
     name: "",
     passportNumber: "",
     joiningDate: "",
-    position: "",
+    position: user?.role || "",
     country: "",
     visitFrom: "",
     visitTo: "",
     purpose: "",
-    email: "",
+    email: user?.email || "",
     requestDate: "",
   });
 
@@ -75,12 +77,12 @@ const NOC = () => {
         name: "",
         passportNumber: "",
         joiningDate: "",
-        position: "",
+        position: user?.role || "",
         country: "",
         visitFrom: "",
         visitTo: "",
         purpose: "",
-        email: "",
+        email: user?.email || "",
         requestDate: "",
       });
     } catch (err) {
@@ -147,9 +149,9 @@ const NOC = () => {
           name="position"
           value={formData.position}
           onChange={handleChange}
-          className="border p-2 rounded w-full"
-          placeholder="Position*"
-          required
+          className="border p-2 rounded w-full bg-gray-100 cursor-not-allowed"
+          // placeholder="Position*"
+          // required
         />
         <input
           type="text"
@@ -195,9 +197,9 @@ const NOC = () => {
           name="email"
           value={formData.email}
           onChange={handleChange}
-          className="border p-2 rounded w-full"
-          placeholder="Email*"
-          required
+          className="border p-2 rounded w-full bg-gray-100 cursor-not-allowed"
+          // placeholder="Email*"
+          // required
         />
       </div>
 

@@ -3,12 +3,14 @@ import axios from "../../../api/axios";
 import SalaryModal from "./SalaryModal";
 import NOCModal from "./NOCModal";
 import { toast } from "react-toastify";
+import Cookies from "js-cookie";
 
 const HRApproval = () => {
   const [salaryData, setSalaryData] = useState([]);
   const [nocData, setNocData] = useState([]);
   const [selectedSalary, setSelectedSalary] = useState(null);
   const [selectedNOC, setSelectedNOC] = useState(null);
+  const [userRole, setUserRole] = useState("");
 
   // Pagination states for salary table
   const [salaryCurrentPage, setSalaryCurrentPage] = useState(1);
@@ -19,6 +21,17 @@ const HRApproval = () => {
   const [nocItemsPerPage] = useState(5);
 
   useEffect(() => {
+    // Get user role from cookies
+    const userData = Cookies.get("user");
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        setUserRole(user.role || "");
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+      }
+    }
+    
     fetchSalaryData();
     fetchNocData();
   }, []);
@@ -65,16 +78,22 @@ const HRApproval = () => {
       if (type === "salaryCertificate") {
         await axios.patch(`/salaryCertificate/cancel/${id}`);
         fetchSalaryData();
-        toast.success("Salary certificate cancel !");
+        toast.success("Salary certificate canceled!");
       } else if (type === "noc") {
         await axios.patch(`/noc/cancel/${id}`);
         fetchNocData();
-        toast.success("NOC cancel !");
+        toast.success("NOC canceled!");
       }
     } catch (err) {
       console.error(err);
       toast.error("Failed to cancel request");
     }
+  };
+
+  // Check if buttons should be disabled based on role and position
+  const shouldDisableButtons = (position) => {
+    // If user role is AccountAdmin and position is AccountAdmin, disable buttons
+    return userRole === "AccountAdmin" && position === "AccountAdmin";
   };
 
   // Pagination logic for salary table
@@ -149,37 +168,66 @@ const HRApproval = () => {
               <th className="py-2 px-4 border">Employee Name</th>
               <th className="py-2 px-4 border">Position</th>
               <th className="py-2 px-4 border">Request Date</th>
+              <th className="py-2 px-4 border">Status</th>
               <th className="py-2 px-4 border">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {salaryCurrentItems.map((item) => (
-              <tr key={item._id} className="text-center hover:bg-gray-50">
-                <td className="py-2 px-4 border">{item.name}</td>
-                <td className="py-2 px-4 border">{item.position}</td>
-                <td className="py-2 px-4 border">{item.requestDate}</td>
-                <td className="py-2 px-4 border space-x-2">
-                  <button
-                    onClick={() => setSelectedSalary(item)}
-                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                  >
-                    View
-                  </button>
-                  <button
-                    onClick={() => handleApprove(item._id, "salaryCertificate")}
-                    className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
-                  >
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => handleCancel(item._id, "salaryCertificate")}
-                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                  >
-                    Cancel
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {salaryCurrentItems.map((item) => {
+              const disableButtons = shouldDisableButtons(item.position);
+              return (
+                <tr key={item._id} className="text-center hover:bg-gray-50">
+                  <td className="py-2 px-4 border">{item.name}</td>
+                  <td className="py-2 px-4 border">{item.position}</td>
+                  <td className="py-2 px-4 border">
+                    {new Date(item.requestDate).toLocaleDateString()}
+                  </td>
+                  <td className="py-2 px-4 border">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        item.status === "approved"
+                          ? "bg-green-100 text-green-800"
+                          : item.status === "rejected"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}
+                    >
+                      {item.status || "pending"}
+                    </span>
+                  </td>
+                  <td className="py-2 px-4 border space-x-2">
+                    <button
+                      onClick={() => setSelectedSalary(item)}
+                      className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={() => handleApprove(item._id, "salaryCertificate")}
+                      disabled={disableButtons || item.status === "approved"}
+                      className={`px-3 py-1 rounded ${
+                        disableButtons || item.status === "approved"
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-green-500 hover:bg-green-600"
+                      } text-white`}
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => handleCancel(item._id, "salaryCertificate")}
+                      disabled={disableButtons || item.status === "rejected"}
+                      className={`px-3 py-1 rounded ${
+                        disableButtons || item.status === "rejected"
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-red-500 hover:bg-red-600"
+                      } text-white`}
+                    >
+                      Cancel
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
 
@@ -201,37 +249,66 @@ const HRApproval = () => {
               <th className="py-2 px-4 border">Employee Name</th>
               <th className="py-2 px-4 border">Position</th>
               <th className="py-2 px-4 border">Request Date</th>
+              <th className="py-2 px-4 border">Status</th>
               <th className="py-2 px-4 border">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {nocCurrentItems.map((item) => (
-              <tr key={item._id} className="text-center hover:bg-gray-50">
-                <td className="py-2 px-4 border">{item.name}</td>
-                <td className="py-2 px-4 border">{item.position}</td>
-                <td className="py-2 px-4 border">{item.requestDate}</td>
-                <td className="py-2 px-4 border space-x-2">
-                  <button
-                    onClick={() => setSelectedNOC(item)}
-                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                  >
-                    View
-                  </button>
-                  <button
-                    onClick={() => handleApprove(item._id, "noc")}
-                    className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
-                  >
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => handleCancel(item._id, "noc")}
-                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                  >
-                    Cancel
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {nocCurrentItems.map((item) => {
+              const disableButtons = shouldDisableButtons(item.position);
+              return (
+                <tr key={item._id} className="text-center hover:bg-gray-50">
+                  <td className="py-2 px-4 border">{item.name}</td>
+                  <td className="py-2 px-4 border">{item.position}</td>
+                  <td className="py-2 px-4 border">
+                    {new Date(item.requestDate).toLocaleDateString()}
+                  </td>
+                  <td className="py-2 px-4 border">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        item.status === "approved"
+                          ? "bg-green-100 text-green-800"
+                          : item.status === "rejected"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}
+                    >
+                      {item.status || "pending"}
+                    </span>
+                  </td>
+                  <td className="py-2 px-4 border space-x-2">
+                    <button
+                      onClick={() => setSelectedNOC(item)}
+                      className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={() => handleApprove(item._id, "noc")}
+                      disabled={disableButtons || item.status === "approved"}
+                      className={`px-3 py-1 rounded ${
+                        disableButtons || item.status === "approved"
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-green-500 hover:bg-green-600"
+                      } text-white`}
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => handleCancel(item._id, "noc")}
+                      disabled={disableButtons || item.status === "rejected"}
+                      className={`px-3 py-1 rounded ${
+                        disableButtons || item.status === "rejected"
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-red-500 hover:bg-red-600"
+                      } text-white`}
+                    >
+                      Cancel
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
 

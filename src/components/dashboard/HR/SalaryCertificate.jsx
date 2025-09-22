@@ -1,15 +1,19 @@
 import React, { useState } from "react";
-import axios from "../../../api/axios"; // Adjust the path as needed
-
+import axios from "../../../api/axios";
+import Cookies from "js-cookie"; 
 const SalaryCertificate = () => {
+   const user = JSON.parse(Cookies.get("user") || "{}");
+
   const [formData, setFormData] = useState({
     name: "",
-    position: "",
+    position: user?.role || "",
     joiningDate: "",
     monthlySalary: "",
     requestDate: "",
-    email: "",
+    email: user?.email || "",
   });
+
+  
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -42,6 +46,7 @@ const SalaryCertificate = () => {
     try {
       setLoading(true);
       setError("");
+     
       
       // Basic validation
       if (!formData.name || !formData.position || !formData.monthlySalary || !formData.email) {
@@ -60,11 +65,11 @@ const SalaryCertificate = () => {
       // Reset form after successful submission if needed
       setFormData({
         name: "",
-        position: "",
+        position: user?.role,
         joiningDate: "",
         monthlySalary: "",
         requestDate: "",
-        email: "",
+        email: user?.email || "",
       });
     } catch (err) {
       console.error("Error sending certificate:", err);
@@ -113,8 +118,8 @@ const SalaryCertificate = () => {
           name="position"
           value={formData.position}
           onChange={handleChange}
-          className="border p-2 rounded w-full"
-          placeholder="Position*"
+          className="border p-2 rounded w-full bg-gray-100 cursor-not-allowed"
+          // placeholder="Position*"
           required
         />
         <input
@@ -139,9 +144,8 @@ const SalaryCertificate = () => {
           name="email"
           value={formData.email}
           onChange={handleChange}
-          className="border p-2 rounded w-full"
-          placeholder="Employee Email*"
-          required
+          className="border p-2 rounded w-full bg-gray-100 cursor-not-allowed"
+          // placeholder="Employee Email*"
         />
       </div>
 
