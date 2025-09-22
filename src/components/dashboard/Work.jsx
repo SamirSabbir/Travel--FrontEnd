@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { Loader2, Save, Search } from "lucide-react";
 import WorkRecordsModal from "../work/WorkRecordModal";
 import PaymentDetailsModal from "../work/PaymentDetailsModal";
+import InvoiceModal from "../work/InvoiceModal";
 import Select from "react-select";
 
 const Work = ({ userRole }) => {
@@ -237,6 +238,9 @@ const Work = ({ userRole }) => {
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [updatingPayment, setUpdatingPayment] = useState(false);
+
+  //Invoice modal
+  const [selectedInvoiceWork, setSelectedInvoiceWork] = useState(null);
 
   //pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -474,6 +478,7 @@ const Work = ({ userRole }) => {
                   "Assigned To",
                   "Work Records",
                   "Payment Details",
+                  "Invoice",
                   "Actions",
                 ].map((col) => (
                   <th
@@ -686,6 +691,18 @@ const Work = ({ userRole }) => {
                     </button>
                   </td>
 
+                    <td className="px-6 py-4 whitespace-nowrap">
+                    {work.workStatus === "Completed" && (
+                      <button
+                        onClick={() => setSelectedInvoiceWork(work)} // 👈 add state for invoice modal
+                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                      >
+                        Invoice
+                      </button>
+                    )}
+                  </td>
+                
+
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
                       onClick={() =>
@@ -803,6 +820,11 @@ const Work = ({ userRole }) => {
           </div>
         </div>
       </div>
+      <InvoiceModal
+        isOpen={!!selectedInvoiceWork}
+        onClose={() => setSelectedInvoiceWork(null)}
+        work={selectedInvoiceWork}
+      />
     </div>
   );
 };
