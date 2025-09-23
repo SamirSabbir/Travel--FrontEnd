@@ -245,6 +245,9 @@ const SpecialRequest = () => {
             <p className="text-sm text-gray-600">
               <strong>Email:</strong> {user.email || "user@example.com"}
             </p>
+            <p className="text-sm text-gray-600">
+              <strong>Commission:</strong> {user.commission || "user"}
+            </p>
           </div>
 
           <button
@@ -275,6 +278,7 @@ const SpecialRequest = () => {
                   className="text-blue-600 focus:ring-blue-500"
                 />
                 <span className="ml-2">Casual Leave</span>
+                <strong>Casual Leaves remain:</strong> {user.casualLeaves || ""}
               </label>
               <label className="inline-flex items-center">
                 <input
@@ -286,6 +290,9 @@ const SpecialRequest = () => {
                   className="text-blue-600 focus:ring-blue-500"
                 />
                 <span className="ml-2">Sick Leave</span>
+                <p className="text-sm text-gray-600">
+                  <strong>Sick Leaves remain:</strong> {user.sickLeaves || ""}
+                </p>
               </label>
             </div>
           </div>

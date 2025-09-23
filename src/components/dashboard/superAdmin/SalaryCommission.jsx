@@ -10,6 +10,8 @@ import {
   FiChevronDown,
   FiChevronUp,
   FiSearch,
+  FiHeart,
+  FiCoffee,
 } from "react-icons/fi";
 import { Line } from "react-chartjs-2";
 import {
@@ -40,12 +42,15 @@ const SalaryCommission = () => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [kpiHistory, setKpiHistory] = useState([]);
   const [commissionHistory, setCommissionHistory] = useState([]);
+  const [leaveHistory, setLeaveHistory] = useState([]);
   const [expandedEmployee, setExpandedEmployee] = useState(null);
   const [editMode, setEditMode] = useState(null);
   const [formData, setFormData] = useState({
     salary: "",
     KPI: "",
     Commission: "",
+    remainingCasualLeaves: "",
+    remainingSickLeaves: "",
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -68,12 +73,14 @@ const SalaryCommission = () => {
 
   const fetchEmployeeHistory = async (employeeId) => {
     try {
-      const [kpiRes, commissionRes] = await Promise.all([
+      const [kpiRes, commissionRes, leaveRes] = await Promise.all([
         axios.get(`/chart/KPI-Chart/${employeeId}`),
         axios.get(`/chart/commission-Chart/${employeeId}`),
+        axios.get(`/chart/leave-Chart/${employeeId}`), // Assuming you have this endpoint
       ]);
       setKpiHistory(kpiRes.data.data);
       setCommissionHistory(commissionRes.data.data);
+      setLeaveHistory(leaveRes.data.data || []);
     } catch (error) {
       toast.error("Failed to fetch employee history");
     }
@@ -101,6 +108,8 @@ const SalaryCommission = () => {
       salary: employee.salary || "",
       KPI: employee.KPI || "",
       Commission: employee.Commission || "",
+      remainingCasualLeaves: employee.remainingCasualLeaves || "",
+      remainingSickLeaves: employee.remainingSickLeaves || "",
     });
   };
 
@@ -121,6 +130,8 @@ const SalaryCommission = () => {
       salary: employee.salary || "",
       KPI: employee.KPI || "",
       Commission: employee.Commission || "",
+      remainingCasualLeaves: employee.remainingCasualLeaves || "",
+      remainingSickLeaves: employee.remainingSickLeaves || "",
     });
   };
 
@@ -138,6 +149,8 @@ const SalaryCommission = () => {
       if (formData.salary) payload.salary = Number(formData.salary);
       if (formData.KPI) payload.KPI = Number(formData.KPI);
       if (formData.Commission) payload.Commission = Number(formData.Commission);
+      if (formData.remainingCasualLeaves) payload.remainingCasualLeaves = Number(formData.remainingCasualLeaves);
+      if (formData.remainingSickLeaves) payload.remainingSickLeaves = Number(formData.remainingSickLeaves);
 
       await axios.patch(
         `/users/employeeProfileUpdateForAdmin/${employeeEmail}`,
@@ -175,10 +188,32 @@ const SalaryCommission = () => {
     ),
     datasets: [
       {
-        label: "Commission Rate (%)",
+        label: "Commission Rate (tk)",
         data: commissionHistory.map((item) => item.Commission),
         borderColor: "rgb(153, 102, 255)",
         backgroundColor: "rgba(153, 102, 255, 0.5)",
+        tension: 0.1,
+      },
+    ],
+  };
+
+  const leaveChartData = {
+    labels: leaveHistory.map((item) =>
+      new Date(item.createdAt).toLocaleDateString()
+    ),
+    datasets: [
+      {
+        label: "Casual Leaves",
+        data: leaveHistory.map((item) => item.remainingCasualLeaves),
+        borderColor: "rgb(255, 159, 64)",
+        backgroundColor: "rgba(255, 159, 64, 0.5)",
+        tension: 0.1,
+      },
+      {
+        label: "Sick Leaves",
+        data: leaveHistory.map((item) => item.remainingSickLeaves),
+        borderColor: "rgb(255, 99, 132)",
+        backgroundColor: "rgba(255, 99, 132, 0.5)",
         tension: 0.1,
       },
     ],
@@ -242,18 +277,24 @@ const SalaryCommission = () => {
 
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
         <div className="grid grid-cols-12 bg-gray-50 p-4 border-b border-gray-200">
-          <div className="col-span-3 font-medium text-gray-500">Employee</div>
+          <div className="col-span-2 font-medium text-gray-500">Employee</div>
           <div className="col-span-1 font-medium text-gray-500 text-center">
             Role
           </div>
-          <div className="col-span-2 font-medium text-gray-500 text-center">
+          <div className="col-span-1 font-medium text-gray-500 text-center">
             Salary
           </div>
-          <div className="col-span-2 font-medium text-gray-500 text-center">
+          <div className="col-span-1 font-medium text-gray-500 text-center">
             KPI
           </div>
-          <div className="col-span-2 font-medium text-gray-500 text-center">
+          <div className="col-span-1 font-medium text-gray-500 text-center">
             Commission
+          </div>
+          <div className="col-span-2 font-medium text-gray-500 text-center">
+            Casual Leave
+          </div>
+          <div className="col-span-2 font-medium text-gray-500 text-center">
+            Sick Leave
           </div>
           <div className="col-span-2 font-medium text-gray-500 text-center">
             Actions
@@ -272,7 +313,7 @@ const SalaryCommission = () => {
                 className="hover:bg-gray-50 transition-colors"
               >
                 <div className="grid grid-cols-12 items-center p-4">
-                  <div className="col-span-3 flex items-center">
+                  <div className="col-span-2 flex items-center">
                     <div className="bg-indigo-100 p-2 rounded-full mr-3">
                       <FiUser className="text-indigo-600" />
                     </div>
@@ -288,20 +329,74 @@ const SalaryCommission = () => {
                     {employee.role.toLowerCase()}
                   </div>
 
-                  <div className="col-span-2 text-center">
+                  <div className="col-span-1 text-center">
                     {editMode === employee._id ? (
                       <input
                         type="number"
                         name="salary"
                         value={formData.salary}
                         onChange={handleInputChange}
-                        className="w-24 px-2 py-1 border border-gray-300 rounded text-center"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded text-center text-sm"
                       />
                     ) : (
                       <div className="flex items-center justify-center">
                         <FiDollarSign className="text-gray-400 mr-1" />
-                        <span>
+                        <span className="text-sm">
                           {employee.salary?.toLocaleString() || "N/A"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="col-span-1 text-center">
+                    {editMode === employee._id ? (
+                      <input
+                        type="number"
+                        name="KPI"
+                        value={formData.KPI}
+                        onChange={handleInputChange}
+                        className="w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <FiTrendingUp className="text-gray-400 mr-1" />
+                        <span className="text-sm">{employee.KPI || "N/A"}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="col-span-1 text-center">
+                    {editMode === employee._id ? (
+                      <input
+                        type="number"
+                        name="Commission"
+                        value={formData.Commission}
+                        onChange={handleInputChange}
+                        className="w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm"
+                      />
+                    ) : (
+                      <span className="text-sm">
+                        {employee.Commission
+                          ? `${employee.Commission}tk`
+                          : "N/A"}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="col-span-2 text-center">
+                    {editMode === employee._id ? (
+                      <input
+                        type="number"
+                        name="remainingCasualLeaves"
+                        value={formData.remainingCasualLeaves}
+                        onChange={handleInputChange}
+                        className="w-20 px-2 py-1 border border-gray-300 rounded text-center text-sm"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <FiCoffee className="text-blue-500 mr-1" />
+                        <span className="text-sm">
+                          {employee.remainingCasualLeaves || 0}
                         </span>
                       </div>
                     )}
@@ -311,34 +406,18 @@ const SalaryCommission = () => {
                     {editMode === employee._id ? (
                       <input
                         type="number"
-                        name="KPI"
-                        value={formData.KPI}
+                        name="remainingSickLeaves"
+                        value={formData.remainingSickLeaves}
                         onChange={handleInputChange}
-                        className="w-24 px-2 py-1 border border-gray-300 rounded text-center"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded text-center text-sm"
                       />
                     ) : (
                       <div className="flex items-center justify-center">
-                        <FiTrendingUp className="text-gray-400 mr-1" />
-                        <span>{employee.KPI || "N/A"}</span>
+                        <FiHeart className="text-red-500 mr-1" />
+                        <span className="text-sm">
+                          {employee.remainingSickLeaves || 0}
+                        </span>
                       </div>
-                    )}
-                  </div>
-
-                  <div className="col-span-2 text-center">
-                    {editMode === employee._id ? (
-                      <input
-                        type="number"
-                        name="Commission"
-                        value={formData.Commission}
-                        onChange={handleInputChange}
-                        className="w-24 px-2 py-1 border border-gray-300 rounded text-center"
-                      />
-                    ) : (
-                      <span>
-                        {employee.Commission
-                          ? `${employee.Commission}%`
-                          : "N/A"}
-                      </span>
                     )}
                   </div>
 
@@ -347,13 +426,13 @@ const SalaryCommission = () => {
                       <>
                         <button
                           onClick={() => handleSubmit(employee.email)}
-                          className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                          className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
                         >
                           Save
                         </button>
                         <button
                           onClick={() => setEditMode(null)}
-                          className="px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                          className="px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm"
                         >
                           Cancel
                         </button>
@@ -393,7 +472,7 @@ const SalaryCommission = () => {
                       className="overflow-hidden"
                     >
                       <div className="p-6 border-t border-gray-200 bg-gray-50">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                           <div>
                             <h3 className="text-lg font-medium text-gray-800 mb-4">
                               KPI History
@@ -418,6 +497,18 @@ const SalaryCommission = () => {
                               </p>
                             )}
                           </div>
+                          <div>
+                            <h3 className="text-lg font-medium text-gray-800 mb-4">
+                              Leave History
+                            </h3>
+                            {leaveHistory.length > 0 ? (
+                              <Line data={leaveChartData} />
+                            ) : (
+                              <p className="text-gray-500">
+                                No leave history available
+                              </p>
+                            )}
+                          </div>
                         </div>
 
                         <div className="mt-6">
@@ -425,7 +516,7 @@ const SalaryCommission = () => {
                             Recent Updates
                           </h3>
                           <div className="space-y-3">
-                            {[...kpiHistory, ...commissionHistory]
+                            {[...kpiHistory, ...commissionHistory, ...leaveHistory]
                               .sort(
                                 (a, b) =>
                                   new Date(b.createdAt) - new Date(a.createdAt)
@@ -440,7 +531,9 @@ const SalaryCommission = () => {
                                     <span className="font-medium">
                                       {item.KPI
                                         ? "KPI Update"
-                                        : "Commission Update"}
+                                        : item.Commission
+                                        ? "Commission Update"
+                                        : "Leave Update"}
                                     </span>
                                     <span className="text-sm text-gray-500">
                                       {new Date(
@@ -448,16 +541,22 @@ const SalaryCommission = () => {
                                       ).toLocaleString()}
                                     </span>
                                   </div>
-                                  <div className="mt-1">
+                                  <div className="mt-1 text-sm">
                                     {item.KPI && (
-                                      <span className="text-sm">
-                                        New KPI: {item.KPI}
-                                      </span>
+                                      <span>New KPI: {item.KPI}</span>
                                     )}
                                     {item.Commission && (
-                                      <span className="text-sm">
-                                        New Commission: {item.Commission}%
-                                      </span>
+                                      <span>New Commission: {item.Commission}tk</span>
+                                    )}
+                                    {(item.remainingCasualLeaves !== undefined || item.remainingSickLeaves !== undefined) && (
+                                      <div>
+                                        {item.remainingCasualLeaves !== undefined && (
+                                          <span>Casual Leaves: {item.remainingCasualLeaves}</span>
+                                        )}
+                                        {item.remainingSickLeaves !== undefined && (
+                                          <span>Sick Leaves: {item.remainingSickLeaves}</span>
+                                        )}
+                                      </div>
                                     )}
                                   </div>
                                 </div>
