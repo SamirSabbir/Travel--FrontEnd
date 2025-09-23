@@ -64,6 +64,9 @@ const Login = () => {
         role: userRole,
         email: decodedToken.email || formData.email,
         photo: decodedToken.photo || null, // Ensure photo is always set
+        commission: decodedToken.commission,
+        sickLeaves: decodedToken.sickLeaves,
+        casualLeaves: decodedToken.casualLeaves,
       };
 
       // Store basic user info in cookie (optional)

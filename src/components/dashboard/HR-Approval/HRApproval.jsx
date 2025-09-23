@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "../../../api/axios";
 import SalaryModal from "./SalaryModal";
 import NOCModal from "./NOCModal";
+import SpecialRequest from "./SpecialRequest";
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
 
@@ -31,7 +32,7 @@ const HRApproval = () => {
         console.error("Error parsing user data:", error);
       }
     }
-    
+
     fetchSalaryData();
     fetchNocData();
   }, []);
@@ -203,7 +204,9 @@ const HRApproval = () => {
                       View
                     </button>
                     <button
-                      onClick={() => handleApprove(item._id, "salaryCertificate")}
+                      onClick={() =>
+                        handleApprove(item._id, "salaryCertificate")
+                      }
                       disabled={disableButtons || item.status === "approved"}
                       className={`px-3 py-1 rounded ${
                         disableButtons || item.status === "approved"
@@ -214,7 +217,9 @@ const HRApproval = () => {
                       Approve
                     </button>
                     <button
-                      onClick={() => handleCancel(item._id, "salaryCertificate")}
+                      onClick={() =>
+                        handleCancel(item._id, "salaryCertificate")
+                      }
                       disabled={disableButtons || item.status === "rejected"}
                       className={`px-3 py-1 rounded ${
                         disableButtons || item.status === "rejected"
@@ -331,6 +336,7 @@ const HRApproval = () => {
       {selectedNOC && (
         <NOCModal data={selectedNOC} onClose={() => setSelectedNOC(null)} />
       )}
+      <SpecialRequest />
     </div>
   );
 };

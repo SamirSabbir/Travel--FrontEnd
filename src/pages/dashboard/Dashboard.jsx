@@ -36,6 +36,7 @@ import HRApproval from "../../components/dashboard/HR-Approval/HRApproval";
 import Notary from "../../components/dashboard/Office-Boy/Notary";
 import Lunch from "../../components/dashboard/Office-Boy/Lunch";
 import OfficeSupplies from "../../components/dashboard/Office-Boy/OfficeSupplies";
+import Expense from "../../components/dashboard/Expense";
 
 // Tab mapping with role-based visibility
 const allTabs = [
@@ -87,23 +88,23 @@ const allTabs = [
   },
   {
     name: "HR",
-    roles: ["employee","OfficeBoy","AccountAdmin"],
+    roles: ["employee", "OfficeBoy", "AccountAdmin"],
     component: HR,
     subTabs: [
       {
         name: "Salary Certificate",
         component: SalaryCertificate,
-        roles: ["employee","OfficeBoy","AccountAdmin"],
+        roles: ["employee", "OfficeBoy", "AccountAdmin"],
       },
       {
         name: "NOC",
         component: NOC,
-        roles: ["employee","OfficeBoy","AccountAdmin"],
+        roles: ["employee", "OfficeBoy", "AccountAdmin"],
       },
       {
         name: "Special Request",
         component: SpecialRequest,
-        roles: ["employee","OfficeBoy","AccountAdmin"],
+        roles: ["employee", "OfficeBoy", "AccountAdmin"],
       },
     ],
   },
@@ -134,6 +135,11 @@ const allTabs = [
     name: "Sales Pipeline",
     component: SalesPipeline,
     roles: ["superAdmin"],
+  },
+  {
+    name: "Expense",
+    component: Expense,
+    roles: ["AccountAdmin", "superAdmin"],
   },
   {
     name: "Notary",
@@ -286,7 +292,7 @@ const Dashboard = () => {
       }
     }
 
-    return () => <div>Component Not Found</div>;
+    return () => <div>Component Not Found <span className="text-red-600 font-bold">Please</span> Select a Menu</div>;
   };
 
   const CurrentTabComponent = findComponent();
