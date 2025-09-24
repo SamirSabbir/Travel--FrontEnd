@@ -691,17 +691,34 @@ const Work = ({ userRole }) => {
                     </button>
                   </td>
 
-                    <td className="px-6 py-4 whitespace-nowrap">
-                    {work.workStatus === "Completed" && (
-                      <button
-                        onClick={() => setSelectedInvoiceWork(work)} // 👈 add state for invoice modal
-                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                      >
-                        Invoice
-                      </button>
-                    )}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {work.workStatus === "Completed" &&
+                      (() => {
+                        const isEmployee =
+                          userRole?.toLowerCase() === "employee";
+                        return (
+                          <button
+                            onClick={() =>
+                              !isEmployee && setSelectedInvoiceWork(work)
+                            }
+                            disabled={isEmployee}
+                            aria-disabled={isEmployee}
+                            title={
+                              isEmployee
+                                ? "Not allowed for Employee role"
+                                : "Open invoice"
+                            }
+                            className={`inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${
+                              isEmployee
+                                ? "bg-green-400 cursor-not-allowed opacity-60"
+                                : "bg-green-600 hover:bg-green-700"
+                            }`}
+                          >
+                            Invoice
+                          </button>
+                        );
+                      })()}
                   </td>
-                
 
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
