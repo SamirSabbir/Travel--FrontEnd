@@ -250,7 +250,7 @@ const MyProfile = ({ userRole, userData }) => {
                       Commission
                     </span>
                     <p className="text-lg font-semibold text-gray-800">
-                      {profile.Commission}%
+                      {profile.Commission}
                     </p>
                   </div>
 
