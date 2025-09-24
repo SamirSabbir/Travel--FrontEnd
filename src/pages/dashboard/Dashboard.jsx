@@ -127,7 +127,7 @@ const allTabs = [
     roles: ["employee", "AccountAdmin", "superAdmin"],
   },
   {
-    name: "Employees Performance",
+    name: "Employees Dashboard",
     component: SalaryCommission,
     roles: ["superAdmin"],
   },
