@@ -49,7 +49,7 @@ const SalaryCommission = () => {
   const [formData, setFormData] = useState({
     salary: "",
     KPI: "",
-    Commission: "",
+    commission: "",
     remainingCasualLeaves: "",
     remainingSickLeaves: "",
     joiningDate: "",
@@ -75,14 +75,14 @@ const SalaryCommission = () => {
 
   const fetchEmployeeHistory = async (employeeId) => {
     try {
-      const [kpiRes, commissionRes, leaveRes] = await Promise.all([
+      const [kpiRes, commissionRes] = await Promise.all([
         axios.get(`/chart/KPI-Chart/${employeeId}`),
         axios.get(`/chart/commission-Chart/${employeeId}`),
-        axios.get(`/chart/leave-Chart/${employeeId}`),
+        // axios.get(`/chart/leave-Chart/${employeeId}`),
       ]);
       setKpiHistory(kpiRes.data.data);
       setCommissionHistory(commissionRes.data.data);
-      setLeaveHistory(leaveRes.data.data || []);
+      setLeaveHistory([]);
     } catch (error) {
       toast.error("Failed to fetch employee history");
     }
@@ -107,7 +107,7 @@ const SalaryCommission = () => {
     setFormData({
       salary: employee.salary || "",
       KPI: employee.KPI || "",
-      Commission: employee.Commission || "",
+      commission: employee.commission || "",
       remainingCasualLeaves: employee.remainingCasualLeaves || "",
       remainingSickLeaves: employee.remainingSickLeaves || "",
       joiningDate: employee.joiningDate || "",
@@ -130,7 +130,7 @@ const SalaryCommission = () => {
     setFormData({
       salary: employee.salary || "",
       KPI: employee.KPI || "",
-      Commission: employee.Commission || "",
+      commission: employee.commission || "",
       remainingCasualLeaves: employee.remainingCasualLeaves || "",
       remainingSickLeaves: employee.remainingSickLeaves || "",
       joiningDate: employee.joiningDate || "",
@@ -150,7 +150,7 @@ const SalaryCommission = () => {
       const payload = {};
       if (formData.salary) payload.salary = Number(formData.salary);
       if (formData.KPI) payload.KPI = Number(formData.KPI);
-      if (formData.Commission) payload.Commission = Number(formData.Commission);
+      if (formData.commission) payload.commission = Number(formData.commission);
       if (formData.remainingCasualLeaves)
         payload.remainingCasualLeaves = Number(formData.remainingCasualLeaves);
       if (formData.remainingSickLeaves)
@@ -199,7 +199,7 @@ const SalaryCommission = () => {
     datasets: [
       {
         label: "Commission Rate (tk)",
-        data: commissionHistory.map((item) => item.Commission),
+        data: commissionHistory.map((item) => item.commission),
         borderColor: "rgb(16, 185, 129)",
         backgroundColor: "rgba(16, 185, 129, 0.1)",
         borderWidth: 2,
@@ -249,25 +249,25 @@ const SalaryCommission = () => {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'top',
+        position: "top",
         labels: {
           usePointStyle: true,
           padding: 15,
-        }
+        },
       },
     },
     scales: {
       y: {
         beginAtZero: true,
         grid: {
-          color: 'rgba(0, 0, 0, 0.05)',
-        }
+          color: "rgba(0, 0, 0, 0.05)",
+        },
       },
       x: {
         grid: {
           display: false,
-        }
-      }
+        },
+      },
     },
   };
 
@@ -285,7 +285,9 @@ const SalaryCommission = () => {
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           Employee Performance Dashboard
         </h1>
-        <p className="text-gray-600">Manage and monitor employee performance metrics</p>
+        <p className="text-gray-600">
+          Manage and monitor employee performance metrics
+        </p>
       </div>
 
       {/* Search and Controls */}
@@ -309,13 +311,16 @@ const SalaryCommission = () => {
 
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-600">
-              Showing {currentEmployees.length} of {filteredEmployees.length} employees
+              Showing {currentEmployees.length} of {filteredEmployees.length}{" "}
+              employees
             </span>
             {filteredEmployees.length > employeesPerPage && (
               <nav className="flex items-center">
                 <ul className="flex space-x-1">
                   {Array.from({
-                    length: Math.ceil(filteredEmployees.length / employeesPerPage),
+                    length: Math.ceil(
+                      filteredEmployees.length / employeesPerPage
+                    ),
                   }).map((_, index) => (
                     <li key={index}>
                       <button
@@ -373,13 +378,18 @@ const SalaryCommission = () => {
               <FiUser className="mx-auto text-4xl" />
             </div>
             <p className="text-gray-500 text-lg">
-              {searchTerm ? "No employees found matching your search" : "No employees available"}
+              {searchTerm
+                ? "No employees found matching your search"
+                : "No employees available"}
             </p>
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
             {currentEmployees.map((employee) => (
-              <div key={employee._id} className="group hover:bg-gray-50 transition-colors duration-200">
+              <div
+                key={employee._id}
+                className="group hover:bg-gray-50 transition-colors duration-200"
+              >
                 {/* Main Row */}
                 <div className="grid grid-cols-12 items-center px-6 py-4">
                   {/* Employee Info */}
@@ -407,13 +417,15 @@ const SalaryCommission = () => {
 
                   {/* Role */}
                   <div className="col-span-1 text-center">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                      employee.role === "AccountAdmin" 
-                        ? "bg-green-100 text-green-800"
-                        : employee.role === "OfficeBoy"
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                        employee.role === "AccountAdmin"
+                          ? "bg-green-100 text-green-800"
+                          : employee.role === "OfficeBoy"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
                       {employee.role.toLowerCase()}
                     </span>
                   </div>
@@ -433,10 +445,13 @@ const SalaryCommission = () => {
                         <FiCalendar className="text-gray-400 mb-1" size={16} />
                         <span className="text-sm text-gray-700 font-medium">
                           {employee.joiningDate
-                            ? new Date(employee.joiningDate).toLocaleDateString('en-US', { 
-                                month: 'short', 
-                                year: 'numeric' 
-                              })
+                            ? new Date(employee.joiningDate).toLocaleDateString(
+                                "en-US",
+                                {
+                                  month: "short",
+                                  year: "numeric",
+                                }
+                              )
                             : "N/A"}
                         </span>
                       </div>
@@ -455,9 +470,14 @@ const SalaryCommission = () => {
                       />
                     ) : (
                       <div className="flex flex-col items-center">
-                        <FiDollarSign className="text-gray-400 mb-1" size={16} />
+                        <FiDollarSign
+                          className="text-gray-400 mb-1"
+                          size={16}
+                        />
                         <span className="text-sm font-semibold text-gray-900">
-                          {employee.salary ? `${(employee.salary / 1000).toFixed(0)}k` : "N/A"}
+                          {employee.salary
+                            ? `${(employee.salary / 1000).toFixed(0)}k`
+                            : "N/A"}
                         </span>
                       </div>
                     )}
@@ -475,11 +495,19 @@ const SalaryCommission = () => {
                       />
                     ) : (
                       <div className="flex flex-col items-center">
-                        <FiTrendingUp className="text-gray-400 mb-1" size={16} />
-                        <span className={`text-sm font-semibold ${
-                          employee.KPI >= 80 ? "text-green-600" :
-                          employee.KPI >= 60 ? "text-yellow-600" : "text-red-600"
-                        }`}>
+                        <FiTrendingUp
+                          className="text-gray-400 mb-1"
+                          size={16}
+                        />
+                        <span
+                          className={`text-sm font-semibold ${
+                            employee.KPI >= 80
+                              ? "text-green-600"
+                              : employee.KPI >= 60
+                              ? "text-yellow-600"
+                              : "text-red-600"
+                          }`}
+                        >
                           {employee.KPI || "N/A"}
                         </span>
                       </div>
@@ -491,14 +519,16 @@ const SalaryCommission = () => {
                     {editMode === employee._id ? (
                       <input
                         type="number"
-                        name="Commission"
-                        value={formData.Commission}
+                        name="commission"
+                        value={formData.commission}
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
                     ) : (
                       <span className="text-sm font-semibold text-gray-900">
-                        {employee.Commission ? `${employee.Commission} tk` : "N/A"}
+                        {employee.commission
+                          ? `${employee.commission} tk`
+                          : "N/A"}
                       </span>
                     )}
                   </div>
@@ -520,7 +550,9 @@ const SalaryCommission = () => {
                           <span className="text-sm font-semibold text-gray-900 block">
                             {employee.remainingCasualLeaves || 0}
                           </span>
-                          <span className="text-xs text-gray-500">remaining</span>
+                          <span className="text-xs text-gray-500">
+                            remaining
+                          </span>
                         </div>
                       </div>
                     )}
@@ -543,7 +575,9 @@ const SalaryCommission = () => {
                           <span className="text-sm font-semibold text-gray-900 block">
                             {employee.remainingSickLeaves || 0}
                           </span>
-                          <span className="text-xs text-gray-500">remaining</span>
+                          <span className="text-xs text-gray-500">
+                            remaining
+                          </span>
                         </div>
                       </div>
                     )}
@@ -610,7 +644,10 @@ const SalaryCommission = () => {
                             </h3>
                             <div className="h-64">
                               {kpiHistory.length > 0 ? (
-                                <Line data={kpiChartData} options={chartOptions} />
+                                <Line
+                                  data={kpiChartData}
+                                  options={chartOptions}
+                                />
                               ) : (
                                 <div className="h-full flex items-center justify-center text-gray-500">
                                   No KPI history available
@@ -625,7 +662,10 @@ const SalaryCommission = () => {
                             </h3>
                             <div className="h-64">
                               {commissionHistory.length > 0 ? (
-                                <Line data={commissionChartData} options={chartOptions} />
+                                <Line
+                                  data={commissionChartData}
+                                  options={chartOptions}
+                                />
                               ) : (
                                 <div className="h-full flex items-center justify-content text-gray-500">
                                   No commission history available
@@ -633,21 +673,24 @@ const SalaryCommission = () => {
                               )}
                             </div>
                           </div>
-                          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                          {/* <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
                             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                               <FiCalendar className="mr-2 text-orange-500" />
                               Leave History
                             </h3>
                             <div className="h-64">
                               {leaveHistory.length > 0 ? (
-                                <Line data={leaveChartData} options={chartOptions} />
+                                <Line
+                                  data={leaveChartData}
+                                  options={chartOptions}
+                                />
                               ) : (
                                 <div className="h-full flex items-center justify-center text-gray-500">
                                   No leave history available
                                 </div>
                               )}
                             </div>
-                          </div>
+                          </div> */}
                         </div>
 
                         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
@@ -655,29 +698,71 @@ const SalaryCommission = () => {
                             Recent Activity
                           </h3>
                           <div className="space-y-3">
-                            {[...kpiHistory, ...commissionHistory, ...leaveHistory]
-                              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                            {[
+                              ...kpiHistory,
+                              ...commissionHistory,
+                              // ...leaveHistory,
+                            ]
+                              .sort(
+                                (a, b) =>
+                                  new Date(b.createdAt) - new Date(a.createdAt)
+                              )
                               .slice(0, 5)
                               .map((item, index) => (
-                                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div
+                                  key={index}
+                                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                                >
                                   <div className="flex items-center space-x-3">
-                                    <div className={`w-2 h-2 rounded-full ${
-                                      item.KPI ? "bg-indigo-500" :
-                                      item.Commission ? "bg-green-500" : "bg-orange-500"
-                                    }`} />
+                                    <div
+                                      className={`w-2 h-2 rounded-full ${
+                                        item.KPI
+                                          ? "bg-indigo-500"
+                                          : item.commission
+                                          ? "bg-green-500"
+                                          : "bg-orange-500"
+                                      }`}
+                                    />
                                     <span className="font-medium text-gray-700">
-                                      {item.KPI ? "KPI Updated" :
-                                       item.Commission ? "Commission Updated" : "Leave Balance Updated"}
+                                      {Object.prototype.hasOwnProperty.call(
+                                        item,
+                                        "KPI"
+                                      )
+                                        ? "KPI Updated"
+                                        : Object.prototype.hasOwnProperty.call(
+                                            item,
+                                            "commission"
+                                          )
+                                        ? "commission Updated"
+                                        : "Leave Balance Updated"}
                                     </span>
+
                                     <span className="text-sm text-gray-500">
-                                      {item.KPI && `New KPI: ${item.KPI}`}
-                                      {item.Commission && `New Commission: ${item.Commission}tk`}
-                                      {item.remainingCasualLeaves !== undefined && `Casual Leaves: ${item.remainingCasualLeaves}`}
-                                      {item.remainingSickLeaves !== undefined && `Sick Leaves: ${item.remainingSickLeaves}`}
+                                      {Object.prototype.hasOwnProperty.call(
+                                        item,
+                                        "KPI"
+                                      ) && `New KPI: ${item.KPI}`}
+                                      {Object.prototype.hasOwnProperty.call(
+                                        item,
+                                        "commission"
+                                      ) &&
+                                        `New commission: ${item.commission}tk`}
+                                      {Object.prototype.hasOwnProperty.call(
+                                        item,
+                                        "remainingCasualLeaves"
+                                      ) &&
+                                        `Casual Leaves: ${item.remainingCasualLeaves}`}
+                                      {Object.prototype.hasOwnProperty.call(
+                                        item,
+                                        "remainingSickLeaves"
+                                      ) &&
+                                        `Sick Leaves: ${item.remainingSickLeaves}`}
                                     </span>
                                   </div>
                                   <span className="text-sm text-gray-400">
-                                    {new Date(item.createdAt).toLocaleDateString()}
+                                    {new Date(
+                                      item.createdAt
+                                    ).toLocaleDateString()}
                                   </span>
                                 </div>
                               ))}
