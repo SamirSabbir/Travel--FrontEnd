@@ -292,7 +292,7 @@ const MyProfile = ({ userRole, userData }) => {
                       Salary
                     </span>
                     <p className="text-lg font-semibold text-gray-800">
-                      ${profile.salary?.toLocaleString() || "N/A"}
+                      <span className="pr-2">Tk</span>{profile.salary?.toLocaleString() || "N/A"}
                     </p>
                   </div>
 
@@ -301,7 +301,7 @@ const MyProfile = ({ userRole, userData }) => {
                       Commission
                     </span>
                     <p className="text-lg font-semibold text-gray-800">
-                      {profile.Commission}
+                     <span className="pr-2">Tk</span> {profile.Commission} 
                     </p>
                   </div>
                   <div className="flex flex-col gap-1">
@@ -309,7 +309,7 @@ const MyProfile = ({ userRole, userData }) => {
                       Casual Leave
                     </span>
                     <p className="text-lg font-semibold text-gray-800">
-                      {profile.remainingCasualLeaves}
+                      {profile.remainingCasualLeaves}<span className="pl-2">days</span>
                     </p>
                   </div>
                   <div className="flex flex-col gap-1">
@@ -317,7 +317,7 @@ const MyProfile = ({ userRole, userData }) => {
                       Sick Leave
                     </span>
                     <p className="text-lg font-semibold text-gray-800">
-                      {profile.remainingSickLeaves}
+                      {profile.remainingSickLeaves}<span className="pl-2">days</span>
                     </p>
                   </div>
                   <div className="flex flex-col gap-1">
