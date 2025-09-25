@@ -15,6 +15,11 @@ const Register = () => {
     email: "",
     password: "",
     role: "Employee",
+    passportNo: "",
+    passwordExpiryDate: "",
+    phoneNo: "",
+    address: "",
+    emergencyPhoneNo: "",
   });
 
   const [files, setFiles] = useState([]);
@@ -147,6 +152,11 @@ const Register = () => {
         email: formData.email,
         password: formData.password,
         role: formData.role,
+        passportNo: formData.passportNo,
+        passwordExpiryDate: formData.passwordExpiryDate,
+        phoneNo: formData.phoneNo,
+        address: formData.address,
+        emergencyPhoneNo: formData.emergencyPhoneNo,
         ...(uploadedFiles.length > 0 && { photo: uploadedFiles[0].url }), //only include if exists
       });
 
@@ -252,6 +262,76 @@ const Register = () => {
                     )}
                   </button>
                 </div>
+              </div>
+
+              {/* Passport Number Field */}
+              <div>
+                <label className="block text-sm font-medium text-[#374151] mb-1">
+                  Passport Number
+                </label>
+                <input
+                  type="text"
+                  name="passportNo"
+                  className="w-full px-4 py-2.5 rounded-lg border border-[#e0e6ed] focus:outline-none focus:ring-2 focus:ring-[#0F4F55] focus:border-transparent transition"
+                  value={formData.passportNo}
+                  onChange={handleChange}
+                />
+              </div>
+
+              {/* Password Expiry Date Field */}
+              <div>
+                <label className="block text-sm font-medium text-[#374151] mb-1">
+                  Password Expiry Date
+                </label>
+                <input
+                  type="date"
+                  name="passwordExpiryDate"
+                  className="w-full px-4 py-2.5 rounded-lg border border-[#e0e6ed] focus:outline-none focus:ring-2 focus:ring-[#0F4F55] focus:border-transparent transition"
+                  value={formData.passwordExpiryDate}
+                  onChange={handleChange}
+                />
+              </div>
+
+              {/* Phone Number Field */}
+              <div>
+                <label className="block text-sm font-medium text-[#374151] mb-1">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  name="phoneNo"
+                  className="w-full px-4 py-2.5 rounded-lg border border-[#e0e6ed] focus:outline-none focus:ring-2 focus:ring-[#0F4F55] focus:border-transparent transition"
+                  value={formData.phoneNo}
+                  onChange={handleChange}
+                />
+              </div>
+
+              {/* Address Field */}
+              <div>
+                <label className="block text-sm font-medium text-[#374151] mb-1">
+                  Address
+                </label>
+                <textarea
+                  name="address"
+                  rows="3"
+                  className="w-full px-4 py-2.5 rounded-lg border border-[#e0e6ed] focus:outline-none focus:ring-2 focus:ring-[#0F4F55] focus:border-transparent transition"
+                  value={formData.address}
+                  onChange={handleChange}
+                />
+              </div>
+
+              {/* Emergency Phone Number Field */}
+              <div>
+                <label className="block text-sm font-medium text-[#374151] mb-1">
+                  Emergency Phone Number
+                </label>
+                <input
+                  type="tel"
+                  name="emergencyPhoneNo"
+                  className="w-full px-4 py-2.5 rounded-lg border border-[#e0e6ed] focus:outline-none focus:ring-2 focus:ring-[#0F4F55] focus:border-transparent transition"
+                  value={formData.emergencyPhoneNo}
+                  onChange={handleChange}
+                />
               </div>
 
               {/* Role Selection */}

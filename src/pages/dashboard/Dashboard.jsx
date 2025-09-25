@@ -124,10 +124,10 @@ const allTabs = [
   {
     name: "My Profile",
     component: MyProfile,
-    roles: ["employee", "AccountAdmin", "superAdmin"],
+    roles: ["employee", "OfficeBoy", "AccountAdmin", "superAdmin",],
   },
   {
-    name: "Employees Performance",
+    name: "Employees Dashboard",
     component: SalaryCommission,
     roles: ["superAdmin"],
   },
@@ -292,7 +292,12 @@ const Dashboard = () => {
       }
     }
 
-    return () => <div>Component Not Found <span className="text-red-600 font-bold">Please</span> Select a Menu</div>;
+    return () => (
+      <div>
+        Component Not Found{" "}
+        <span className="text-red-600 font-bold">Please</span> Select a Menu
+      </div>
+    );
   };
 
   const CurrentTabComponent = findComponent();

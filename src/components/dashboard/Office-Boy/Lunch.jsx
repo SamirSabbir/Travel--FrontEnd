@@ -1,83 +1,168 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
+import {
+  Plus,
+  Trash2,
+  Save,
+  Calendar,
+  Utensils,
+  DollarSign,
+  FileText,
+} from "lucide-react";
+import axios from "../../../api/axios";
 
 const Lunch = () => {
   const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [inputRows, setInputRows] = useState([
     {
       id: 1,
-      date: '',
-      lunchBoxes: '',
-      source: '',
-      note: '',
-      bill: ''
-    }
+      date: "",
+      lunchBoxes: "",
+      source: "",
+      note: "",
+      bill: "",
+    },
   ]);
   const [currentPage, setCurrentPage] = useState(1);
-  const entriesPerPage = 5;
+  const entriesPerPage = 10;
+
+  // Fetch lunch data from API
+  const fetchLunchData = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get("/lunch");
+      
+      // Handle different response structures
+      let lunchData = [];
+      if (Array.isArray(response.data)) {
+        // If response is directly an array
+        lunchData = response.data;
+      } else if (response.data.data && Array.isArray(response.data.data)) {
+        // If response has data property
+        lunchData = response.data.data;
+      } else if (response.data.success && Array.isArray(response.data.data)) {
+        // If response has success property
+        lunchData = response.data.data;
+      }
+      
+      setEntries(lunchData);
+      console.log("Fetched lunch data:", lunchData); // Debug log
+    } catch (error) {
+      toast.error("Failed to fetch lunch data");
+      console.error("Error fetching lunch data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Save lunch entries to API
+  const saveAllEntries = async () => {
+    // Filter out incomplete rows
+    const validRows = inputRows.filter(
+      (row) => row.date && row.lunchBoxes && row.source && row.bill
+    );
+
+    if (validRows.length === 0) {
+      toast.error("Please fill in all required fields in at least one row");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const payload = validRows.map((row) => ({
+        date: new Date(row.date),
+        lunchBoxes: parseInt(row.lunchBoxes),
+        source: row.source,
+        note: row.note || "",
+        bill: parseFloat(row.bill),
+      }));
+
+      console.log("Sending payload:", payload); // Debug log
+
+      const response = await axios.post("/lunch", payload);
+      console.log("Save response:", response); // Debug log
+
+      // Check for different success indicators
+      if (response.status === 200 || response.status === 201 || response.data.success) {
+        toast.success(
+          `${validRows.length} lunch record(s) saved successfully!`
+        );
+
+        // Reset input rows but keep one empty row
+        setInputRows([
+          {
+            id: 1,
+            date: "",
+            lunchBoxes: "",
+            source: "",
+            note: "",
+            bill: "",
+          },
+        ]);
+
+        // Refresh the data
+        fetchLunchData();
+      } else {
+        toast.error("Failed to save lunch records - unexpected response");
+      }
+    } catch (error) {
+      console.error("Error details:", error); // Debug log
+      toast.error("Failed to save lunch records");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Delete lunch entry
+  const deleteEntry = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this lunch record?")) {
+      return;
+    }
+
+    try {
+      const response = await axios.delete(`/lunch/${id}`);
+      if (response.status === 200 || response.data.success) {
+        toast.success("Lunch record deleted successfully!");
+        fetchLunchData();
+      }
+    } catch (error) {
+      toast.error("Failed to delete lunch record");
+      console.error("Error deleting lunch record:", error);
+    }
+  };
 
   const handleInputChange = (id, e) => {
     const { name, value } = e.target;
-    
-    setInputRows(prev => prev.map(row => 
-      row.id === id ? { ...row, [name]: value } : row
-    ));
+
+    setInputRows((prev) =>
+      prev.map((row) => (row.id === id ? { ...row, [name]: value } : row))
+    );
   };
 
   const addInputRow = () => {
-    const newId = inputRows.length > 0 ? Math.max(...inputRows.map(row => row.id)) + 1 : 1;
-    setInputRows([...inputRows, {
-      id: newId,
-      date: '',
-      lunchBoxes: '',
-      source: '',
-      note: '',
-      bill: ''
-    }]);
+    const newId =
+      inputRows.length > 0
+        ? Math.max(...inputRows.map((row) => row.id)) + 1
+        : 1;
+    setInputRows([
+      ...inputRows,
+      {
+        id: newId,
+        date: "",
+        lunchBoxes: "",
+        source: "",
+        note: "",
+        bill: "",
+      },
+    ]);
   };
 
   const removeInputRow = (id) => {
     if (inputRows.length > 1) {
-      setInputRows(inputRows.filter(row => row.id !== id));
+      setInputRows(inputRows.filter((row) => row.id !== id));
     }
-  };
-
-  const saveAllEntries = () => {
-    // Filter out incomplete rows
-    const validRows = inputRows.filter(row => 
-      row.date && row.lunchBoxes && row.source && row.bill
-    );
-
-    if (validRows.length === 0) {
-      alert('Please fill in all required fields in at least one row');
-      return;
-    }
-
-    const newEntries = validRows.map(row => ({
-      id: Date.now() + row.id, // Ensure unique ID
-      date: row.date,
-      lunchBoxes: row.lunchBoxes,
-      source: row.source,
-      note: row.note,
-      bill: row.bill
-    }));
-
-    setEntries([...entries, ...newEntries]);
-    
-    // Reset input rows but keep one empty row
-    setInputRows([{
-      id: 1,
-      date: '',
-      lunchBoxes: '',
-      source: '',
-      note: '',
-      bill: ''
-    }]);
-    
-    alert(`${newEntries.length} lunch record(s) saved successfully!`);
-  };
-
-  const deleteEntry = (id) => {
-    setEntries(entries.filter(entry => entry.id !== id));
   };
 
   // Pagination logic
@@ -86,266 +171,400 @@ const Lunch = () => {
   const currentEntries = entries.slice(indexOfFirstEntry, indexOfLastEntry);
   const totalPages = Math.ceil(entries.length / entriesPerPage);
 
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-  const renderPaginationButtons = () => {
-    const buttons = [];
-    const maxVisibleButtons = 5;
-    
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisibleButtons / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisibleButtons - 1);
-    
-    if (endPage - startPage + 1 < maxVisibleButtons) {
-      startPage = Math.max(1, endPage - maxVisibleButtons + 1);
-    }
-    
-    // Previous button
-    buttons.push(
-      <button
-        key="prev"
-        onClick={() => paginate(Math.max(1, currentPage - 1))}
-        disabled={currentPage === 1}
-        className="px-3 py-1 rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        &laquo;
-      </button>
-    );
-    
-    // Page number buttons
-    for (let i = startPage; i <= endPage; i++) {
-      buttons.push(
-        <button
-          key={i}
-          onClick={() => paginate(i)}
-          className={`px-3 py-1 rounded-md border ${
-            currentPage === i 
-              ? 'bg-blue-500 text-white border-blue-500' 
-              : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-          }`}
-        >
-          {i}
-        </button>
-      );
-    }
-    
-    // Next button
-    buttons.push(
-      <button
-        key="next"
-        onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
-        disabled={currentPage === totalPages}
-        className="px-3 py-1 rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        &raquo;
-      </button>
-    );
-    
-    return buttons;
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount || 0);
+  };
+
+  // Calculate summary statistics - handle missing lunchBoxes field
+  const totalExpenses = entries.reduce(
+    (sum, entry) => sum + (entry.bill || 0),
+    0
+  );
+  
+  const totalLunchBoxes = entries.reduce(
+    (sum, entry) => sum + (entry.lunchBoxes || 0),
+    0
+  );
+  
+  const averagePerBox =
+    totalLunchBoxes > 0 ? totalExpenses / totalLunchBoxes : 0;
+
+  useEffect(() => {
+    fetchLunchData();
+  }, []);
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">Lunch Management</h1>
-          <p className="text-gray-600">Track and manage lunch expenses</p>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Lunch Management
+              </h1>
+              <p className="text-gray-600 mt-2">
+                Track and manage lunch expenses efficiently
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={addInputRow}
+                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+              >
+                <Plus size={18} className="mr-2" />
+                Add Row
+              </button>
+              <button
+                onClick={saveAllEntries}
+                disabled={saving}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-sm"
+              >
+                <Save size={18} className="mr-2" />
+                {saving ? "Saving..." : "Save All"}
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="flex space-x-2">
-          <button
-            onClick={addInputRow}
-            className="flex items-center px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-200"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
-            Add Row
-          </button>
-          <button
-            onClick={saveAllEntries}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200"
-          >
-            Save All
-          </button>
-        </div>
-      </div>
-      
-      <div className="bg-white shadow-md rounded-lg overflow-hidden mb-8">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. of Lunch Boxes</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Note</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bill ($)</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {/* Input rows */}
-              {inputRows.map(row => (
-                <tr key={row.id} className="bg-blue-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <input
-                      type="date"
-                      name="date"
-                      value={row.date}
-                      onChange={(e) => handleInputChange(row.id, e)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <input
-                      type="number"
-                      name="lunchBoxes"
-                      value={row.lunchBoxes}
-                      onChange={(e) => handleInputChange(row.id, e)}
-                      placeholder="Number of boxes"
-                      min="1"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <select
-                      name="source"
-                      value={row.source}
-                      onChange={(e) => handleInputChange(row.id, e)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      <option value="">Select Source</option>
-                      <option value="Catering">Catering</option>
-                      <option value="Restaurant">Restaurant</option>
-                      <option value="OtherSide food">OtherSide food</option>
-                    </select>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <input
-                      type="text"
-                      name="note"
-                      value={row.note}
-                      onChange={(e) => handleInputChange(row.id, e)}
-                      placeholder="Additional notes"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <input
-                      type="number"
-                      name="bill"
-                      value={row.bill}
-                      onChange={(e) => handleInputChange(row.id, e)}
-                      placeholder="0.00"
-                      min="0"
-                      step="0.01"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <button
-                      onClick={() => removeInputRow(row.id)}
-                      className="text-red-500 hover:text-red-700 p-1"
-                      disabled={inputRows.length <= 1}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                  </td>
+
+        {/* Input Table */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-800 flex items-center">
+              <FileText size={20} className="mr-2" />
+              New Lunch Entries
+            </h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <div className="flex items-center">
+                      <Calendar size={16} className="mr-2" />
+                      Date
+                    </div>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <div className="flex items-center">
+                      <Utensils size={16} className="mr-2" />
+                      Lunch Boxes
+                    </div>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Source
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Note
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <div className="flex items-center">
+                      <DollarSign size={16} className="mr-2" />
+                      Bill Amount
+                    </div>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Action
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Saved entries table */}
-      {entries.length > 0 && (
-        <>
-          <div className="bg-white shadow-md rounded-lg overflow-hidden mb-4">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lunch Boxes</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Note</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bill ($)</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {inputRows.map((row) => (
+                  <tr
+                    key={row.id}
+                    className="hover:bg-blue-50/50 transition-colors"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="date"
+                        name="date"
+                        value={row.date}
+                        onChange={(e) => handleInputChange(row.id, e)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="number"
+                        name="lunchBoxes"
+                        value={row.lunchBoxes}
+                        onChange={(e) => handleInputChange(row.id, e)}
+                        placeholder="Number of boxes"
+                        min="1"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <select
+                        name="source"
+                        value={row.source}
+                        onChange={(e) => handleInputChange(row.id, e)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      >
+                        <option value="">Select Source</option>
+                        <option value="Catering">Catering</option>
+                        <option value="Restaurant">Restaurant</option>
+                        <option value="OtherSide food">OtherSide food</option>
+                      </select>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="text"
+                        name="note"
+                        value={row.note}
+                        onChange={(e) => handleInputChange(row.id, e)}
+                        placeholder="Additional notes"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="relative">
+                        <DollarSign
+                          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                          size={16}
+                        />
+                        <input
+                          type="number"
+                          name="bill"
+                          value={row.bill}
+                          onChange={(e) => handleInputChange(row.id, e)}
+                          placeholder="0.00"
+                          min="0"
+                          step="0.01"
+                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          required
+                        />
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => removeInputRow(row.id)}
+                        disabled={inputRows.length <= 1}
+                        className="p-2 text-red-500 hover:text-red-700 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {currentEntries.map(entry => (
-                    <tr key={entry.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">{entry.date}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{entry.lunchBoxes}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          entry.source === 'Catering' ? 'bg-blue-100 text-blue-800' :
-                          entry.source === 'Restaurant' ? 'bg-green-100 text-green-800' :
-                          'bg-purple-100 text-purple-800'
-                        }`}>
-                          {entry.source}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">{entry.note || '-'}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">${parseFloat(entry.bill).toFixed(2)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button 
-                          onClick={() => deleteEntry(entry.id)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          Delete
-                        </button>
-                      </td>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Saved Entries Table */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
+          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h2 className="text-lg font-semibold text-gray-800">
+              Saved Lunch Records
+            </h2>
+            <span className="text-sm text-gray-500">
+              {entries.length} record(s) total
+            </span>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Lunch Boxes
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Source
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Note
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Bill Amount
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center mt-6 mb-8">
-              <div className="flex space-x-2">
-                {renderPaginationButtons()}
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {currentEntries.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan="6"
+                          className="px-6 py-8 text-center text-gray-500"
+                        >
+                          No lunch records found. Start by adding some entries above.
+                        </td>
+                      </tr>
+                    ) : (
+                      currentEntries.map((entry) => (
+                        <tr
+                          key={entry._id}
+                          className="hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {formatDate(entry.date)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              {entry.lunchBoxes || 0} boxes
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                entry.source === "Catering"
+                                  ? "bg-green-100 text-green-800"
+                                  : entry.source === "Restaurant"
+                                  ? "bg-purple-100 text-purple-800"
+                                  : "bg-orange-100 text-orange-800"
+                              }`}
+                            >
+                              {entry.source}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
+                            {entry.note || "-"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                            {formatCurrency(entry.bill)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <button
+                              onClick={() => deleteEntry(entry._id)}
+                              className="text-red-600 hover:text-red-900 transition-colors p-1"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
-            </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="px-6 py-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-700">
+                      Showing {indexOfFirstEntry + 1} to{" "}
+                      {Math.min(indexOfLastEntry, entries.length)} of{" "}
+                      {entries.length} entries
+                    </div>
+                    <div className="flex space-x-1">
+                      <button
+                        onClick={() =>
+                          setCurrentPage((prev) => Math.max(prev - 1, 1))
+                        }
+                        disabled={currentPage === 1}
+                        className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Previous
+                      </button>
+
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                        (page) => (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`px-3 py-1 border rounded-md text-sm font-medium transition-colors ${
+                              currentPage === page
+                                ? "bg-blue-600 text-white border-blue-600"
+                                : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        )
+                      )}
+
+                      <button
+                        onClick={() =>
+                          setCurrentPage((prev) =>
+                            Math.min(prev + 1, totalPages)
+                          )
+                        }
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
+        </div>
 
-          {/* Summary section */}
-          <div className="bg-white shadow-md rounded-lg p-6 mb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Lunch Summary</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="text-lg font-medium text-blue-800">Total Expenses</h3>
-                <p className="text-2xl font-bold text-blue-600">
-                  ${entries.reduce((sum, entry) => sum + parseFloat(entry.bill), 0).toFixed(2)}
-                </p>
+        {/* Summary Section */}
+        {entries.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100 text-sm font-medium">
+                    Total Expenses
+                  </p>
+                  <p className="text-2xl font-bold mt-1">
+                    {formatCurrency(totalExpenses)}
+                  </p>
+                </div>
+                <DollarSign size={32} className="text-blue-200" />
               </div>
-              <div className="bg-green-50 p-4 rounded-lg">
-                <h3 className="text-lg font-medium text-green-800">Total Lunch Boxes</h3>
-                <p className="text-2xl font-bold text-green-600">
-                  {entries.reduce((sum, entry) => sum + parseInt(entry.lunchBoxes), 0)}
-                </p>
+            </div>
+
+            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-100 text-sm font-medium">
+                    Total Lunch Boxes
+                  </p>
+                  <p className="text-2xl font-bold mt-1">{totalLunchBoxes}</p>
+                </div>
+                <Utensils size={32} className="text-green-200" />
               </div>
-              <div className="bg-purple-50 p-4 rounded-lg">
-                <h3 className="text-lg font-medium text-purple-800">Average per Box</h3>
-                <p className="text-2xl font-bold text-purple-600">
-                  ${(entries.reduce((sum, entry) => sum + parseFloat(entry.bill), 0) / 
-                    entries.reduce((sum, entry) => sum + parseInt(entry.lunchBoxes), 0)).toFixed(2)}
-                </p>
+            </div>
+
+            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-100 text-sm font-medium">
+                    Average per Box
+                  </p>
+                  <p className="text-2xl font-bold mt-1">
+                    {formatCurrency(averagePerBox)}
+                  </p>
+                </div>
+                <Calendar size={32} className="text-purple-200" />
               </div>
             </div>
           </div>
-        </>
-      )}
+        )}
+      </div>
     </div>
   );
 };
