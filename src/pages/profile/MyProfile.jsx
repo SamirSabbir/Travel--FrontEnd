@@ -23,6 +23,11 @@ const MyProfile = ({ userRole, userData }) => {
   const [formData, setFormData] = useState({
     name: "",
     password: "",
+    passportNo: "",
+    passwordExpiryDate: "",
+    phoneNo: "",
+    address: "",
+    emergencyPhoneNo: "",
   });
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState("");
@@ -33,10 +38,14 @@ const MyProfile = ({ userRole, userData }) => {
   const userPhoto = userData?.photo || null;
 
   // Determine API endpoints based on role
-  const isEmployee = userRole?.toLowerCase() === "employee";
+  const isEmployee =
+    userRole?.toLowerCase() === "employee" ||
+    userRole?.toLowerCase() === "officeboy";
+
   const profileUrl = isEmployee
     ? "/users/employeeProfile"
     : "/users/admin-profile";
+
   const updateUrl = isEmployee
     ? "/users/employeeProfileUpdate"
     : "/users/admin-profile-update";
@@ -45,9 +54,10 @@ const MyProfile = ({ userRole, userData }) => {
     const fetchProfile = async () => {
       try {
         const response = await axios.get(profileUrl);
-        setProfile(response.data.data);
+        const data = response?.data?.data || {};
+        setProfile(data);
         setFormData({
-          name: response.data.data.name,
+          name: data.name || "",
           password: "",
         });
         setLoading(false);
@@ -199,7 +209,7 @@ const MyProfile = ({ userRole, userData }) => {
                     Full Name
                   </span>
                   <p className="text-lg font-semibold text-gray-800">
-                    {profile.name}
+                    {profile?.name || "N/A"}
                   </p>
                 </div>
 
@@ -208,16 +218,57 @@ const MyProfile = ({ userRole, userData }) => {
                     Email
                   </span>
                   <p className="text-lg font-semibold text-gray-800">
-                    {profile.email}
+                    {profile?.email || "N/A"}
                   </p>
                 </div>
 
                 <div className="flex flex-col gap-1">
                   <span className="text-sm font-medium text-gray-500">
-                    Role
+                    Passport Number
+                  </span>
+                  <p className="text-lg font-semibold text-gray-800">
+                    {profile?.passportNo || "N/A"}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm font-medium text-gray-500">
+                    Passport Expiry Date
+                  </span>
+                  <p className="text-lg font-semibold text-gray-800">
+                    {profile?.passwordExpiryDate || "N/A"}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm font-medium text-gray-500">
+                    Phone Number
+                  </span>
+                  <p className="text-lg font-semibold text-gray-800">
+                    {profile?.phoneNo || "N/A"}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm font-medium text-gray-500">
+                    Address
+                  </span>
+                  <p className="text-lg font-semibold text-gray-800">
+                    {profile?.address || "N/A"}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm font-medium text-gray-500">
+                    Emergency Phone Number
+                  </span>
+                  <p className="text-lg font-semibold text-gray-800">
+                    {profile?.emergencyPhoneNo || "N/A"}
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm font-medium text-gray-500">
+                    Position
                   </span>
                   <p className="text-lg font-semibold text-gray-800 capitalize">
-                    {profile.role.toLowerCase()}
+                    {profile?.role?.toLowerCase() || "N/A"}
                   </p>
                 </div>
               </div>
@@ -251,6 +302,30 @@ const MyProfile = ({ userRole, userData }) => {
                     </span>
                     <p className="text-lg font-semibold text-gray-800">
                       {profile.Commission}
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm font-medium text-gray-500">
+                      Casual Leave
+                    </span>
+                    <p className="text-lg font-semibold text-gray-800">
+                      {profile.remainingCasualLeaves}
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm font-medium text-gray-500">
+                      Sick Leave
+                    </span>
+                    <p className="text-lg font-semibold text-gray-800">
+                      {profile.remainingSickLeaves}
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm font-medium text-gray-500">
+                      Joining Date
+                    </span>
+                    <p className="text-lg font-semibold text-gray-800">
+                      {profile.joiningDate}
                     </p>
                   </div>
 
@@ -322,6 +397,86 @@ const MyProfile = ({ userRole, userData }) => {
                         type="text"
                         name="name"
                         value={formData.name}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                        required
+                      />
+                      <FaUser className="absolute right-3 top-3 text-gray-400" />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Passport Number
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="passportNo"
+                        value={formData.passportNo}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                        required
+                      />
+                      <FaUser className="absolute right-3 top-3 text-gray-400" />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Passport Expiry Date
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="date"
+                        name="passwordExpiryDate"
+                        value={formData.passwordExpiryDate}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                        required
+                      />
+                      <FaUser className="absolute right-3 top-3 text-gray-400" />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Phone No
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="phoneNo"
+                        value={formData.phoneNo}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                        required
+                      />
+                      <FaUser className="absolute right-3 top-3 text-gray-400" />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Address
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name=" address"
+                        value={formData.address}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                        required
+                      />
+                      <FaUser className="absolute right-3 top-3 text-gray-400" />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Emergency Phone No
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="emergencyPhoneNo"
+                        value={formData.emergencyPhoneNo}
                         onChange={handleInputChange}
                         className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
                         required

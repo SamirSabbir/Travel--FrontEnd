@@ -124,7 +124,7 @@ const allTabs = [
   {
     name: "My Profile",
     component: MyProfile,
-    roles: ["employee", "AccountAdmin", "superAdmin", "OfficeBoy"],
+    roles: ["employee", "OfficeBoy", "AccountAdmin", "superAdmin",],
   },
   {
     name: "Employees Dashboard",

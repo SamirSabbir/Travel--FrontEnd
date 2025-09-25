@@ -19,6 +19,11 @@ const Expense = () => {
     key: "date",
     direction: "desc",
   });
+  const [downloadFilter, setDownloadFilter] = useState({
+    type: "all", // 'all', 'month', 'year'
+    month: new Date().getMonth() + 1, // Current month (1-12)
+    year: new Date().getFullYear(), // Current year
+  });
 
   // Fetch expenses data
   const fetchExpenses = async () => {
@@ -36,21 +41,68 @@ const Expense = () => {
     }
   };
 
-  // Download expenses
+  // Get unique years from expenses data
+  const getUniqueYears = () => {
+    const years = expenses
+      .map((expense) => new Date(expense.date).getFullYear())
+      .filter((year, index, self) => self.indexOf(year) === index)
+      .sort((a, b) => b - a); // Sort descending (newest first)
+
+    return years.length > 0 ? years : [new Date().getFullYear()];
+  };
+
+  // Download expenses with filters
   const handleDownload = async () => {
     try {
-      const response = await axios.get("/expense/download", {
+      let downloadUrl = "/expense/download"; // Changed variable name from 'url' to 'downloadUrl'
+      const params = new URLSearchParams();
+
+      if (downloadFilter.type === "month") {
+        params.append("month", downloadFilter.month);
+        params.append("year", downloadFilter.year);
+      } else if (downloadFilter.type === "year") {
+        params.append("year", downloadFilter.year);
+      }
+
+      if (params.toString()) {
+        downloadUrl += `?${params.toString()}`;
+      }
+
+      const response = await axios.get(downloadUrl, {
         responseType: "blob",
       });
 
       // Create blob link to download
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(new Blob([response.data])); // This 'url' is local to this block
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute(
-        "download",
-        `expenses-${new Date().toISOString().split("T")[0]}.csv`
-      );
+
+      let filename = "expenses";
+      if (downloadFilter.type === "month") {
+        const monthNames = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
+        filename = `expenses-${monthNames[downloadFilter.month - 1]}-${
+          downloadFilter.year
+        }`;
+      } else if (downloadFilter.type === "year") {
+        filename = `expenses-${downloadFilter.year}`;
+      } else {
+        filename = `expenses-${new Date().toISOString().split("T")[0]}`;
+      }
+
+      link.setAttribute("download", `${filename}.csv`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -119,7 +171,7 @@ const Expense = () => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-BD", {
       style: "currency",
-      currency: "BDT", // 👈 use BDT instead of USD
+      currency: "BDT",
       currencyDisplay: "symbol",
     }).format(amount || 0);
   };
@@ -144,17 +196,110 @@ const Expense = () => {
     fetchExpenses();
   }, []);
 
+  const uniqueYears = getUniqueYears();
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Expense Management</h1>
-        <button
-          onClick={handleDownload}
-          className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-        >
-          <Download size={18} className="mr-2" />
-          Download CSV
-        </button>
+        <div className="flex items-center space-x-4">
+          {/* Download Filters */}
+          <div className="flex items-center space-x-2 bg-white rounded-lg shadow-sm p-2">
+            <select
+              value={downloadFilter.type}
+              onChange={(e) =>
+                setDownloadFilter({
+                  ...downloadFilter,
+                  type: e.target.value,
+                  month:
+                    e.target.value === "month"
+                      ? downloadFilter.month
+                      : new Date().getMonth() + 1,
+                  year:
+                    e.target.value === "year"
+                      ? downloadFilter.year
+                      : new Date().getFullYear(),
+                })
+              }
+              className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Data</option>
+              <option value="month">By Month</option>
+              <option value="year">By Year</option>
+            </select>
+
+            {downloadFilter.type === "month" && (
+              <>
+                <select
+                  value={downloadFilter.month}
+                  onChange={(e) =>
+                    setDownloadFilter({
+                      ...downloadFilter,
+                      month: parseInt(e.target.value),
+                    })
+                  }
+                  className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="1">January</option>
+                  <option value="2">February</option>
+                  <option value="3">March</option>
+                  <option value="4">April</option>
+                  <option value="5">May</option>
+                  <option value="6">June</option>
+                  <option value="7">July</option>
+                  <option value="8">August</option>
+                  <option value="9">September</option>
+                  <option value="10">October</option>
+                  <option value="11">November</option>
+                  <option value="12">December</option>
+                </select>
+                <select
+                  value={downloadFilter.year}
+                  onChange={(e) =>
+                    setDownloadFilter({
+                      ...downloadFilter,
+                      year: parseInt(e.target.value),
+                    })
+                  }
+                  className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {uniqueYears.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
+
+            {downloadFilter.type === "year" && (
+              <select
+                value={downloadFilter.year}
+                onChange={(e) =>
+                  setDownloadFilter({
+                    ...downloadFilter,
+                    year: parseInt(e.target.value),
+                  })
+                }
+                className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {uniqueYears.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          <button
+            onClick={handleDownload}
+            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <Download size={18} className="mr-2" />
+            Download CSV
+          </button>
+        </div>
       </div>
 
       {/* Search and Filters */}
