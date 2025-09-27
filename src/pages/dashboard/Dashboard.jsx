@@ -37,6 +37,7 @@ import Notary from "../../components/dashboard/Office-Boy/Notary";
 import Lunch from "../../components/dashboard/Office-Boy/Lunch";
 import OfficeSupplies from "../../components/dashboard/Office-Boy/OfficeSupplies";
 import Expense from "../../components/dashboard/Expense";
+import EmployeeActivity from "../../components/dashboard/superAdmin/EmployeeActivity";
 
 // Tab mapping with role-based visibility
 const allTabs = [
@@ -122,9 +123,14 @@ const allTabs = [
   { name: "Account-Info", component: AccountInfo, roles: ["AccountAdmin"] },
   { name: "My-Business", component: MyBusiness, roles: ["superAdmin"] },
   {
+    name: "Employee Activity",
+    component: EmployeeActivity,
+    roles: ["superAdmin"],
+  },
+  {
     name: "My Profile",
     component: MyProfile,
-    roles: ["employee", "OfficeBoy", "AccountAdmin", "superAdmin",],
+    roles: ["employee", "OfficeBoy", "AccountAdmin", "superAdmin"],
   },
   {
     name: "Employees Dashboard",
@@ -166,6 +172,15 @@ const Dashboard = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [socket, setSocket] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isOnline, setIsOnline] = useState(false);
+
+  // State for online users data that will be passed to EmployeeActivity
+  const [onlineUsers, setOnlineUsers] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [stats, setStats] = useState({
+    completedTasks: 0,
+    onlineEmployees: 0,
+  });
 
   useEffect(() => {
     const token = Cookies.get("token");
@@ -194,19 +209,10 @@ const Dashboard = () => {
     const normalizedUserRole = userData.role.toLowerCase();
     setUser(userData);
 
-    // const availableTabs = allTabs.filter((tab) =>
-    //   tab.roles.some((tabRole) => tabRole.toLowerCase() === normalizedUserRole)
-    // );
     const availableTabs = allTabs.filter((tab) => {
       const hasAccess = tab.roles.some(
         (tabRole) => tabRole.toLowerCase() === normalizedUserRole
       );
-
-      // setTabs(availableTabs);
-
-      // if (!availableTabs.some((tab) => tab.name === selectedTab)) {
-      //   setSelectedTab(availableTabs[0]?.name || "");
-      // }
 
       if (tab.subTabs) {
         const filteredSubTabs = tab.subTabs.filter((subTab) =>
@@ -214,8 +220,6 @@ const Dashboard = () => {
             (subTabRole) => subTabRole.toLowerCase() === normalizedUserRole
           )
         );
-
-        // Only show the tab if it has accessible sub-tabs
         return hasAccess && filteredSubTabs.length > 0;
       }
 
@@ -243,8 +247,31 @@ const Dashboard = () => {
       const newSocket = io("http://localhost:5000");
       setSocket(newSocket);
 
-      // Join user's room for targeted notifications
-      newSocket.emit("join-user-room", userData.email);
+      // Socket connection handlers
+      newSocket.on("connect", () => {
+        console.log("✅ Connected to Socket.IO server");
+        setIsOnline(true);
+
+        // Join user's room for targeted notifications and activity tracking
+        newSocket.emit("join-user-room", {
+          userEmail: userData.email,
+          userName: userData.name,
+          userId: userData._id,
+        });
+
+        // Request initial data for activity tracking
+        newSocket.emit("activity:fetch-initial");
+      });
+
+      newSocket.on("disconnect", (reason) => {
+        console.log("❌ Disconnected from Socket.IO:", reason);
+        setIsOnline(false);
+      });
+
+      newSocket.on("connect_error", (error) => {
+        console.error("❌ Socket connection error:", error);
+        setIsOnline(false);
+      });
 
       // Listen for new notifications
       newSocket.on("new-notification", (notification) => {
@@ -255,15 +282,73 @@ const Dashboard = () => {
         });
       });
 
+      // Listen for online users updates (this will update for ALL users)
+      newSocket.on("activity:online-updated", (data) => {
+        console.log("📊 Online users updated:", data.onlineUsers);
+        setOnlineUsers(data.onlineUsers || []);
+        setStats({
+          completedTasks: data.stats?.completedWorks || 0,
+          onlineEmployees: data.stats?.onlineCount || 0,
+        });
+      });
+
+      // Listen for new activities
+      newSocket.on("activity:new", (activity) => {
+        console.log("🎯 New activity:", activity);
+        setActivities((prev) => [activity, ...prev].slice(0, 50));
+      });
+
+      // Listen for initial data
+      newSocket.on("activity:initial-data", (data) => {
+        console.log("📦 Initial activity data received");
+        setActivities(data.activities?.slice(0, 50) || []);
+        setOnlineUsers(data.onlineUsers || []);
+        setStats({
+          completedTasks: data.stats?.completedWorks || 0,
+          onlineEmployees: data.stats?.onlineCount || 0,
+        });
+      });
+
+      // Set up visibility change handler
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === "hidden" && newSocket.connected) {
+          console.log("👋 User left dashboard tab");
+        } else if (
+          document.visibilityState === "visible" &&
+          newSocket.connected
+        ) {
+          console.log("👋 User returned to dashboard tab");
+        }
+      };
+
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+
+      const handleBeforeUnload = () => {
+        if (newSocket.connected) {
+          console.log("🚪 User is leaving the dashboard");
+        }
+      };
+
+      window.addEventListener("beforeunload", handleBeforeUnload);
+
       return () => {
-        newSocket.close();
+        document.removeEventListener(
+          "visibilitychange",
+          handleVisibilityChange
+        );
+        window.removeEventListener("beforeunload", handleBeforeUnload);
+
+        if (newSocket.connected) {
+          newSocket.close();
+        }
       };
     }
   }, [navigate]);
 
   const handleLogout = () => {
     if (socket) {
-      socket.close();
+      // socket.emit("disconnect");
+      socket.disconnect();
     }
     Cookies.remove("token");
     Cookies.remove("user");
@@ -280,11 +365,9 @@ const Dashboard = () => {
 
   // Find the appropriate component based on selected tab
   const findComponent = () => {
-    // First check if it's a main tab with a component
     const mainTab = tabs.find((tab) => tab.name === selectedTab);
     if (mainTab && mainTab.component) return mainTab.component;
 
-    // If not found, check if it's a sub-tab from any dropdown
     for (const tab of tabs) {
       if (tab.subTabs) {
         const subTab = tab.subTabs.find((st) => st.name === selectedTab);
@@ -302,10 +385,6 @@ const Dashboard = () => {
 
   const CurrentTabComponent = findComponent();
 
-  // const CurrentTabComponent =
-  //   tabs.find((tab) => tab.name === selectedTab)?.component ||
-  //   (() => <div>Not Found</div>);
-
   return (
     <div className="flex h-screen bg-gray-100">
       <ToastContainer position="top-right" autoClose={3000} />
@@ -318,6 +397,32 @@ const Dashboard = () => {
           <span className="text-lg font-semibold text-[#0F4F55]">
             Trip and Travel
           </span>
+        </div>
+
+        {/* Online Status Indicator */}
+        <div className="px-4 py-2 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-600">Status:</span>
+            <div className="flex items-center">
+              <div
+                className={`w-2 h-2 rounded-full mr-2 ${
+                  isOnline ? "bg-green-500 animate-pulse" : "bg-red-500"
+                }`}
+              ></div>
+              <span
+                className={`text-xs font-medium ${
+                  isOnline ? "text-green-600" : "text-red-600"
+                }`}
+              >
+                {isOnline ? "Online" : "Offline"}
+              </span>
+            </div>
+          </div>
+
+          {/* Online Users Count */}
+          <div className="mt-2 text-xs text-gray-500">
+            {onlineUsers.length} users online
+          </div>
         </div>
 
         {/* Tab List */}
@@ -361,9 +466,22 @@ const Dashboard = () => {
       <div className="flex-1 flex flex-col bg-[#ECF4FB]">
         {/* Top Header */}
         <header className="bg-white shadow px-6 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-700">
-            Welcome, {user.name}
-          </h1>
+          <div>
+            <h1 className="text-xl font-bold text-gray-700">
+              Welcome, {user.name}
+            </h1>
+            <div className="flex items-center mt-1">
+              <div
+                className={`w-2 h-2 rounded-full mr-2 ${
+                  isOnline ? "bg-green-500" : "bg-red-500"
+                }`}
+              ></div>
+              <span className="text-xs text-gray-500">
+                {isOnline ? "Connected to server" : "Disconnected"} •
+                {onlineUsers.length} users online
+              </span>
+            </div>
+          </div>
 
           <div className="flex items-center gap-4">
             {/* Notification Bell */}
@@ -416,7 +534,16 @@ const Dashboard = () => {
 
         {/* Page Content */}
         <main className="flex-1 p-6 overflow-y-auto">
-          <CurrentTabComponent userRole={user.role} userData={user} />
+          <CurrentTabComponent
+            userRole={user.role}
+            userData={user}
+            socket={socket}
+            // Pass online users data to EmployeeActivity component
+            onlineUsers={onlineUsers}
+            activities={activities}
+            stats={stats}
+            setActivities={setActivities}
+          />
         </main>
       </div>
     </div>

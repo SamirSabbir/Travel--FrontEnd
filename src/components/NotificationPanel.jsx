@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "../api/axios";
-import { io } from "socket.io-client";
+import { socket } from "../socket"; // use shared socket
 import {
   X,
   CheckCircle,
@@ -10,7 +10,7 @@ import {
   Bell,
 } from "react-feather";
 
-const NotificationPanel = ({ onClose, userEmail, socket, setUnreadCount }) => {
+const NotificationPanel = ({ onClose, userEmail, setUnreadCount }) => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,70 +21,59 @@ const NotificationPanel = ({ onClose, userEmail, socket, setUnreadCount }) => {
       return;
     }
 
-    fetchNotifications();
-
-    // Listen for real-time notifications if socket is provided
-    if (socket) {
-      socket.on("new-notification", (notification) => {
-        setNotifications((prev) => [notification, ...prev]);
-        if (setUnreadCount) {
-          setUnreadCount((prev) => prev + 1);
+    // Fetch initial notifications
+    const fetchNotifications = async () => {
+      try {
+        setError(null);
+        const response = await axios.get(`/notifications/${userEmail}`);
+        if (response.data.success) {
+          setNotifications(response.data.data || []);
+          const unread = response.data.data?.filter((n) => n.isNew).length || 0;
+          setUnreadCount?.(unread);
+        } else {
+          setError("Failed to fetch notifications");
         }
-      });
-    }
-
-    return () => {
-      if (socket) {
-        socket.off("new-notification");
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+        setError("Failed to load notifications. Please try again.");
+        setNotifications([]);
+      } finally {
+        setLoading(false);
       }
     };
-  }, [userEmail, socket]);
 
-  const fetchNotifications = async () => {
-    try {
-      setError(null);
-      const response = await axios.get(`/notifications/${userEmail}`);
+    fetchNotifications();
 
-      if (response.data.success) {
-        setNotifications(response.data.data || []);
-
-        // Update unread count
-        const unread = response.data.data?.filter((n) => n.isNew).length || 0;
-        if (setUnreadCount) {
-          setUnreadCount(unread);
-        }
-      } else {
-        setError("Failed to fetch notifications");
+    // Listen for real-time notifications for this user
+    const handleNewNotification = (notification) => {
+      if (notification.userEmail === userEmail) {
+        setNotifications((prev) => [notification, ...prev]);
+        setUnreadCount?.((prev) => prev + 1);
       }
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-      setError("Failed to load notifications. Please try again.");
-      setNotifications([]); // Ensure no dummy data
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    socket.on("new-notification", handleNewNotification);
+
+    return () => {
+      socket.off("new-notification", handleNewNotification);
+    };
+  }, [userEmail, setUnreadCount]);
 
   const markAsRead = async (id) => {
     try {
       const response = await axios.patch(
         `/api/v1/notifications/${id}/${userEmail}/read`
       );
-
       if (response.data.success) {
-        setNotifications(
-          notifications.map((notif) =>
+        setNotifications((prev) =>
+          prev.map((notif) =>
             notif._id === id ? { ...notif, isNew: false } : notif
           )
         );
-
-        // Update unread count
-        if (setUnreadCount) {
-          setUnreadCount((prev) => Math.max(0, prev - 1));
-        }
+        setUnreadCount?.((prev) => Math.max(0, prev - 1));
       }
-    } catch (error) {
-      console.error("Error marking notification as read:", error);
+    } catch (err) {
+      console.error("Error marking notification as read:", err);
     }
   };
 
@@ -94,19 +83,14 @@ const NotificationPanel = ({ onClose, userEmail, socket, setUnreadCount }) => {
         "/api/v1/notifications/mark-all-read",
         { userEmail }
       );
-
       if (response.data.success) {
-        setNotifications(
-          notifications.map((notif) => ({ ...notif, isNew: false }))
+        setNotifications((prev) =>
+          prev.map((notif) => ({ ...notif, isNew: false }))
         );
-
-        // Reset unread count
-        if (setUnreadCount) {
-          setUnreadCount(0);
-        }
+        setUnreadCount?.(0);
       }
-    } catch (error) {
-      console.error("Error marking all notifications as read:", error);
+    } catch (err) {
+      console.error("Error marking all notifications as read:", err);
     }
   };
 
@@ -128,14 +112,13 @@ const NotificationPanel = ({ onClose, userEmail, socket, setUnreadCount }) => {
       const date = new Date(dateString);
       const now = new Date();
       const diffInMinutes = Math.floor(
-        (now.getTime() - date.getTime()) / (1000 * 60)
+        (now.getTime() - date.getTime()) / 60000
       );
-
       if (diffInMinutes < 1) return "Just now";
       if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
       if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
       return `${Math.floor(diffInMinutes / 1440)}d ago`;
-    } catch (error) {
+    } catch {
       return "Recently";
     }
   };
@@ -163,7 +146,7 @@ const NotificationPanel = ({ onClose, userEmail, socket, setUnreadCount }) => {
 
   const unreadNotifications = notifications.filter((n) => n.isNew).length;
 
-  if (loading) {
+  if (loading)
     return (
       <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
         <div className="p-4 border-b border-gray-200 flex justify-between items-center">
@@ -181,9 +164,8 @@ const NotificationPanel = ({ onClose, userEmail, socket, setUnreadCount }) => {
         </div>
       </div>
     );
-  }
 
-  if (error) {
+  if (error)
     return (
       <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
         <div className="p-4 border-b border-gray-200 flex justify-between items-center">
@@ -199,7 +181,7 @@ const NotificationPanel = ({ onClose, userEmail, socket, setUnreadCount }) => {
           <AlertCircle className="h-12 w-12 mx-auto mb-2" />
           <p>{error}</p>
           <button
-            onClick={fetchNotifications}
+            onClick={() => fetchNotifications()}
             className="mt-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             Retry
@@ -207,7 +189,6 @@ const NotificationPanel = ({ onClose, userEmail, socket, setUnreadCount }) => {
         </div>
       </div>
     );
-  }
 
   return (
     <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
@@ -278,14 +259,13 @@ const NotificationPanel = ({ onClose, userEmail, socket, setUnreadCount }) => {
         )}
       </div>
 
-      {/* Footer - Only show if there are notifications */}
+      {/* Footer */}
       {notifications.length > 0 && (
         <div className="p-3 border-t border-gray-200 text-center">
           <button
             className="text-sm text-blue-600 hover:text-blue-800 px-3 py-1 rounded hover:bg-blue-50"
             onClick={() => {
               onClose();
-              // Navigate to full notifications page if needed
             }}
           >
             View all notifications
