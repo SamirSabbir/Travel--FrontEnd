@@ -255,6 +255,9 @@ const Work = ({ userRole }) => {
   const totalPages = Math.ceil(filteredWorkData.length / itemsPerPage);
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
+  // Debounce timer for auto-save
+  const [debounceTimers, setDebounceTimers] = useState({});
+
   const fetchWorks = async () => {
     try {
       const endpoint =
@@ -298,6 +301,46 @@ const Work = ({ userRole }) => {
     } catch (err) {
       toast.error("Failed to fetch assign service users");
     }
+  };
+
+  // Auto-save function for pax, country, submissionDate
+  const autoSaveWorkDetails = async (workId, field, value) => {
+    // Clear existing timer for this workId
+    if (debounceTimers[workId]) {
+      clearTimeout(debounceTimers[workId]);
+    }
+
+    // Set new timer for debounce (500ms delay)
+    const timer = setTimeout(async () => {
+      try {
+        const updateData = {
+          pax:
+            field === "pax"
+              ? value
+              : workData.find((w) => w._id === workId)?.pax,
+          country:
+            field === "country"
+              ? value
+              : workData.find((w) => w._id === workId)?.country,
+          submissionDate:
+            field === "submissionDate"
+              ? value
+              : workData.find((w) => w._id === workId)?.submissionDate,
+        };
+
+        await axios.patch(`/works/update-work-employee/${workId}`, updateData);
+        toast.success("Work details updated automatically");
+        await fetchWorks(); // Refresh the data
+      } catch (err) {
+        toast.error("Failed to auto-save work details");
+      }
+    }, 500);
+
+    // Store the timer in state
+    setDebounceTimers((prev) => ({
+      ...prev,
+      [workId]: timer,
+    }));
   };
 
   const handlePaymentDetailsClick = (work) => {
@@ -356,6 +399,11 @@ const Work = ({ userRole }) => {
       fetchEmployees(),
       fetchAssignServiceUsers(),
     ]).finally(() => setLoading(false));
+
+    // Cleanup timers on unmount
+    return () => {
+      Object.values(debounceTimers).forEach((timer) => clearTimeout(timer));
+    };
   }, [userRole]);
 
   useEffect(() => {
@@ -369,6 +417,11 @@ const Work = ({ userRole }) => {
     setWorkData((prev) =>
       prev.map((w) => (w._id === id ? { ...w, [field]: value } : w))
     );
+
+    // Auto-save for pax, country, submissionDate
+    if (["pax", "country", "submissionDate"].includes(field)) {
+      autoSaveWorkDetails(id, field, value);
+    }
   };
 
   const getStatusColor = (status) => {
@@ -405,15 +458,24 @@ const Work = ({ userRole }) => {
     );
   }
 
-  const handleUpdate = async (workId, updateData) => {
+  // Save button now only handles service assignment
+  const handleServiceAssignment = async (workId, updateData) => {
     setUpdatingId(workId);
-    console.log(updateData);
     try {
-      await axios.patch(`/works/assign-services/${workId}`, updateData);
-      toast.success("Work updated successfully");
+      // Only send service-related data for the save button
+      const serviceUpdateData = {
+        services: updateData.services,
+        assignedTo: updateData.assignedTo,
+        employeeEmail: updateData.employeeEmail,
+        workStatus: updateData.workStatus,
+        serviceAssigned: true,
+      };
+
+      await axios.patch(`/works/assign-services/${workId}`, serviceUpdateData);
+      toast.success("Service assignment updated successfully");
       await fetchWorks(); // Refresh the data
     } catch (err) {
-      toast.error("Failed to update work");
+      toast.error("Failed to update service assignment");
     } finally {
       setUpdatingId(null);
     }
@@ -438,7 +500,7 @@ const Work = ({ userRole }) => {
         onPaymentUpdate={handlePaymentUpdate}
         updatingPayment={updatingPayment}
         userRole={userRole}
-        workId={paymentDetails?.workId} // Add this line
+        workId={paymentDetails?.workId}
       />
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -467,13 +529,11 @@ const Work = ({ userRole }) => {
                   "Unique ID",
                   "Service",
                   "Assign Service",
-
                   "Pax",
                   "Country",
                   "Submission Date",
                   "Payment",
                   "Payment Status",
-
                   "Work Status",
                   "Assigned To",
                   "Work Records",
@@ -527,9 +587,9 @@ const Work = ({ userRole }) => {
                       closeMenuOnSelect={false}
                       hideSelectedOptions={false}
                       maxMenuHeight={200}
-                      menuPortalTarget={document.body} // Add this line
+                      menuPortalTarget={document.body}
                       styles={{
-                        menuPortal: (base) => ({ ...base, zIndex: 9999 }), // Ensure high z-index
+                        menuPortal: (base) => ({ ...base, zIndex: 9999 }),
                       }}
                     />
                   </td>
@@ -543,9 +603,15 @@ const Work = ({ userRole }) => {
                           e.target.value
                         )
                       }
-                      disabled={work.workStatus !== "Completed"}
+                      disabled={
+                        work.workStatus !== "Completed" ||
+                        work.assignedServiceUser ||
+                        work.serviceAssigned
+                      }
                       className={`px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm ${
-                        work.workStatus !== "Completed"
+                        work.workStatus !== "Completed" ||
+                        work.assignedServiceUser ||
+                        work.serviceAssigned
                           ? "bg-gray-100 cursor-not-allowed"
                           : ""
                       }`}
@@ -723,19 +789,14 @@ const Work = ({ userRole }) => {
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
                       onClick={() =>
-                        handleUpdate(work._id, {
+                        handleServiceAssignment(work._id, {
                           services: work.service,
                           assignedTo: work.assignedServiceUser,
-                          pax: work.pax,
-                          country: work.country,
-                          submissionDate: work.submissionDate,
-                          payment: work.payment,
-                          paymentStatus: work.paymentStatus,
                           employeeEmail: work.employeeEmail,
                           workStatus: work.workStatus,
                         })
                       }
-                      // disabled={updatingId === work._id}
+                      disabled={updatingId === work._id || work.serviceAssigned}
                       className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                     >
                       {updatingId === work._id ? (
@@ -743,9 +804,11 @@ const Work = ({ userRole }) => {
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                           Saving
                         </>
+                      ) : work.serviceAssigned ? (
+                        "Service Assigned" // Change text when already assigned
                       ) : (
                         <>
-                          <Save className="w-4 h-4 mr-2" /> Save
+                          <Save className="w-4 h-4 mr-2" /> Save Services
                         </>
                       )}
                     </button>
@@ -754,6 +817,7 @@ const Work = ({ userRole }) => {
               ))}
             </tbody>
           </table>
+          {/* Pagination remains the same */}
           <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-gray-200">
             <div className="flex-1 flex justify-between sm:hidden">
               <button

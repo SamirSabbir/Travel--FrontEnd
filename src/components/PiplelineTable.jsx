@@ -30,12 +30,20 @@ const PipelineTable = ({ userRole }) => {
           : "/works/pipeline";
 
       const res = await axios.get(pipelineEndpoint);
-      const normalized = res.data.data.map((item) => ({
+      const normalized = res.data.data.map((item) => {
+        
+        console.log(item);
+      return  (
+        
+        {
         ...item,
-        status: pipelineStatusOptions.includes(item.status)
-          ? item.status
+        
+        status: pipelineStatusOptions.includes(item.leadsStatus)
+          ? item.leadsStatus
           : "choose an option",
-      }));
+      })
+      } );
+      
 
       setPipeline(normalized);
     } catch (err) {
@@ -115,8 +123,8 @@ const PipelineTable = ({ userRole }) => {
         <tbody className="bg-white divide-y divide-gray-200">
           {pipeline.map((item) => {
             const isDisabled = updatingId === item._id;
-            const displayStatus = pipelineStatusOptions.includes(item.status)
-              ? item.status
+            const displayStatus = pipelineStatusOptions.includes(item.leadsStatus)
+              ? item.leadsStatus
               : "choose an option";
 
             return (
@@ -130,7 +138,7 @@ const PipelineTable = ({ userRole }) => {
                 <td className="px-6 py-4 text-sm text-gray-500">
                   <span
                     className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      statusColors[item.status] || "bg-gray-100 text-gray-800"
+                      statusColors[item.leadsStatus] || "bg-gray-100 text-gray-800"
                     }`}
                   >
                     {displayStatus}
@@ -145,7 +153,7 @@ const PipelineTable = ({ userRole }) => {
                       }
                       disabled={isDisabled}
                       className={`appearance-none border rounded-lg px-3 py-2 text-sm w-40 focus:outline-none focus:ring-2 focus:ring-blue-300
-    ${statusColors[item.status] || "bg-gray-100 text-gray-800"}
+    ${statusColors[item.leadsStatus] || "bg-gray-100 text-gray-800"}
     ${isDisabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"}
   `}
                     >
