@@ -18,7 +18,9 @@ const VisaProcessing = () => {
   const filteredData = visaData.filter(
     (item) =>
       item && // make sure item is not null
-      (item.workId?.uuId || "").toLowerCase().includes(searchTerm.toLowerCase())
+      (item?.workId?.uuId || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
   );
 
   //pagination calculation
@@ -210,7 +212,7 @@ const VisaProcessing = () => {
                 )}
                 <td className="py-4 px-6 border-b whitespace-nowrap">
                   <div className="flex items-center">
-                    <span>{item.workId.name}</span>
+                    <span>{item?.workId?.name}</span>
                     <button
                       onClick={() => handleCustomerClick(item)}
                       className="ml-2 mb-1 text-blue-500 hover:text-blue-700 text-[30px]"
@@ -222,7 +224,7 @@ const VisaProcessing = () => {
 
                 {/* Unique ID Column */}
                 <td className="py-4 px-6 border-b whitespace-nowrap">
-                  {item.workId.uuId}
+                  {item?.workId?.uuId}
                 </td>
 
                 {/* PAX Column */}
@@ -257,7 +259,7 @@ const VisaProcessing = () => {
 
                 {/* Date of Entry Column */}
                 <td className="py-2 px-4 border-b">
-                  {new Date(item.workId.updatedAt).toLocaleDateString()}
+                  {new Date(item?.workId?.updatedAt).toLocaleDateString()}
                 </td>
 
                 {/* Date of Deadline Column */}
@@ -302,7 +304,7 @@ const VisaProcessing = () => {
 
                 {/* Transferred From Column */}
                 <td className="py-2 px-4 border-b">
-                  {item.workId.employeeEmail}
+                  {item?.workId?.employeeEmail}
                 </td>
 
                 {/* Closed Date Column */}
