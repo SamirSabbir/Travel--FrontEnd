@@ -59,7 +59,7 @@ const allTabs = [
     roles: ["employee", "AccountAdmin", "superAdmin"],
   },
 
-  { name: "Approval", component: Approval, roles: ["superAdmin"] },
+  { name: "User Approval", component: Approval, roles: ["superAdmin"] },
   {
     name: "Visa Processing",
     component: VisaProcessing,
