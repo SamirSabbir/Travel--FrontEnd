@@ -31,7 +31,7 @@ const Expense = () => {
     try {
       const response = await axios.get("/expense");
       if (response.data.success) {
-        setExpenses(response.data.data);
+        setExpenses(response.data.data || []);
       }
     } catch (error) {
       toast.error("Failed to fetch expenses");
@@ -43,10 +43,14 @@ const Expense = () => {
 
   // Get unique years from expenses data
   const getUniqueYears = () => {
+    if (!expenses || expenses.length === 0) {
+      return [new Date().getFullYear()];
+    }
+
     const years = expenses
       .map((expense) => new Date(expense.date).getFullYear())
       .filter((year, index, self) => self.indexOf(year) === index)
-      .sort((a, b) => b - a); // Sort descending (newest first)
+      .sort((a, b) => b - a);
 
     return years.length > 0 ? years : [new Date().getFullYear()];
   };
@@ -330,7 +334,7 @@ const Expense = () => {
         ) : (
           <>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full divide-y divide-gray-200 table-auto">
                 <thead className="bg-gray-50">
                   <tr>
                     <th
@@ -405,11 +409,12 @@ const Expense = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
                             className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              expense.category === "Notary"
+                              expense.category.toLowerCase() === "notary"
                                 ? "bg-purple-100 text-purple-800"
-                                : expense.category === "OfficeSupplies"
+                                : expense.category.toLowerCase() ===
+                                  "office supplies"
                                 ? "bg-blue-100 text-blue-800"
-                                : expense.category === "Lunch"
+                                : expense.category.toLowerCase() === "lunch"
                                 ? "bg-green-100 text-green-800"
                                 : "bg-gray-100 text-gray-800"
                             }`}
@@ -423,7 +428,7 @@ const Expense = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {expense.paymentMethod}
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
+                        <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
                           {expense.description}
                         </td>
                       </tr>
