@@ -301,7 +301,7 @@ const MyProfile = ({ userRole, userData }) => {
                       Commission
                     </span>
                     <p className="text-lg font-semibold text-gray-800">
-                     <span className="pr-2">Tk</span> {profile.Commission} 
+                     <span className="pr-2">Tk</span> {profile.commission} 
                     </p>
                   </div>
                   <div className="flex flex-col gap-1">

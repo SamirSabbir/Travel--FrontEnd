@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "../../api/axios";
+import { toast } from "react-toastify";
 
 const ApplicationModal = ({ onClose, application, item }) => {
   const [selectedCountry, setSelectedCountry] = useState("usa");
@@ -79,11 +80,11 @@ const ApplicationModal = ({ onClose, application, item }) => {
         );
       }
 
-      alert("Application information saved!");
+      toast.success("Application information saved!");
       onClose();
     } catch (err) {
       console.error(err);
-      alert("Error saving application information: " + err);
+      toast.error("Error saving application information: " + err);
     }
   };
 
@@ -107,10 +108,15 @@ const ApplicationModal = ({ onClose, application, item }) => {
             <button
               type="button"
               onClick={() => setSelectedCountry("usa")}
+              disabled={item?.visaType === "Schengen"} // disable if Schengen is already saved
               className={`px-4 py-2 rounded ${
                 selectedCountry === "usa"
                   ? "bg-blue-600 text-white"
                   : "bg-gray-200 text-gray-700"
+              } ${
+                item?.visaType === "Schengen"
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
               }`}
             >
               USA Visa
@@ -118,10 +124,13 @@ const ApplicationModal = ({ onClose, application, item }) => {
             <button
               type="button"
               onClick={() => setSelectedCountry("schengen")}
+              disabled={item?.visaType === "USA"} // disable if USA is already saved
               className={`px-4 py-2 rounded ${
                 selectedCountry === "schengen"
                   ? "bg-blue-600 text-white"
                   : "bg-gray-200 text-gray-700"
+              } ${
+                item?.visaType === "USA" ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
               Schengen Country Visa
@@ -158,7 +167,7 @@ const ApplicationModal = ({ onClose, application, item }) => {
                       type="text"
                       id="name"
                       name="name"
-                      value={formData.name || item.name}
+                      value={formData.fullName || item?.fullName || ""}
                       onChange={handleChange}
                       className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
@@ -202,7 +211,11 @@ const ApplicationModal = ({ onClose, application, item }) => {
                           type="text"
                           id="applicationId"
                           name="applicationId"
-                          value={formData.applicationId || item.applicationId}
+                          value={
+                            formData.applicationId ||
+                            item?.usaDetails?.applicationId ||
+                            ""
+                          }
                           onChange={handleChange}
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
@@ -222,7 +235,9 @@ const ApplicationModal = ({ onClose, application, item }) => {
                           name="surnameFirstFive"
                           maxLength="5"
                           value={
-                            formData.surnameFirstFive || item.surnameFirstFive
+                            formData.surnameFirstFive ||
+                            item?.usaDetails?.fiveLettersOfSurname ||
+                            ""
                           }
                           onChange={handleChange}
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -241,7 +256,11 @@ const ApplicationModal = ({ onClose, application, item }) => {
                           name="yearOfBirth"
                           min="1900"
                           max="2100"
-                          value={formData.yearOfBirth || item.yearOfBirth}
+                          value={
+                            formData.yearOfBirth ||
+                            item?.usaDetails?.yearOfBirth ||
+                            ""
+                          }
                           onChange={handleChange}
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
@@ -260,7 +279,9 @@ const ApplicationModal = ({ onClose, application, item }) => {
                           id="motherGivenName"
                           name="motherGivenName"
                           value={
-                            formData.motherGivenName || item.motherGivenName
+                            formData.motherGivenName ||
+                            item?.usaDetails?.motherGivenName ||
+                            ""
                           }
                           onChange={handleChange}
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -286,8 +307,11 @@ const ApplicationModal = ({ onClose, application, item }) => {
                           type="text"
                           id="username"
                           name="username"
-                          value={formData.username || item.username}
-                          onChange={handleChange}
+                          value={
+                            formData.username ||
+                            item?.usaDetails?.userName ||
+                            ""
+                          }
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
                         />
@@ -302,7 +326,11 @@ const ApplicationModal = ({ onClose, application, item }) => {
                           type="text"
                           id="password"
                           name="password"
-                          value={formData.password || item.password}
+                          value={
+                            formData.password ||
+                            item?.usaDetails?.password ||
+                            ""
+                          }
                           onChange={handleChange}
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
@@ -321,7 +349,9 @@ const ApplicationModal = ({ onClose, application, item }) => {
                           id="securityQuestion1"
                           name="securityQuestion1"
                           value={
-                            formData.securityQuestion1 || item.securityQuestion1
+                            formData.securityQuestion1 ||
+                            item?.usaDetails?.sq1 ||
+                            ""
                           }
                           onChange={handleChange}
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -341,7 +371,9 @@ const ApplicationModal = ({ onClose, application, item }) => {
                           id="securityQuestion2"
                           name="securityQuestion2"
                           value={
-                            formData.securityQuestion2 || item.securityQuestion2
+                            formData.securityQuestion2 ||
+                            item?.usaDetails?.sq2 ||
+                            ""
                           }
                           onChange={handleChange}
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -361,7 +393,9 @@ const ApplicationModal = ({ onClose, application, item }) => {
                           id="securityQuestion3"
                           name="securityQuestion3"
                           value={
-                            formData.securityQuestion3 || item.securityQuestion3
+                            formData.securityQuestion3 ||
+                            item?.usaDetails?.sq3 ||
+                            ""
                           }
                           onChange={handleChange}
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -421,7 +455,7 @@ const ApplicationModal = ({ onClose, application, item }) => {
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
                         <input
-                          type="password"
+                          type="text"
                           id="schengenPassword"
                           name="schengenPassword"
                           value={

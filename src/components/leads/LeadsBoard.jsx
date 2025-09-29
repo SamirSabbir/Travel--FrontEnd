@@ -7,8 +7,16 @@ const LeadsBoard = ({ leads, searchQuery, setSearchQuery, formatDate }) => {
   const pageSize = 6;
 
   const filteredLeads = useMemo(() => {
-    return leads.filter((lead) =>
-      lead.customerName.toLowerCase().includes(searchQuery.toLowerCase())
+    if (!searchQuery) return leads;
+
+    return leads.filter(
+      (lead) =>
+        lead.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (lead.uniqueId &&
+          lead.uniqueId
+            .toString()
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()))
     );
   }, [leads, searchQuery]);
 
@@ -35,7 +43,7 @@ const LeadsBoard = ({ leads, searchQuery, setSearchQuery, formatDate }) => {
           </div>
           <input
             type="text"
-            placeholder="Search customer..."
+            placeholder="Search by name or ID..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -67,9 +75,16 @@ const LeadsBoard = ({ leads, searchQuery, setSearchQuery, formatDate }) => {
                   className="border rounded-lg p-4 shadow-sm hover:shadow-md transition-all bg-white"
                 >
                   <div className="flex justify-between items-start">
-                    <h4 className="font-semibold text-gray-800 truncate">
-                      {lead.customerName}
-                    </h4>
+                    <div>
+                      <h4 className="font-semibold text-gray-800 truncate">
+                        {lead.customerName}
+                      </h4>
+                      {lead.uniqueId && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          ID: {lead.uniqueId}
+                        </p>
+                      )}
+                    </div>
                     <span
                       className={`px-2 py-1 text-xs rounded-full ${
                         isAssigned

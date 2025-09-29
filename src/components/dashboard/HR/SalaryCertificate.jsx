@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "../../../api/axios";
 import Cookies from "js-cookie"; 
+import { toast } from "react-toastify";
 const SalaryCertificate = () => {
    const user = JSON.parse(Cookies.get("user") || "{}");
 
@@ -33,7 +34,7 @@ const SalaryCertificate = () => {
       });
       
       console.log("Saved as draft:", response.data);
-      alert("Salary certificate saved as draft successfully!");
+      toast.success("Salary certificate saved as draft successfully!");
     } catch (err) {
       console.error("Error saving draft:", err);
       setError("Failed to save as draft. Please try again.");
@@ -60,7 +61,7 @@ const SalaryCertificate = () => {
       });
       
       console.log("Certificate sent:", response.data);
-      alert("Salary certificate sent successfully!");
+      toast.success("Salary certificate sent successfully!");
       
       // Reset form after successful submission if needed
       setFormData({
