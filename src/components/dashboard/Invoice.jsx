@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { toast } from "react-toastify";
 
 const fieldMap = {
   "Air Ticket": [
@@ -62,7 +63,7 @@ const Invoice = ({ userRole }) => {
     setInvoices((prev) => [...prev, newInvoice]);
     setFile(null);
     setFormData({});
-    alert("Invoice saved!");
+    toast.success("Invoice saved!");
   };
 
   return (

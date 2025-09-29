@@ -4,12 +4,38 @@ import { DateRange } from "react-date-range";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import { format, differenceInDays } from "date-fns";
+import { toast } from "react-toastify";
 
 const TourPackage = () => {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [openCalendarId, setOpenCalendarId] = useState(null);
+  // Search and pagination
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Filter data based on search term
+  const filteredData = packages.filter(
+    (item) =>
+      item && // make sure item is not null
+      (item?.workId?.uuId || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
+  );
+
+  // Pagination calculation
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const currentItems = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Reset to first page when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const countries = [
     "France",
@@ -100,33 +126,39 @@ const TourPackage = () => {
   };
 
   // Handle input changes
-  const handleInputChange = (index, field, value) => {
-    const updatedPackages = [...packages];
-    updatedPackages[index][field] = value;
+  const handleInputChange = (packageId, field, value) => {
+    const updatedPackages = packages.map((item) => {
+      if (item._id === packageId) {
+        return { ...item, [field]: value };
+      }
+      return item;
+    });
     setPackages(updatedPackages);
   };
 
   // Handle save action
-  const handleSave = async (index) => {
+  const handleSave = async (packageId) => {
     try {
-      const packageItem = packages[index];
+      const packageItem = packages.find((p) => p._id === packageId);
+      if (packageItem) {
+        // Prepare data for API - convert dates to ISO strings
+        const dataToSave = {
+          ...packageItem,
+          night: {
+            from: packageItem.night?.from
+              ? packageItem.night.from.toISOString()
+              : null,
+            to: packageItem.night?.to
+              ? packageItem.night.to.toISOString()
+              : null,
+          },
+        };
 
-      // Prepare data for API - convert dates to ISO strings
-      const dataToSave = {
-        ...packageItem,
-        night: {
-          from: packageItem.night?.from
-            ? packageItem.night.from.toISOString()
-            : null,
-          to: packageItem.night?.to ? packageItem.night.to.toISOString() : null,
-        },
-        // sightSeeing: packageItem.sightSeeing === "Yes", // convert to boolean
-      };
-
-      await axios.patch(`/tourPackage/${packageItem._id}`, dataToSave);
-      alert("Package updated successfully!");
+        await axios.patch(`/tourPackage/${packageItem._id}`, dataToSave);
+        toast.success("Package updated successfully!");
+      }
     } catch (err) {
-      alert("Error updating package: " + err.message);
+      toast.error("Error updating package: " + err.message);
     }
   };
 
@@ -139,7 +171,18 @@ const TourPackage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Tour Package Management</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Tour Package Management</h1>
+        <div className="flex items-center space-x-2">
+          <input
+            type="text"
+            placeholder="Search by Unique ID..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="border rounded px-3 py-2 w-64"
+          />
+        </div>
+      </div>
 
       <div className="overflow-x-auto shadow-md rounded-lg">
         <table className="min-w-full bg-white border border-gray-200">
@@ -178,8 +221,8 @@ const TourPackage = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {Array.isArray(packages) && packages.length > 0 ? (
-              packages.map((packageItem, index) => (
+            {Array.isArray(currentItems) && currentItems.length > 0 ? (
+              currentItems.map((packageItem, index) => (
                 <tr key={packageItem._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {packageItem.workId?.name || "N/A"}
@@ -191,7 +234,11 @@ const TourPackage = () => {
                     <select
                       value={packageItem.country || ""}
                       onChange={(e) =>
-                        handleInputChange(index, "country", e.target.value)
+                        handleInputChange(
+                          packageItem._id,
+                          "country",
+                          e.target.value
+                        )
                       }
                       className=" px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
@@ -207,7 +254,11 @@ const TourPackage = () => {
                     <select
                       value={packageItem.transfer || ""}
                       onChange={(e) =>
-                        handleInputChange(index, "transfer", e.target.value)
+                        handleInputChange(
+                          packageItem._id,
+                          "transfer",
+                          e.target.value
+                        )
                       }
                       className=" px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
@@ -239,18 +290,17 @@ const TourPackage = () => {
                         : "Select dates"}
                     </div>
 
-                    {/* Calendar modal */}
                     {openCalendarId === packageItem._id && (
                       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
                         <div className="bg-white p-4 rounded-lg shadow-lg">
                           <DateRange
                             ranges={[
                               {
-                                startDate: packageItem.dates?.from
-                                  ? new Date(packageItem.dates.from)
+                                startDate: packageItem.night?.from
+                                  ? new Date(packageItem.night.from)
                                   : new Date(),
-                                endDate: packageItem.dates?.to
-                                  ? new Date(packageItem.dates.to)
+                                endDate: packageItem.night?.to
+                                  ? new Date(packageItem.night.to)
                                   : new Date(),
                                 key: "selection",
                               },
@@ -266,7 +316,6 @@ const TourPackage = () => {
                                 "to",
                                 ranges.selection.endDate
                               );
-                              setOpenCalendarId(null); // close calendar after picking
                             }}
                             moveRangeOnFirstSelection={false}
                             rangeColors={["#2563eb"]}
@@ -288,8 +337,13 @@ const TourPackage = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <select
                       value={packageItem.hotel || ""}
-                      onChange={(e) =>
-                        handleInputChange(index, "hotel", e.target.value)
+                      onChange={
+                        (e) =>
+                          handleInputChange(
+                            packageItem._id,
+                            "hotel",
+                            e.target.value
+                          ) // ✅ fix
                       }
                       className="px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
@@ -301,22 +355,31 @@ const TourPackage = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <select
                       value={packageItem.sightSeeing || ""}
-                      onChange={(e) =>
-                        handleInputChange(index, "sightSeeing", e.target.value)
+                      onChange={
+                        (e) =>
+                          handleInputChange(
+                            packageItem._id,
+                            "sightSeeing",
+                            e.target.value
+                          ) // ✅ fix
                       }
-                      className=" px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      {" "}
-                      <option value="">Select</option>{" "}
-                      <option value="Yes">Yes</option>{" "}
-                      <option value="No">No</option>{" "}
+                      <option value="">Select</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
                     </select>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <select
                       value={packageItem.flights || ""}
-                      onChange={(e) =>
-                        handleInputChange(index, "flights", e.target.value)
+                      onChange={
+                        (e) =>
+                          handleInputChange(
+                            packageItem._id,
+                            "flights",
+                            e.target.value
+                          ) // ✅ fix
                       }
                       className="px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
@@ -331,15 +394,20 @@ const TourPackage = () => {
                       min="0"
                       step="0.01"
                       value={packageItem.totalPrice || ""}
-                      onChange={(e) =>
-                        handleInputChange(index, "totalPrice", e.target.value)
+                      onChange={
+                        (e) =>
+                          handleInputChange(
+                            packageItem._id,
+                            "totalPrice",
+                            e.target.value
+                          ) // ✅ fix
                       }
                       className="w-[90px] px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
-                      onClick={() => handleSave(index)}
+                      onClick={() => handleSave(packageItem._id)}
                       className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       Save
@@ -356,6 +424,51 @@ const TourPackage = () => {
             )}
           </tbody>
         </table>
+        {/* Pagination */}
+        <div className="flex justify-between items-center mt-4">
+          <div>
+            <span className="text-sm text-gray-700">
+              Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+              {Math.min(currentPage * itemsPerPage, filteredData.length)} of{" "}
+              {filteredData.length} entries
+            </span>
+          </div>
+
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Previous
+            </button>
+
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const pageNum = i + 1;
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`px-3 py-1 border rounded ${
+                    currentPage === pageNum ? "bg-blue-500 text-white" : ""
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+
+            <button
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

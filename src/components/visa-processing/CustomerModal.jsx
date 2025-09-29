@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "../../api/axios";
+import { toast } from "react-toastify";
 
 const CustomerModal = ({ customer, onClose, item }) => {
   const [formData, setFormData] = useState({
@@ -16,8 +17,6 @@ const CustomerModal = ({ customer, onClose, item }) => {
     }));
   };
 
-
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -29,17 +28,21 @@ const CustomerModal = ({ customer, onClose, item }) => {
         phone: formData.phone || item.phone,
       };
 
+      console.log("payload", payload);
+
       await axios.patch(
         `/visa/update-customer-details/${customer._id}`,
         payload
       );
-      alert("Customer information saved!");
+      toast.success("Customer information saved!");
       onClose();
     } catch (err) {
       console.error(err);
-      alert("Error saving customer information: " + err.message);
+      toast.error("Error saving customer information: " + err.message);
     }
   };
+
+  console.log("customer details", customer);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">

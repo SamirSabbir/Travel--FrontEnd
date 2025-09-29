@@ -4,6 +4,7 @@ import { DateRange } from "react-date-range";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import { format } from "date-fns";
+import { toast } from "react-toastify";
 
 const Hotel = () => {
   const [hotelData, setHotelData] = useState([]);
@@ -11,6 +12,30 @@ const Hotel = () => {
   const [error, setError] = useState(null);
   const [showCalendar, setShowCalendar] = useState(false);
   const [openCalendarId, setOpenCalendarId] = useState(null);
+
+  // Search and pagination
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Filter data based on search term
+  const filteredData = hotelData.filter(
+    (item) =>
+      item && // make sure item is not null
+      (item?.workId?.uuId || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
+  );
+
+  // Pagination calculation
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const currentItems = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   // Fetch data from API
   useEffect(() => {
@@ -117,7 +142,7 @@ const Hotel = () => {
     setHotelData(updatedData);
   };
 
-   const handlePerNightPriceChange = (id, field, value) => {
+  const handlePerNightPriceChange = (id, field, value) => {
     const updatedData = hotelData.map((item) => {
       if (item._id === id) {
         return {
@@ -211,18 +236,27 @@ const Hotel = () => {
       console.log(itemToSave);
 
       await axios.patch(`/hotel/${id}`, itemToSave);
-      alert("Changes saved successfully!");
+      toast.success("Changes saved successfully!");
     } catch (err) {
       console.error("Error saving data:", err);
-      alert("Failed to save changes");
+      toast.error("Failed to save changes");
     }
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">
-        Hotel Management
-      </h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Hotel</h1>
+        <div className="flex items-center space-x-2">
+          <input
+            type="text"
+            placeholder="Search by Unique ID..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="border rounded px-3 py-2 w-64"
+          />
+        </div>
+      </div>
 
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
@@ -305,7 +339,7 @@ const Hotel = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {hotelData.map((item) => (
+              {currentItems.map((item) => (
                 <tr key={item._id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {item.workId?.name || "N/A"}
@@ -562,6 +596,51 @@ const Hotel = () => {
               ))}
             </tbody>
           </table>
+          {/* Pagination */}
+          <div className="flex justify-between items-center mt-4">
+            <div>
+              <span className="text-sm text-gray-700">
+                Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                {Math.min(currentPage * itemsPerPage, filteredData.length)} of{" "}
+                {filteredData.length} entries
+              </span>
+            </div>
+
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 border rounded disabled:opacity-50"
+              >
+                Previous
+              </button>
+
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const pageNum = i + 1;
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`px-3 py-1 border rounded ${
+                      currentPage === pageNum ? "bg-blue-500 text-white" : ""
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 border rounded disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

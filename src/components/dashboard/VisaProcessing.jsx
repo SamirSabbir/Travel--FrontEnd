@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "../../api/axios"; // Adjust the path as needed
 import CustomerModal from "../visa-processing/CustomerModal";
 import ApplicationModal from "../visa-processing/ApplicationModal";
+import { toast } from "react-toastify";
 
 const VisaProcessing = () => {
   const [visaData, setVisaData] = useState([]);
@@ -78,10 +79,10 @@ const VisaProcessing = () => {
   const handleSave = async (index) => {
     try {
       const item = visaData[index];
-      await axios.put(`/visa/user/${item._id}`, item);
-      alert("Data saved successfully!");
+      await axios.patch(`/visa/${item._id}`, item);
+      toast.success("Data saved successfully!");
     } catch (err) {
-      alert("Error saving data: " + err.message);
+      toast.error("Error saving data: " + err.message);
     }
   };
 
@@ -264,9 +265,7 @@ const VisaProcessing = () => {
 
                 {/* Date of Deadline Column */}
                 <td className="py-2 px-4 border-b">
-                  {item.submissionDate
-                    ? new Date(item.submissionDate).toLocaleDateString()
-                    : "N/A"}
+                  {new Date(item?.workId?.submissionDate).toLocaleDateString()}
                 </td>
 
                 {/* Details Column */}
@@ -308,13 +307,18 @@ const VisaProcessing = () => {
                 </td>
 
                 {/* Closed Date Column */}
+
                 <td className="py-2 px-4 border-b">
                   <input
                     type="date"
                     className="border rounded px-2 py-1"
-                    value={item.closedDate || ""}
+                    value={
+                      item.close
+                        ? new Date(item.close).toISOString().split("T")[0]
+                        : ""
+                    }
                     onChange={(e) =>
-                      handleInputChange(index, "closedDate", e.target.value)
+                      handleInputChange(index, "close", e.target.value)
                     }
                   />
                 </td>

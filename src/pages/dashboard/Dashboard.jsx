@@ -41,6 +41,11 @@ import EmployeeActivity from "../../components/dashboard/superAdmin/EmployeeActi
 
 // Tab mapping with role-based visibility
 const allTabs = [
+  {
+    name: "Works In Progress",
+    component: EmployeeActivity,
+    roles: ["superAdmin", "employee", "AccountAdmin", "OfficeBoy"],
+  },
   { name: "Leads Management", component: Leads, roles: ["superAdmin"] },
   { name: "Leads", component: Sales, roles: ["employee", "superAdmin"] },
   {
@@ -120,13 +125,9 @@ const allTabs = [
     component: HRApproval,
     roles: ["AccountAdmin", "superAdmin"],
   },
-  { name: "Account-Info", component: AccountInfo, roles: ["AccountAdmin"] },
-  { name: "My-Business", component: MyBusiness, roles: ["superAdmin"] },
-  {
-    name: "Employee Activity",
-    component: EmployeeActivity,
-    roles: ["superAdmin"],
-  },
+  // { name: "Account-Info", component: AccountInfo, roles: ["AccountAdmin"] },
+  // { name: "My-Business", component: MyBusiness, roles: ["superAdmin"] },
+
   {
     name: "My Profile",
     component: MyProfile,
@@ -137,11 +138,11 @@ const allTabs = [
     component: SalaryCommission,
     roles: ["superAdmin"],
   },
-  {
-    name: "Sales Pipeline",
-    component: SalesPipeline,
-    roles: ["superAdmin"],
-  },
+  // {
+  //   name: "Sales Pipeline",
+  //   component: SalesPipeline,
+  //   roles: ["superAdmin"],
+  // },
   {
     name: "Expense",
     component: Expense,

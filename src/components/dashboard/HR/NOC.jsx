@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "../../../api/axios"; 
 import Cookies from "js-cookie"; 
+import { toast } from "react-toastify";
 
 const NOC = () => {
   const user = JSON.parse(Cookies.get("user") || "{}");
@@ -35,7 +36,7 @@ const NOC = () => {
       });
 
       console.log("Saved as draft:", response.data);
-      alert("NOC saved as draft successfully!");
+      toast.success("NOC saved as draft successfully!");
     } catch (err) {
       console.error("Error saving draft:", err);
       setError("Failed to save as draft. Please try again.");
@@ -70,7 +71,7 @@ const NOC = () => {
       });
 
       console.log("NOC sent:", response.data);
-      alert("NOC sent successfully!");
+      toast.success("NOC sent successfully!");
 
       // Reset form after successful submission if needed
       setFormData({
