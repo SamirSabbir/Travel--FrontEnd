@@ -19,7 +19,7 @@ const Lunch = () => {
     {
       id: 1,
       date: "",
-      lunchBoxes: "",
+      lunchBoxesNo: "",
       source: "",
       note: "",
       bill: "",
@@ -33,7 +33,7 @@ const Lunch = () => {
     setLoading(true);
     try {
       const response = await axios.get("/lunch");
-      
+
       // Handle different response structures
       let lunchData = [];
       if (Array.isArray(response.data)) {
@@ -46,7 +46,7 @@ const Lunch = () => {
         // If response has success property
         lunchData = response.data.data;
       }
-      
+
       setEntries(lunchData);
       console.log("Fetched lunch data:", lunchData); // Debug log
     } catch (error) {
@@ -61,7 +61,7 @@ const Lunch = () => {
   const saveAllEntries = async () => {
     // Filter out incomplete rows
     const validRows = inputRows.filter(
-      (row) => row.date && row.lunchBoxes && row.source && row.bill
+      (row) => row.date && row.lunchBoxesNo && row.source && row.bill
     );
 
     if (validRows.length === 0) {
@@ -72,8 +72,8 @@ const Lunch = () => {
     setSaving(true);
     try {
       const payload = validRows.map((row) => ({
-        date: new Date(row.date),
-        lunchBoxes: parseInt(row.lunchBoxes),
+        date: new Date(row.date).toISOString(), // safer for JSON transport
+        lunchBoxesNo: parseInt(row.lunchBoxesNo, 10),
         source: row.source,
         note: row.note || "",
         bill: parseFloat(row.bill),
@@ -85,7 +85,11 @@ const Lunch = () => {
       console.log("Save response:", response); // Debug log
 
       // Check for different success indicators
-      if (response.status === 200 || response.status === 201 || response.data.success) {
+      if (
+        response.status === 200 ||
+        response.status === 201 ||
+        response.data.success
+      ) {
         toast.success(
           `${validRows.length} lunch record(s) saved successfully!`
         );
@@ -95,7 +99,7 @@ const Lunch = () => {
           {
             id: 1,
             date: "",
-            lunchBoxes: "",
+            lunchBoxesNo: "",
             source: "",
             note: "",
             bill: "",
@@ -151,7 +155,7 @@ const Lunch = () => {
       {
         id: newId,
         date: "",
-        lunchBoxes: "",
+        lunchBoxesNo: "",
         source: "",
         note: "",
         bill: "",
@@ -191,12 +195,12 @@ const Lunch = () => {
     (sum, entry) => sum + (entry.bill || 0),
     0
   );
-  
+
   const totalLunchBoxes = entries.reduce(
-    (sum, entry) => sum + (entry.lunchBoxes || 0),
+    (sum, entry) => sum + (entry.lunchBoxesNo || 0),
     0
   );
-  
+
   const averagePerBox =
     totalLunchBoxes > 0 ? totalExpenses / totalLunchBoxes : 0;
 
@@ -298,8 +302,8 @@ const Lunch = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <input
                         type="number"
-                        name="lunchBoxes"
-                        value={row.lunchBoxes}
+                        name="lunchBoxesNo"
+                        value={row.lunchBoxesNo}
                         onChange={(e) => handleInputChange(row.id, e)}
                         placeholder="Number of boxes"
                         min="1"
@@ -414,7 +418,8 @@ const Lunch = () => {
                           colSpan="6"
                           className="px-6 py-8 text-center text-gray-500"
                         >
-                          No lunch records found. Start by adding some entries above.
+                          No lunch records found. Start by adding some entries
+                          above.
                         </td>
                       </tr>
                     ) : (
@@ -428,7 +433,7 @@ const Lunch = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              {entry.lunchBoxes || 0} boxes
+                              {entry.lunchBoxesNo || 0} boxes
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
