@@ -72,16 +72,16 @@ const Lunch = () => {
     setSaving(true);
     try {
       const payload = validRows.map((row) => ({
-        date: new Date(row.date).toISOString(), // safer for JSON transport
+        date: new Date(row.date), // safer for JSON transport
         lunchBoxesNo: parseInt(row.lunchBoxesNo, 10),
         source: row.source,
         note: row.note || "",
-        bill: parseFloat(row.bill),
+        bill: row.bill ? Number(row.bill) : 0,
       }));
 
       console.log("Sending payload:", payload); // Debug log
 
-      const response = await axios.post("/lunch", payload);
+      const response = await axios.post("/lunch", payload[0]);
       console.log("Save response:", response); // Debug log
 
       // Check for different success indicators
@@ -128,7 +128,7 @@ const Lunch = () => {
     try {
       const response = await axios.delete(`/lunch/${id}`);
       if (response.status === 200 || response.data.success) {
-        toast.success("Lunch record deleted successfully!");
+        toast.success("Lunch record successfully!");
         fetchLunchData();
       }
     } catch (error) {
@@ -223,13 +223,13 @@ const Lunch = () => {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <button
+              {/* <button
                 onClick={addInputRow}
                 className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm"
               >
                 <Plus size={18} className="mr-2" />
                 Add Row
-              </button>
+              </button> */}
               <button
                 onClick={saveAllEntries}
                 disabled={saving}

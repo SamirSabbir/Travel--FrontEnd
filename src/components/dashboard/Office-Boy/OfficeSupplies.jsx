@@ -87,12 +87,13 @@ const OfficeSupplies = () => {
           parseFloat(row.quantity) * parseFloat(row.unitPrice),
       }));
 
-      const response = await axios.post("/office-supplies", payload);
-
-      if (Array.isArray(response.data)) {
-        toast.success(
-          `${validRows.length} office supply record(s) saved successfully!`
-        );
+      const response = await axios.post("/office-supplies", payload[0]);
+      if (
+        response.status === 200 ||
+        response.status === 201 ||
+        response.data.success
+      ) {
+        toast.success(`${validRows.length} record(s) saved successfully!`);
 
         // Reset input rows but keep one empty row
         setInputRows([
@@ -240,13 +241,13 @@ const OfficeSupplies = () => {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <button
+              {/* <button
                 onClick={addInputRow}
                 className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm"
               >
                 <Plus size={18} className="mr-2" />
                 Add Row
-              </button>
+              </button> */}
               <button
                 onClick={saveAllEntries}
                 disabled={saving}

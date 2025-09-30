@@ -11,12 +11,14 @@ const PipelineTable = ({ userRole }) => {
   const pipelineStatusOptions = [
     "choose an option",
     "Confirmed",
+    "Follow-up",
     "Follow-up 1",
     "Follow-up 2",
   ];
 
   const statusColors = {
     Confirmed: "bg-blue-100 text-blue-800",
+    "Follow-up": "bg-green-100 text-white-800",
     "Follow-up 1": "bg-orange-100 text-orange-800",
     "Follow-up 2": "bg-red-100 text-red-800",
   };
@@ -31,19 +33,15 @@ const PipelineTable = ({ userRole }) => {
 
       const res = await axios.get(pipelineEndpoint);
       const normalized = res.data.data.map((item) => {
-        
         console.log(item);
-      return  (
-        
-        {
-        ...item,
-        
-        status: pipelineStatusOptions.includes(item.leadsStatus)
-          ? item.leadsStatus
-          : "choose an option",
-      })
-      } );
-      
+        return {
+          ...item,
+
+          status: pipelineStatusOptions.includes(item.leadsStatus)
+            ? item.leadsStatus
+            : "choose an option",
+        };
+      });
 
       setPipeline(normalized);
     } catch (err) {
@@ -123,7 +121,9 @@ const PipelineTable = ({ userRole }) => {
         <tbody className="bg-white divide-y divide-gray-200">
           {pipeline.map((item) => {
             const isDisabled = updatingId === item._id;
-            const displayStatus = pipelineStatusOptions.includes(item.leadsStatus)
+            const displayStatus = pipelineStatusOptions.includes(
+              item.leadsStatus
+            )
               ? item.leadsStatus
               : "choose an option";
 
@@ -138,7 +138,8 @@ const PipelineTable = ({ userRole }) => {
                 <td className="px-6 py-4 text-sm text-gray-500">
                   <span
                     className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      statusColors[item.leadsStatus] || "bg-gray-100 text-gray-800"
+                      statusColors[item.leadsStatus] ||
+                      "bg-gray-100 text-gray-800"
                     }`}
                   >
                     {displayStatus}
