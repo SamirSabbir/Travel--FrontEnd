@@ -6,7 +6,7 @@ const ApplicationModal = ({ onClose, application, item }) => {
   const [selectedCountry, setSelectedCountry] = useState("usa");
   const [formData, setFormData] = useState({
     // Common fields
-    name: "",
+    fullname: "",
     email: "",
     // USA specific fields
     applicationId: "",
@@ -40,21 +40,25 @@ const ApplicationModal = ({ onClose, application, item }) => {
         // Construct payload for USA visa
         const payload = {
           visaType: "USA",
-          fullName: formData.name || item.name,
-          email: formData.email || item.email,
+          fullName: formData.fullName || item?.fullName,
+          email: formData.email || item?.email,
           usaDetails: {
-            applicationId: formData.applicationId || item.applicationId,
+            applicationId:
+              formData.applicationId || item?.usaDetails?.applicationId,
             fiveLettersOfSurname:
-              formData.surnameFirstFive || item.surnameFirstFive,
-            yearOfBirth: formData.yearOfBirth || item.yearOfBirth,
-            motherGivenName: formData.motherGivenName || item.motherGivenName,
-            userName: formData.username || item.userName,
-            password: formData.password || item.password,
-            sq1: formData.securityQuestion1 || item.securityQuestion1,
-            sq2: formData.securityQuestion2 || item.securityQuestion2,
-            sq3: formData.securityQuestion3 || item.securityQuestion3,
+              formData.surnameFirstFive ||
+              item?.usaDetails?.fiveLettersOfSurname,
+            yearOfBirth: formData.yearOfBirth || item?.usaDetails?.yearOfBirth,
+            motherGivenName:
+              formData.motherGivenName || item?.usaDetails?.motherGivenName,
+            userName: formData.username || item?.usaDetails?.userName,
+            password: formData.password || item?.usaDetails?.password,
+            sq1: formData.securityQuestion1 || item?.usaDetails?.sq1,
+            sq2: formData.securityQuestion2 || item?.usaDetails?.sq2,
+            sq3: formData.securityQuestion3 || item?.usaDetails?.sq3,
           },
         };
+
         console.log(payload);
 
         await axios.patch(
@@ -165,8 +169,8 @@ const ApplicationModal = ({ onClose, application, item }) => {
                   <td className="border border-gray-300 px-4 py-2">
                     <input
                       type="text"
-                      id="name"
-                      name="name"
+                      id="fullName"
+                      name="fullName"
                       value={formData.fullName || item?.fullName || ""}
                       onChange={handleChange}
                       className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -441,7 +445,9 @@ const ApplicationModal = ({ onClose, application, item }) => {
                           id="schengenUsername"
                           name="schengenUsername"
                           value={
-                            formData.schengenUsername || item.schengenUsername
+                            formData.schengenUsername ||
+                            item?.schengenDetails?.userName ||
+                            ""
                           }
                           onChange={handleChange}
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -459,7 +465,9 @@ const ApplicationModal = ({ onClose, application, item }) => {
                           id="schengenPassword"
                           name="schengenPassword"
                           value={
-                            formData.schengenPassword || item.schengenPassword
+                            formData.schengenPassword ||
+                            item?.schengenDetails?.password ||
+                            ""
                           }
                           onChange={handleChange}
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
