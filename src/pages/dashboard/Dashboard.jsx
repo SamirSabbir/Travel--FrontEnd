@@ -46,7 +46,11 @@ const allTabs = [
     component: EmployeeActivity,
     roles: ["superAdmin", "employee", "AccountAdmin", "OfficeBoy"],
   },
-  { name: "Leads Management", component: Leads, roles: ["superAdmin"] },
+  {
+    name: "Leads Management",
+    component: Leads,
+    roles: ["superAdmin", "AccountAdmin"],
+  },
   { name: "Leads", component: Sales, roles: ["employee", "superAdmin"] },
   {
     name: "Pipeline",

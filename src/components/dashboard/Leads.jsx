@@ -93,7 +93,7 @@ const Leads = ({ userRole }) => {
     <div className="p-6 space-y-8">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-800">Leads Management</h2>
-        {userRole?.toLowerCase() === "superadmin" && (
+        {["superadmin", "accountadmin"].includes(userRole?.toLowerCase()) && (
           <button
             onClick={() => setIsModalOpen(true)}
             className="flex items-center gap-2 bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] text-white px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-all"

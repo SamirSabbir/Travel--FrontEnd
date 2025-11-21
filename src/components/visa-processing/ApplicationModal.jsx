@@ -112,29 +112,22 @@ const ApplicationModal = ({ onClose, application, item }) => {
             <button
               type="button"
               onClick={() => setSelectedCountry("usa")}
-              disabled={item?.visaType === "Schengen"} // disable if Schengen is already saved
               className={`px-4 py-2 rounded ${
                 selectedCountry === "usa"
                   ? "bg-blue-600 text-white"
                   : "bg-gray-200 text-gray-700"
-              } ${
-                item?.visaType === "Schengen"
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
               }`}
             >
               USA Visa
             </button>
+
             <button
               type="button"
               onClick={() => setSelectedCountry("schengen")}
-              disabled={item?.visaType === "USA"} // disable if USA is already saved
               className={`px-4 py-2 rounded ${
                 selectedCountry === "schengen"
                   ? "bg-blue-600 text-white"
                   : "bg-gray-200 text-gray-700"
-              } ${
-                item?.visaType === "USA" ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
               Schengen Country Visa
@@ -316,6 +309,7 @@ const ApplicationModal = ({ onClose, application, item }) => {
                             item?.usaDetails?.userName ||
                             ""
                           }
+                          onChange={handleChange}
                           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
                         />

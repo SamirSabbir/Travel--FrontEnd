@@ -234,6 +234,9 @@ const Work = ({ userRole }) => {
   const [recordsLoading, setRecordsLoading] = useState(false);
   const [assignServiceUsers, setAssignServiceUsers] = useState([]);
 
+  //assign work
+  const [assigningWorkId, setAssigningWorkId] = useState(null);
+
   // Payment Details Modal State
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -413,7 +416,7 @@ const Work = ({ userRole }) => {
     setFilteredWorkData(filtered);
   }, [searchTerm, workData]);
 
-  const handleFieldChange = (id, field, value) => {
+  const handleFieldChange = async (id, field, value) => {
     setWorkData((prev) =>
       prev.map((w) => (w._id === id ? { ...w, [field]: value } : w))
     );
@@ -421,6 +424,11 @@ const Work = ({ userRole }) => {
     // Auto-save for pax, country, submissionDate
     if (["pax", "country", "submissionDate"].includes(field)) {
       autoSaveWorkDetails(id, field, value);
+    }
+
+    // Auto-assign work when employeeEmail changes
+    if (field === "employeeEmail" && value) {
+      await handleWorkAssignment(id, value);
     }
   };
 
@@ -436,6 +444,23 @@ const Work = ({ userRole }) => {
         return "bg-blue-100 text-blue-800";
       default:
         return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  //assign work functionality
+
+  const handleWorkAssignment = async (workId, employeeEmail) => {
+    setAssigningWorkId(workId);
+    try {
+      await axios.patch(`/works/assign-work/${workId}`, {
+        employeeEmail: employeeEmail,
+      });
+      toast.success("Work assigned successfully");
+      await fetchWorks(); // Refresh data
+    } catch (err) {
+      toast.error("Failed to assign work");
+    } finally {
+      setAssigningWorkId(null);
     }
   };
 
@@ -459,9 +484,40 @@ const Work = ({ userRole }) => {
   }
 
   // Save button now only handles service assignment
+  // Save button now only handles service assignment
   const handleServiceAssignment = async (workId, updateData) => {
     setUpdatingId(workId);
     try {
+      // Update local state optimistically
+      setWorkData((prev) =>
+        prev.map((w) =>
+          w._id === workId
+            ? {
+                ...w,
+                serviceAssigned: true,
+                services: updateData.services,
+                assignedServiceUser: updateData.assignedTo,
+                employeeEmail: updateData.employeeEmail,
+                workStatus: updateData.workStatus,
+              }
+            : w
+        )
+      );
+      setFilteredWorkData((prev) =>
+        prev.map((w) =>
+          w._id === workId
+            ? {
+                ...w,
+                serviceAssigned: true,
+                services: updateData.services,
+                assignedServiceUser: updateData.assignedTo,
+                employeeEmail: updateData.employeeEmail,
+                workStatus: updateData.workStatus,
+              }
+            : w
+        )
+      );
+
       // Only send service-related data for the save button
       const serviceUpdateData = {
         services: updateData.services,
@@ -473,9 +529,14 @@ const Work = ({ userRole }) => {
 
       await axios.patch(`/works/assign-services/${workId}`, serviceUpdateData);
       toast.success("Service assignment updated successfully");
-      await fetchWorks(); // Refresh the data
+
+      // Optional: Refresh data to ensure sync with backend
+      await fetchWorks();
     } catch (err) {
+      // Revert optimistic update on error
       toast.error("Failed to update service assignment");
+      // Refresh original data
+      await fetchWorks();
     } finally {
       setUpdatingId(null);
     }
@@ -519,8 +580,8 @@ const Work = ({ userRole }) => {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-gray-200 shadow">
-        <div className="overflow-x-auto">
+      <div className="container mx-auto px-4 py-8">
+        <div className="overflow-x-auto -mx-6">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -570,20 +631,36 @@ const Work = ({ userRole }) => {
                     <Select
                       isMulti
                       options={serviceOptions}
-                      value={serviceOptions.filter((option) =>
-                        Array.isArray(work.service)
-                          ? work.service.includes(option.value)
-                          : work.service === option.value
-                      )}
+                      value={serviceOptions.filter((option) => {
+                        // Normalize services to always be an array
+                        const services = !work.services
+                          ? []
+                          : Array.isArray(work.services)
+                          ? work.services
+                          : [work.services];
+
+                        return services.includes(option.value);
+                      })}
                       onChange={(selectedOptions) => {
                         const selectedValues = selectedOptions
                           ? selectedOptions.map((option) => option.value)
                           : [];
-                        handleFieldChange(work._id, "service", selectedValues);
+                        handleFieldChange(work._id, "services", selectedValues);
                       }}
                       className="w-48 text-sm"
                       classNamePrefix="select"
-                      placeholder="Select services..."
+                      placeholder={
+                        work.services &&
+                        (Array.isArray(work.services)
+                          ? work.services.length > 0
+                          : !!work.services)
+                          ? `${
+                              Array.isArray(work.services)
+                                ? work.services.length
+                                : 1
+                            } service(s) selected`
+                          : "Select services..."
+                      }
                       closeMenuOnSelect={false}
                       hideSelectedOptions={false}
                       maxMenuHeight={200}
@@ -594,35 +671,35 @@ const Work = ({ userRole }) => {
                     />
                   </td>
                   <td className="px-2 py-4 whitespace-nowrap">
-                    <select
-                      value={work.assignedServiceUser || ""}
-                      onChange={(e) =>
-                        handleFieldChange(
-                          work._id,
-                          "assignedServiceUser",
-                          e.target.value
-                        )
-                      }
-                      disabled={
-                        work.workStatus !== "Completed" ||
-                        work.assignedServiceUser ||
-                        work.serviceAssigned
-                      }
-                      className={`px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm ${
-                        work.workStatus !== "Completed" ||
-                        work.assignedServiceUser ||
-                        work.serviceAssigned
-                          ? "bg-gray-100 cursor-not-allowed"
-                          : ""
-                      }`}
-                    >
-                      <option value="">Select User</option>
-                      {assignServiceUsers.map((user) => (
-                        <option key={user._id} value={user.email}>
-                          {user.name} ({user.email})
-                        </option>
-                      ))}
-                    </select>
+                    {work.serviceAssignedTo ? (
+                      <div className="px-2 py-1 text-sm text-gray-700">
+                        Assigned to: {work.serviceAssignedTo}
+                      </div>
+                    ) : (
+                      <select
+                        value={work.serviceAssignedTo || ""}
+                        onChange={(e) =>
+                          handleFieldChange(
+                            work._id,
+                            "serviceAssignedTo",
+                            e.target.value
+                          )
+                        }
+                        disabled={work.workStatus !== "Completed"}
+                        className={`px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm ${
+                          work.workStatus !== "Completed"
+                            ? "bg-gray-100 cursor-not-allowed"
+                            : "bg-white"
+                        }`}
+                      >
+                        <option value="">Select User</option>
+                        {assignServiceUsers.map((user) => (
+                          <option key={user._id} value={user.email}>
+                            {user.name} ({user.email})
+                          </option>
+                        ))}
+                      </select>
+                    )}
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -708,31 +785,41 @@ const Work = ({ userRole }) => {
                       {work.workStatus || "N/A"}
                     </span>
                   </td>
-
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <select
-                      value={work.employeeEmail || ""}
-                      onChange={(e) =>
-                        handleFieldChange(
-                          work._id,
-                          "employeeEmail",
-                          e.target.value
-                        )
-                      }
-                      disabled={work.workStatus !== "Completed"}
-                      className={`px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm ${
-                        work.workStatus !== "Completed"
-                          ? "bg-gray-100 cursor-not-allowed"
-                          : ""
-                      }`}
-                    >
-                      <option value="">Select</option>
-                      {employees.map((emp) => (
-                        <option key={emp._id} value={emp.email}>
-                          {emp.name}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={work.employeeEmail || ""}
+                        onChange={(e) =>
+                          handleFieldChange(
+                            work._id,
+                            "employeeEmail",
+                            e.target.value
+                          )
+                        }
+                        disabled={
+                          work.workStatus !== "Completed" ||
+                          assigningWorkId === work._id
+                        }
+                        className={`px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm ${
+                          work.workStatus !== "Completed" ||
+                          assigningWorkId === work._id
+                            ? "bg-gray-100 cursor-not-allowed"
+                            : ""
+                        }`}
+                      >
+                        <option value="">Select</option>
+                        {employees.map((emp) => (
+                          <option key={emp._id} value={emp.email}>
+                            {emp.name}
+                          </option>
+                        ))}
+                      </select>
+                      {assigningWorkId === work._id && (
+                        <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                          <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                        </div>
+                      )}
+                    </div>
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -790,8 +877,8 @@ const Work = ({ userRole }) => {
                     <button
                       onClick={() =>
                         handleServiceAssignment(work._id, {
-                          services: work.service,
-                          assignedTo: work.assignedServiceUser,
+                          services: work.services,
+                          assignedTo: work.serviceAssignedTo,
                           employeeEmail: work.employeeEmail,
                           workStatus: work.workStatus,
                         })
@@ -817,86 +904,86 @@ const Work = ({ userRole }) => {
               ))}
             </tbody>
           </table>
-          {/* Pagination remains the same */}
-          <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-gray-200">
-            <div className="flex-1 flex justify-between sm:hidden">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
-                disabled={currentPage === totalPages}
-                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-              >
-                Next
-              </button>
+        </div>
+        {/* Pagination remains the same */}
+        <div className="flex items-center justify-between px-6 py-3  border-gray-200 mt-2">
+          <div className="flex-1 flex justify-between sm:hidden">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              disabled={currentPage === totalPages}
+              className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            >
+              Next
+            </button>
+          </div>
+          <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm text-gray-700">
+                Showing{" "}
+                <span className="font-medium">{indexOfFirstItem + 1}</span> to{" "}
+                <span className="font-medium">
+                  {Math.min(indexOfLastItem, filteredWorkData.length)}
+                </span>{" "}
+                of{" "}
+                <span className="font-medium">{filteredWorkData.length}</span>{" "}
+                results
+              </p>
             </div>
-            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-gray-700">
-                  Showing{" "}
-                  <span className="font-medium">{indexOfFirstItem + 1}</span> to{" "}
-                  <span className="font-medium">
-                    {Math.min(indexOfLastItem, filteredWorkData.length)}
-                  </span>{" "}
-                  of{" "}
-                  <span className="font-medium">{filteredWorkData.length}</span>{" "}
-                  results
-                </p>
-              </div>
-              <div>
-                <nav
-                  className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                  aria-label="Pagination"
+            <div>
+              <nav
+                className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                aria-label="Pagination"
+              >
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                 >
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
-                    disabled={currentPage === 1}
-                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                  >
-                    <span className="sr-only">Previous</span>
-                    {/* Previous icon */}
-                    &lt;
-                  </button>
+                  <span className="sr-only">Previous</span>
+                  {/* Previous icon */}
+                  &lt;
+                </button>
 
-                  {/* Page numbers */}
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                    (number) => (
-                      <button
-                        key={number}
-                        onClick={() => paginate(number)}
-                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          currentPage === number
-                            ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
-                            : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
-                        }`}
-                      >
-                        {number}
-                      </button>
-                    )
-                  )}
+                {/* Page numbers */}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (number) => (
+                    <button
+                      key={number}
+                      onClick={() => paginate(number)}
+                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                        currentPage === number
+                          ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
+                          : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
+                      }`}
+                    >
+                      {number}
+                    </button>
+                  )
+                )}
 
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                  >
-                    <span className="sr-only">Next</span>
-                    {/* Next icon */}
-                    &gt;
-                  </button>
-                </nav>
-              </div>
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                  disabled={currentPage === totalPages}
+                  className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                >
+                  <span className="sr-only">Next</span>
+                  {/* Next icon */}
+                  &gt;
+                </button>
+              </nav>
             </div>
           </div>
         </div>
