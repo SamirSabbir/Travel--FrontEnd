@@ -46,11 +46,7 @@ const allTabs = [
     component: EmployeeActivity,
     roles: ["superAdmin", "employee", "AccountAdmin", "OfficeBoy"],
   },
-  {
-    name: "Leads Management",
-    component: Leads,
-    roles: ["superAdmin", "AccountAdmin"],
-  },
+  { name: "Leads Management", component: Leads, roles: ["superAdmin", "AccountAdmin"] },
   { name: "Leads", component: Sales, roles: ["employee", "superAdmin"] },
   {
     name: "Pipeline",
@@ -249,7 +245,7 @@ const Dashboard = () => {
 
     // Initialize Socket.IO connection
     if (userData.email) {
-      const newSocket = io("http://localhost:5000");
+      const newSocket = io("https://travel-c0ta.onrender.com");
       setSocket(newSocket);
 
       // Socket connection handlers
