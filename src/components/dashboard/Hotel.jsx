@@ -596,51 +596,51 @@ const Hotel = () => {
               ))}
             </tbody>
           </table>
-          {/* Pagination */}
-          <div className="flex justify-between items-center mt-4">
-            <div>
-              <span className="text-sm text-gray-700">
-                Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-                {Math.min(currentPage * itemsPerPage, filteredData.length)} of{" "}
-                {filteredData.length} entries
-              </span>
-            </div>
+        </div>
+      </div>
+      {/* Pagination */}
+      <div className="flex justify-between items-center mt-4">
+        <div>
+          <span className="text-sm text-gray-700">
+            Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+            {Math.min(currentPage * itemsPerPage, filteredData.length)} of{" "}
+            {filteredData.length} entries
+          </span>
+        </div>
 
-            <div className="flex space-x-2">
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            const pageNum = i + 1;
+            return (
               <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1 border rounded disabled:opacity-50"
+                key={pageNum}
+                onClick={() => setCurrentPage(pageNum)}
+                className={`px-3 py-1 border rounded ${
+                  currentPage === pageNum ? "bg-blue-500 text-white" : ""
+                }`}
               >
-                Previous
+                {pageNum}
               </button>
+            );
+          })}
 
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                const pageNum = i + 1;
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => setCurrentPage(pageNum)}
-                    className={`px-3 py-1 border rounded ${
-                      currentPage === pageNum ? "bg-blue-500 text-white" : ""
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
-
-              <button
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
-                disabled={currentPage === totalPages}
-                className="px-3 py-1 border rounded disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-          </div>
+          <button
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>

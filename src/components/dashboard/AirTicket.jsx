@@ -277,6 +277,8 @@ const AirTicket = () => {
             )}
           </tbody>
         </table>
+      
+      </div>
         {/* Pagination */}
         <div className="flex justify-between items-center mt-4">
           <div>
@@ -322,7 +324,6 @@ const AirTicket = () => {
             </button>
           </div>
         </div>
-      </div>
     </div>
   );
 };
