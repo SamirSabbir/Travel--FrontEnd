@@ -38,6 +38,7 @@ import Lunch from "../../components/dashboard/Office-Boy/Lunch";
 import OfficeSupplies from "../../components/dashboard/Office-Boy/OfficeSupplies";
 import Expense from "../../components/dashboard/Expense";
 import EmployeeActivity from "../../components/dashboard/superAdmin/EmployeeActivity";
+import axios from "../../api/axios"; // Import axios
 
 // Tab mapping with role-based visibility
 const allTabs = [
@@ -46,7 +47,11 @@ const allTabs = [
     component: EmployeeActivity,
     roles: ["superAdmin", "employee", "AccountAdmin", "OfficeBoy"],
   },
-  { name: "Leads Management", component: Leads, roles: ["superAdmin", "AccountAdmin"] },
+  {
+    name: "Leads Management",
+    component: Leads,
+    roles: ["superAdmin", "AccountAdmin"],
+  },
   { name: "Leads", component: Sales, roles: ["employee", "superAdmin"] },
   {
     name: "Pipeline",
@@ -182,6 +187,39 @@ const Dashboard = () => {
     completedTasks: 0,
     onlineEmployees: 0,
   });
+  // Add this useEffect to your Dashboard component
+  useEffect(() => {
+    // Listen for navigation events from notifications
+    const handleDashboardNavigate = (event) => {
+      const { tab } = event.detail;
+      console.log("📍 Navigation event received:", tab);
+
+      if (tab && tabs.some((t) => t.name === tab)) {
+        setSelectedTab(tab);
+        // Close notification panel if open
+        setShowNotifications(false);
+      }
+    };
+
+    window.addEventListener("dashboard-navigate", handleDashboardNavigate);
+
+    return () => {
+      window.removeEventListener("dashboard-navigate", handleDashboardNavigate);
+    };
+  }, [tabs]); // Add tabs as dependency
+  // Function to fetch unread count from backend
+  const fetchUnreadCount = async (userEmail) => {
+    try {
+      const response = await axios.get(
+        `/notifications/${userEmail}/unread-count`
+      );
+      if (response.data.success) {
+        setUnreadCount(response.data.data.unreadCount || 0);
+      }
+    } catch (error) {
+      console.error("❌ Error fetching unread count:", error);
+    }
+  };
 
   useEffect(() => {
     const token = Cookies.get("token");
@@ -243,9 +281,12 @@ const Dashboard = () => {
 
     setTabs(filteredTabsWithSubTabs);
 
+    // Fetch unread count immediately
+    fetchUnreadCount(userData.email);
+
     // Initialize Socket.IO connection
     if (userData.email) {
-      const newSocket = io("https://travel-c0ta.onrender.com");
+      const newSocket = io("http://localhost:5000");
       setSocket(newSocket);
 
       // Socket connection handlers
@@ -262,6 +303,9 @@ const Dashboard = () => {
 
         // Request initial data for activity tracking
         newSocket.emit("activity:fetch-initial");
+
+        // Fetch unread count again after connection to ensure it's up to date
+        fetchUnreadCount(userData.email);
       });
 
       newSocket.on("disconnect", (reason) => {
@@ -276,7 +320,9 @@ const Dashboard = () => {
 
       // Listen for new notifications
       newSocket.on("new-notification", (notification) => {
-        setUnreadCount((prev) => prev + 1);
+        // Update unread count from backend to ensure accuracy
+        fetchUnreadCount(userData.email);
+
         toast.info(notification.message, {
           position: "top-right",
           autoClose: 5000,
@@ -319,6 +365,8 @@ const Dashboard = () => {
           newSocket.connected
         ) {
           console.log("👋 User returned to dashboard tab");
+          // Refresh unread count when user returns to tab
+          fetchUnreadCount(userData.email);
         }
       };
 
@@ -348,7 +396,6 @@ const Dashboard = () => {
 
   const handleLogout = () => {
     if (socket) {
-      // socket.emit("disconnect");
       socket.disconnect();
     }
     Cookies.remove("token");
@@ -505,7 +552,7 @@ const Dashboard = () => {
                   onClose={() => setShowNotifications(false)}
                   userEmail={user.email}
                   socket={socket}
-                  setUnreadCount={setUnreadCount}
+                  setUnreadCount={setUnreadCount} // Pass setUnreadCount to update when notifications are read
                 />
               )}
             </div>

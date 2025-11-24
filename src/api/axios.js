@@ -2,7 +2,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 
 const instance = axios.create({
-  baseURL: "https://travel-c0ta.onrender.com/api/v1",
+  baseURL: "http://localhost:5000/api/v1",
 });
 
 // Add request interceptor

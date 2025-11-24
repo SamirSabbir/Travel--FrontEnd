@@ -126,6 +126,41 @@ const SpecialRequest = () => {
     );
   };
 
+  // Function to get status badge with approver/canceller info
+  const getStatusBadge = (item) => {
+    if (item.approved) {
+      return (
+        <div className="flex flex-col items-center">
+          <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 mb-1">
+            Approved
+          </span>
+          {item.approvedBy && (
+            <span className="text-xs text-gray-600">By: {item.approvedBy}</span>
+          )}
+        </div>
+      );
+    } else if (item.cancelled) {
+      return (
+        <div className="flex flex-col items-center">
+          <span className="px-2 py-1 rounded-full text-xs bg-red-100 text-red-800 mb-1">
+            Cancelled
+          </span>
+          {item.cancelledBy && (
+            <span className="text-xs text-gray-600">
+              By: {item.cancelledBy}
+            </span>
+          )}
+        </div>
+      );
+    } else {
+      return (
+        <span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">
+          Pending
+        </span>
+      );
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -159,7 +194,9 @@ const SpecialRequest = () => {
                 {commissionCurrentItems.map((item) => (
                   <tr key={item._id} className="text-center hover:bg-gray-50">
                     <td className="py-2 px-4 border">{item.userEmail}</td>
-                    <td className="py-2 px-4 border">{item.roles || "N/A"}</td>
+                    <td className="py-2 px-4 border">
+                      {item.userRole || "N/A"}
+                    </td>
                     <td className="py-2 px-4 border">{item.type}</td>
                     <td className="py-2 px-4 border">
                       ${item.commissionAmount}
@@ -167,23 +204,7 @@ const SpecialRequest = () => {
                     <td className="py-2 px-4 border">
                       {new Date(item.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="py-2 px-4 border">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs ${
-                          item.approved
-                            ? "bg-green-100 text-green-800"
-                            : item.cancelled
-                            ? "bg-red-100 text-red-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
-                        {item.approved
-                          ? "approved"
-                          : item.cancelled
-                          ? "cancelled"
-                          : "pending"}
-                      </span>
-                    </td>
+                    <td className="py-2 px-4 border">{getStatusBadge(item)}</td>
                     <td className="py-2 px-4 border space-x-2">
                       <button
                         onClick={() => handleApprove(item._id)}
@@ -231,7 +252,6 @@ const SpecialRequest = () => {
       <div>
         <h2 className="text-xl font-semibold mb-4">
           Leave Requests ({leaveRequests.length})
-         
         </h2>
         {leaveRequests.length > 0 ? (
           <>
@@ -251,36 +271,22 @@ const SpecialRequest = () => {
                 {leaveCurrentItems.map((item) => (
                   <tr key={item._id} className="text-center hover:bg-gray-50">
                     <td className="py-2 px-4 border">{item.userEmail}</td>
-                    <td className="py-2 px-4 border">{item.roles || "N/A"}</td>
-                    <td className="py-2 px-4 border">{item.type}</td>
-                      
                     <td className="py-2 px-4 border">
-                      {item.leaveDates.map((date, index) => (
-                        <div key={index}>
-                          {new Date(date).toLocaleDateString()}
-                        </div>
-                      ))}
+                      {item.userRole || "N/A"}
+                    </td>
+                    <td className="py-2 px-4 border">{item.type}</td>
+                    <td className="py-2 px-4 border">
+                      {item.leaveDates &&
+                        item.leaveDates.map((date, index) => (
+                          <div key={index}>
+                            {new Date(date).toLocaleDateString()}
+                          </div>
+                        ))}
                     </td>
                     <td className="py-2 px-4 border">
                       {new Date(item.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="py-2 px-4 border">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs ${
-                          item.approved
-                            ? "bg-green-100 text-green-800"
-                            : item.cancelled
-                            ? "bg-red-100 text-red-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
-                        {item.approved
-                          ? "approved"
-                          : item.cancelled
-                          ? "cancelled"
-                          : "pending"}
-                      </span>
-                    </td>
+                    <td className="py-2 px-4 border">{getStatusBadge(item)}</td>
                     <td className="py-2 px-4 border space-x-2">
                       <button
                         onClick={() => handleApprove(item._id)}
@@ -347,7 +353,9 @@ const SpecialRequest = () => {
                 {specialCurrentItems.map((item) => (
                   <tr key={item._id} className="text-center hover:bg-gray-50">
                     <td className="py-2 px-4 border">{item.userEmail}</td>
-                    <td className="py-2 px-4 border">{item.roles || "N/A"}</td>
+                    <td className="py-2 px-4 border">
+                      {item.userRole || "N/A"}
+                    </td>
                     <td className="py-2 px-4 border">{item.type}</td>
                     <td
                       className="py-2 px-4 border max-w-xs truncate"
@@ -358,23 +366,7 @@ const SpecialRequest = () => {
                     <td className="py-2 px-4 border">
                       {new Date(item.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="py-2 px-4 border">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs ${
-                          item.approved
-                            ? "bg-green-100 text-green-800"
-                            : item.cancelled
-                            ? "bg-red-100 text-red-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
-                        {item.approved
-                          ? "approved"
-                          : item.cancelled
-                          ? "cancelled"
-                          : "pending"}
-                      </span>
-                    </td>
+                    <td className="py-2 px-4 border">{getStatusBadge(item)}</td>
                     <td className="py-2 px-4 border space-x-2">
                       <button
                         onClick={() => handleApprove(item._id)}

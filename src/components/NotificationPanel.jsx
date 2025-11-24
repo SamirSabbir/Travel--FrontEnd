@@ -7,12 +7,29 @@ import {
   Info,
   Calendar,
   Bell,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
 } from "react-feather";
+import { useNavigate } from "react-router-dom";
 
 const NotificationPanel = ({ onClose, userEmail, socket, setUnreadCount }) => {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
+  const [dropdownNotifications, setDropdownNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showFullModal, setShowFullModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalNotifications: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
+
+  const notificationsPerPage = 6;
 
   useEffect(() => {
     if (!userEmail) {
@@ -20,12 +37,18 @@ const NotificationPanel = ({ onClose, userEmail, socket, setUnreadCount }) => {
       return;
     }
 
-    fetchNotifications();
+    fetchDropdownNotifications();
+    fetchAllNotifications(1); // Load first page initially
 
     // Listen for real-time notifications if socket is provided
     if (socket) {
       const handleNewNotification = (notification) => {
         console.log("📨 Received real-time notification:", notification);
+        // Add to both dropdown and main list
+        setDropdownNotifications((prev) => [
+          notification,
+          ...prev.slice(0, notificationsPerPage - 1),
+        ]);
         setNotifications((prev) => [notification, ...prev]);
         if (setUnreadCount) {
           setUnreadCount((prev) => prev + 1);
@@ -40,25 +63,50 @@ const NotificationPanel = ({ onClose, userEmail, socket, setUnreadCount }) => {
     }
   }, [userEmail, socket]);
 
-  const fetchNotifications = async () => {
+  const fetchDropdownNotifications = async () => {
+    try {
+      const response = await axios.get(
+        `/notifications/${userEmail}/recent?limit=${notificationsPerPage}`
+      );
+
+      if (response.data.success) {
+        setDropdownNotifications(response.data.data || []);
+
+        // Update unread count from dropdown notifications
+        const unread = response.data.data?.filter((n) => n.newIs).length || 0;
+        if (setUnreadCount) {
+          setUnreadCount(unread);
+        }
+      }
+    } catch (error) {
+      console.error("❌ Error fetching dropdown notifications:", error);
+    }
+  };
+
+  const fetchAllNotifications = async (page = 1) => {
     try {
       setError(null);
-      console.log("🔄 Fetching notifications for:", userEmail);
+      console.log("🔄 Fetching notifications for page:", page);
 
-      const response = await axios.get(`/notifications/${userEmail}`);
+      const response = await axios.get(
+        `/notifications/${userEmail}?page=${page}&limit=${notificationsPerPage}`
+      );
 
       if (response.data.success) {
         console.log(
           "✅ Notifications fetched:",
-          response.data.data?.length || 0
+          response.data.data?.items?.length || 0
         );
-        setNotifications(response.data.data || []);
-
-        // Update unread count
-        const unread = response.data.data?.filter((n) => n.isNew).length || 0;
-        if (setUnreadCount) {
-          setUnreadCount(unread);
-        }
+        setNotifications(response.data.data.items || []);
+        setPagination(
+          response.data.data.pagination || {
+            currentPage: 1,
+            totalPages: 1,
+            totalNotifications: 0,
+            hasNextPage: false,
+            hasPrevPage: false,
+          }
+        );
       } else {
         setError("Failed to fetch notifications");
       }
@@ -79,9 +127,17 @@ const NotificationPanel = ({ onClose, userEmail, socket, setUnreadCount }) => {
       );
 
       if (response.data.success) {
+        // Update in dropdown notifications
+        setDropdownNotifications(
+          dropdownNotifications.map((notif) =>
+            notif._id === id ? { ...notif, newIs: false } : notif
+          )
+        );
+
+        // Update in main notifications
         setNotifications(
           notifications.map((notif) =>
-            notif._id === id ? { ...notif, isNew: false } : notif
+            notif._id === id ? { ...notif, newIs: false } : notif
           )
         );
 
@@ -103,8 +159,12 @@ const NotificationPanel = ({ onClose, userEmail, socket, setUnreadCount }) => {
       });
 
       if (response.data.success) {
+        // Update both dropdown and main notifications
+        setDropdownNotifications(
+          dropdownNotifications.map((notif) => ({ ...notif, newIs: false }))
+        );
         setNotifications(
-          notifications.map((notif) => ({ ...notif, isNew: false }))
+          notifications.map((notif) => ({ ...notif, newIs: false }))
         );
 
         // Reset unread count
@@ -115,6 +175,134 @@ const NotificationPanel = ({ onClose, userEmail, socket, setUnreadCount }) => {
     } catch (error) {
       console.error("❌ Error marking all notifications as read:", error);
     }
+  };
+
+  // Function to handle notification click and navigation
+  const handleNotificationClick = async (notification) => {
+    // Mark as read first
+    if (notification.newIs) {
+      await markAsRead(notification._id);
+    }
+
+    // Close notification panel
+    onClose();
+    setShowFullModal(false);
+
+    // Navigate based on notification type and content
+    navigateBasedOnNotification(notification);
+  };
+
+  // Function to determine where to navigate based on notification
+  const navigateBasedOnNotification = (notification) => {
+    const { type, message, context } = notification;
+
+    // Check for lead assignment notifications
+    if (
+      type === "lead_assignment" ||
+      type === "lead_assignment_made" ||
+      message.toLowerCase().includes("assigned to a lead") ||
+      message.toLowerCase().includes("lead assigned") ||
+      message.toLowerCase().includes("new lead")
+    ) {
+      // Navigate to Leads section
+      console.log("📍 Navigating to Leads section");
+      // This will trigger the tab change in Dashboard
+      window.dispatchEvent(
+        new CustomEvent("dashboard-navigate", {
+          detail: { tab: "Leads" },
+        })
+      );
+      return;
+    }
+
+    // Check for work assignment notifications
+    if (
+      type === "work_assignment" ||
+      type === "work_approved" ||
+      message.toLowerCase().includes("work assigned") ||
+      message.toLowerCase().includes("work approved") ||
+      message.toLowerCase().includes("new work")
+    ) {
+      // Navigate to Work section
+      console.log("📍 Navigating to Work section");
+      window.dispatchEvent(
+        new CustomEvent("dashboard-navigate", {
+          detail: { tab: "Work" },
+        })
+      );
+      return;
+    }
+
+    // Check for pipeline notifications
+    if (
+      type === "pipeline_update" ||
+      message.toLowerCase().includes("pipeline") ||
+      message.toLowerCase().includes("sales pipeline")
+    ) {
+      // Navigate to Pipeline section
+      console.log("📍 Navigating to Pipeline section");
+      window.dispatchEvent(
+        new CustomEvent("dashboard-navigate", {
+          detail: { tab: "Pipeline" },
+        })
+      );
+      return;
+    }
+
+    // Check for approval notifications
+    if (
+      type === "approval_request" ||
+      message.toLowerCase().includes("approval") ||
+      message.toLowerCase().includes("needs approval")
+    ) {
+      // Navigate to Approval section based on user role
+      console.log("📍 Navigating to Approval section");
+      window.dispatchEvent(
+        new CustomEvent("dashboard-navigate", {
+          detail: { tab: "User Approval" },
+        })
+      );
+      return;
+    }
+
+    // Check for visa processing notifications
+    if (
+      type === "visa_update" ||
+      message.toLowerCase().includes("visa") ||
+      message.toLowerCase().includes("processing")
+    ) {
+      // Navigate to Visa Processing section
+      console.log("📍 Navigating to Visa Processing section");
+      window.dispatchEvent(
+        new CustomEvent("dashboard-navigate", {
+          detail: { tab: "Visa Processing" },
+        })
+      );
+      return;
+    }
+
+    // Default: Stay on current page or go to dashboard home
+    console.log("📍 No specific navigation for this notification type");
+  };
+
+  // Check if notification is actionable (has navigation)
+  const isActionableNotification = (notification) => {
+    const { type, message } = notification;
+    return (
+      type === "lead_assignment" ||
+      type === "lead_assignment_made" ||
+      type === "work_assignment" ||
+      type === "work_approved" ||
+      type === "approval_request" ||
+      type === "pipeline_update" ||
+      type === "visa_update" ||
+      message.toLowerCase().includes("assigned") ||
+      message.toLowerCase().includes("lead") ||
+      message.toLowerCase().includes("work") ||
+      message.toLowerCase().includes("approval") ||
+      message.toLowerCase().includes("pipeline") ||
+      message.toLowerCase().includes("visa")
+    );
   };
 
   const getIcon = (type) => {
@@ -168,138 +356,264 @@ const NotificationPanel = ({ onClose, userEmail, socket, setUnreadCount }) => {
     }
   };
 
-  const unreadNotifications = notifications.filter((n) => n.isNew).length;
+  const unreadNotifications = dropdownNotifications.filter(
+    (n) => n.newIs
+  ).length;
 
-  if (loading) {
+  const handleViewAll = () => {
+    setShowFullModal(true);
+    setCurrentPage(1);
+    fetchAllNotifications(1);
+  };
+
+  const handleCloseFullModal = () => {
+    setShowFullModal(false);
+    setCurrentPage(1);
+  };
+
+  const goToPage = (page) => {
+    setCurrentPage(page);
+    fetchAllNotifications(page);
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < pagination.totalPages) {
+      const nextPage = currentPage + 1;
+      setCurrentPage(nextPage);
+      fetchAllNotifications(nextPage);
+    }
+  };
+
+  const goToPrevPage = () => {
+    if (currentPage > 1) {
+      const prevPage = currentPage - 1;
+      setCurrentPage(prevPage);
+      fetchAllNotifications(prevPage);
+    }
+  };
+
+  // Notification Item Component (reusable)
+  const NotificationItem = ({ notification, showFullDetails = false }) => {
+    const isActionable = isActionableNotification(notification);
+
     return (
-      <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
-        <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-          <h3 className="font-semibold text-gray-700">Notifications</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="p-4 flex justify-center items-center h-32">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-          <span className="ml-2 text-gray-600">Loading notifications...</span>
+      <div
+        className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer group ${
+          notification.newIs ? "bg-blue-50" : ""
+        } ${showFullDetails ? "border rounded-lg mb-3" : ""}`}
+        onClick={() => handleNotificationClick(notification)}
+      >
+        <div className="flex items-start space-x-3">
+          <div className="flex-shrink-0">{getIcon(notification.type)}</div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between">
+              <p className="text-sm font-medium text-gray-900">
+                {getTitleFromType(notification.type, notification.message)}
+              </p>
+              {isActionable && (
+                <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-blue-500 ml-2 flex-shrink-0" />
+              )}
+            </div>
+            <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
+            <div className="flex items-center mt-2 text-xs text-gray-400">
+              <Calendar className="h-3 w-3 mr-1" />
+              {formatTime(notification.createdAt)}
+              {showFullDetails && (
+                <span className="ml-2 px-2 py-1 bg-gray-200 rounded-full">
+                  {notification.type || "general"}
+                </span>
+              )}
+            </div>
+            {showFullDetails && notification.newIs && (
+              <span className="inline-block mt-2 px-2 py-1 text-xs bg-blue-500 text-white rounded-full">
+                New
+              </span>
+            )}
+            {isActionable && (
+              <div className="mt-2 text-xs text-blue-600 font-medium">
+                Click to view details →
+              </div>
+            )}
+          </div>
+          {!showFullDetails && notification.newIs && (
+            <div className="flex-shrink-0">
+              <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+            </div>
+          )}
         </div>
       </div>
     );
-  }
-
-  if (error) {
-    return (
-      <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
-        <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-          <h3 className="font-semibold text-gray-700">Notifications</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="p-4 text-center text-red-500">
-          <AlertCircle className="h-12 w-12 mx-auto mb-2" />
-          <p>{error}</p>
-          <button
-            onClick={fetchNotifications}
-            className="mt-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
+  };
 
   return (
-    <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-        <h3 className="font-semibold text-gray-700">Notifications</h3>
-        <div className="flex space-x-2">
-          {unreadNotifications > 0 && (
+    <>
+      {/* Dropdown Notification Panel */}
+      <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+        {/* Header */}
+        <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+          <h3 className="font-semibold text-gray-700">Notifications</h3>
+          <div className="flex space-x-2">
+            {unreadNotifications > 0 && (
+              <button
+                onClick={markAllAsRead}
+                className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-50"
+              >
+                Mark all read
+              </button>
+            )}
             <button
-              onClick={markAllAsRead}
-              className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-50"
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
             >
-              Mark all read
+              <X className="h-5 w-5" />
             </button>
-          )}
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-      </div>
-
-      {/* Notifications List */}
-      <div className="max-h-96 overflow-y-auto">
-        {notifications.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
-            <Bell className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-lg font-medium">No notifications yet</p>
-            <p className="text-sm mt-1">
-              You'll see notifications here when you get them
-            </p>
           </div>
-        ) : (
-          notifications.map((notification) => (
-            <div
-              key={notification._id}
-              className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
-                notification.isNew ? "bg-blue-50" : ""
-              }`}
-              onClick={() => notification.isNew && markAsRead(notification._id)}
-            >
-              <div className="flex items-start space-x-3">
-                <div className="flex-shrink-0">
-                  {getIcon(notification.type)}
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">
-                    {getTitleFromType(notification.type, notification.message)}
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {notification.message}
-                  </p>
-                  <div className="flex items-center mt-2 text-xs text-gray-400">
-                    <Calendar className="h-3 w-3 mr-1" />
-                    {formatTime(notification.createdAt)}
-                  </div>
-                </div>
-                {notification.isNew && (
-                  <div className="flex-shrink-0">
-                    <div className="h-2 w-2 rounded-full bg-blue-500"></div>
-                  </div>
-                )}
-              </div>
+        </div>
+
+        {/* Notifications List (First 6 from backend) */}
+        <div className="max-h-96 overflow-y-auto">
+          {dropdownNotifications.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              <Bell className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-lg font-medium">No notifications yet</p>
+              <p className="text-sm mt-1">
+                You'll see notifications here when you get them
+              </p>
             </div>
-          ))
+          ) : (
+            dropdownNotifications.map((notification) => (
+              <NotificationItem
+                key={notification._id}
+                notification={notification}
+              />
+            ))
+          )}
+        </div>
+
+        {/* Footer */}
+        {pagination.totalNotifications > 0 && (
+          <div className="p-3 border-t border-gray-200 text-center">
+            <button
+              className="text-sm text-blue-600 hover:text-blue-800 px-3 py-1 rounded hover:bg-blue-50"
+              onClick={handleViewAll}
+            >
+              View all notifications ({pagination.totalNotifications})
+            </button>
+          </div>
         )}
       </div>
 
-      {/* Footer - Only show if there are notifications */}
-      {notifications.length > 0 && (
-        <div className="p-3 border-t border-gray-200 text-center">
-          <button
-            className="text-sm text-blue-600 hover:text-blue-800 px-3 py-1 rounded hover:bg-blue-50"
-            onClick={() => {
-              onClose();
-              // Navigate to full notifications page if needed
-            }}
-          >
-            View all notifications
-          </button>
+      {/* Full Notifications Modal */}
+      {showFullModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">
+                  All Notifications
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  {pagination.totalNotifications} total notifications •{" "}
+                  {unreadNotifications} unread
+                </p>
+              </div>
+              <div className="flex items-center space-x-3">
+                {unreadNotifications > 0 && (
+                  <button
+                    onClick={markAllAsRead}
+                    className="text-sm text-blue-600 hover:text-blue-800 px-3 py-1 rounded hover:bg-blue-50"
+                  >
+                    Mark all read
+                  </button>
+                )}
+                <button
+                  onClick={handleCloseFullModal}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* Notifications List with Pagination */}
+            <div className="p-6 max-h-96 overflow-y-auto">
+              {notifications.length === 0 ? (
+                <div className="text-center py-8">
+                  <Bell className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 text-lg">No notifications</p>
+                </div>
+              ) : (
+                notifications.map((notification) => (
+                  <NotificationItem
+                    key={notification._id}
+                    notification={notification}
+                    showFullDetails={true}
+                  />
+                ))
+              )}
+            </div>
+
+            {/* Pagination Controls */}
+            {pagination.totalPages > 1 && (
+              <div className="p-4 border-t border-gray-200 flex items-center justify-between">
+                <button
+                  onClick={goToPrevPage}
+                  disabled={!pagination.hasPrevPage}
+                  className={`flex items-center space-x-1 px-3 py-2 rounded ${
+                    !pagination.hasPrevPage
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "text-blue-600 hover:bg-blue-50"
+                  }`}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  <span>Previous</span>
+                </button>
+
+                <div className="flex items-center space-x-2">
+                  {Array.from(
+                    { length: pagination.totalPages },
+                    (_, i) => i + 1
+                  ).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => goToPage(page)}
+                      className={`w-8 h-8 rounded-full text-sm ${
+                        currentPage === page
+                          ? "bg-blue-500 text-white"
+                          : "text-gray-600 hover:bg-gray-100"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={goToNextPage}
+                  disabled={!pagination.hasNextPage}
+                  className={`flex items-center space-x-1 px-3 py-2 rounded ${
+                    !pagination.hasNextPage
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "text-blue-600 hover:bg-blue-50"
+                  }`}
+                >
+                  <span>Next</span>
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+
+            {/* Page Info */}
+            <div className="p-4 border-t border-gray-200 text-center text-sm text-gray-500">
+              Page {currentPage} of {pagination.totalPages} • Showing{" "}
+              {notifications.length} of {pagination.totalNotifications}{" "}
+              notifications
+            </div>
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
