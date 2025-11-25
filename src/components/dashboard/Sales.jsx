@@ -33,7 +33,7 @@ const Sales = ({ userRole }) => {
   const normalizeSalesData = (salesData) =>
     salesData.map((sale) => ({
       ...sale,
-      status: sale.isConfirmed || "New lead",
+      status: sale.status || "New lead",
     }));
 
   const fetchSales = async () => {

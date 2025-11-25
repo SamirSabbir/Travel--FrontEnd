@@ -1,12 +1,12 @@
-import React, { useState } from "react";
-import axios from "../../../api/axios"; 
-import Cookies from "js-cookie"; 
+import React, { useState, useEffect } from "react";
+import axios from "../../../api/axios";
+import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 
 const NOC = () => {
   const user = JSON.parse(Cookies.get("user") || "{}");
   const [formData, setFormData] = useState({
-    name: "",
+    name: user?.name,
     passportNumber: "",
     joiningDate: "",
     position: user?.role || "",
@@ -94,6 +94,14 @@ const NOC = () => {
     }
   };
 
+  useEffect(() => {
+    const currentDate = new Date().toISOString().split("T")[0];
+    setFormData((prev) => ({
+      ...prev,
+      requestDate: currentDate,
+    }));
+  }, []);
+
   return (
     <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg p-8 border border-gray-300">
       {/* Header */}
@@ -116,7 +124,7 @@ const NOC = () => {
           name="requestDate"
           value={formData.requestDate}
           onChange={handleChange}
-          className="border p-2 rounded w-full"
+          className="border p-2 rounded w-full bg-gray-100 cursor-not-allowed"
           placeholder="Request Date"
         />
         <input
@@ -124,7 +132,7 @@ const NOC = () => {
           name="name"
           value={formData.name}
           onChange={handleChange}
-          className="border p-2 rounded w-full"
+          className="border p-2 rounded w-full bg-gray-100 cursor-not-allowed"
           placeholder="Employee Name*"
           required
         />
@@ -137,14 +145,18 @@ const NOC = () => {
           placeholder="Passport No*"
           required
         />
-        <input
-          type="date"
-          name="joiningDate"
-          value={formData.joiningDate}
-          onChange={handleChange}
-          className="border p-2 rounded w-full"
-          placeholder="Joining Date"
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Joining Date
+          </label>
+          <input
+            type="date"
+            name="joiningDate"
+            value={formData.joiningDate}
+            onChange={handleChange}
+            className="border p-2 rounded w-full"
+          />
+        </div>
         <input
           type="text"
           name="position"
@@ -263,7 +275,7 @@ const NOC = () => {
           disabled={loading}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg disabled:bg-blue-400"
         >
-          {loading ? "Processing..." : "Send"}
+          {loading ? "Processing..." : "Request"}
         </button>
       </div>
     </div>

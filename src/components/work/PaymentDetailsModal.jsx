@@ -140,6 +140,18 @@ const PaymentDetailsModal = ({
     }
   };
 
+  // Calculate due amount automatically
+  useEffect(() => {
+    if (paymentDetails) {
+      const amount = parseFloat(paymentDetails.amount) || 0;
+      const givenAmount = parseFloat(paymentDetails.givenAmount) || 0;
+      const dueAmount = amount - givenAmount;
+
+      // Update dueAmount field
+      onPaymentFieldChange("dueAmount", dueAmount > 0 ? dueAmount : 0);
+    }
+  }, [paymentDetails?.amount, paymentDetails?.givenAmount]);
+
   const isEditable =
     (userRole === "Employee" || userRole === "SuperAdmin") && !isSubmitted;
 
@@ -242,7 +254,7 @@ const PaymentDetailsModal = ({
                         <option value="Trusted">Trusted</option>{" "}
                       </select>{" "}
                     </div>{" "}
-                    <div>
+                    {/* <div>
                       {" "}
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {" "}
@@ -262,12 +274,12 @@ const PaymentDetailsModal = ({
                         <option value="Online Payment">Online Payment</option>{" "}
                         <option value="Bank Transfer">Bank Transfer</option>{" "}
                       </select>{" "}
-                    </div>{" "}
+                    </div>{" "} */}
                     <div>
                       {" "}
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {" "}
-                        Payment Type{" "}
+                        Payment Mode{" "}
                       </label>{" "}
                       <select
                         value={paymentDetails.type}
@@ -283,7 +295,7 @@ const PaymentDetailsModal = ({
                         <option value="Bkash">Bkash</option>{" "}
                         <option value="Nagad">Nagad</option>{" "}
                         <option value="Cash Deposit">Cash Deposit</option>{" "}
-                        <option value="Cash Swipe">Cash Swipe</option>{" "}
+                        <option value="Cash Swipe">Card Swipe</option>{" "}
                       </select>{" "}
                     </div>{" "}
                     <div>
@@ -312,7 +324,7 @@ const PaymentDetailsModal = ({
                         </option>{" "}
                       </select>{" "}
                     </div>{" "}
-                    <div>
+                    {/* <div>
                       {" "}
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {" "}
@@ -327,12 +339,12 @@ const PaymentDetailsModal = ({
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         disabled={!isEditable}
                       />{" "}
-                    </div>{" "}
-                    <div>
+                    </div>{" "} */}
+                    {/* <div>
                       {" "}
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {" "}
-                        Deposit Reference{" "}
+                        Reference Number{" "}
                       </label>{" "}
                       <input
                         type="text"
@@ -346,7 +358,7 @@ const PaymentDetailsModal = ({
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         disabled={!isEditable}
                       />{" "}
-                    </div>{" "}
+                    </div>{" "} */}
                     <div>
                       {" "}
                       <label className="block text-sm font-medium text-gray-700 mb-1">

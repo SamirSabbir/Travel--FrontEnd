@@ -20,6 +20,7 @@ import { updateProfile } from "./UpdateProfile";
 const MyProfile = ({ userRole, userData }) => {
   const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [showCommission, setShowCommission] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     password: "",
@@ -292,7 +293,8 @@ const MyProfile = ({ userRole, userData }) => {
                       Salary
                     </span>
                     <p className="text-lg font-semibold text-gray-800">
-                      <span className="pr-2">Tk</span>{profile.salary?.toLocaleString() || "N/A"}
+                      <span className="pr-2">Tk</span>
+                      {profile.salary?.toLocaleString() || "N/A"}
                     </p>
                   </div>
 
@@ -300,16 +302,33 @@ const MyProfile = ({ userRole, userData }) => {
                     <span className="text-sm font-medium text-gray-500">
                       Commission
                     </span>
-                    <p className="text-lg font-semibold text-gray-800">
-                     <span className="pr-2">Tk</span> {profile.commission} 
-                    </p>
+                    <div
+                      className="flex items-center gap-2 cursor-pointer"
+                      onClick={() => setShowCommission(!showCommission)}
+                    >
+                      <p
+                        className={`text-lg font-semibold ${
+                          showCommission
+                            ? "text-gray-800"
+                            : "blur-sm select-none"
+                        }`}
+                      >
+                        <span className="pr-2">Tk</span> {profile.commission}
+                      </p>
+                      {!showCommission && (
+                        <span className="text-xs text-gray-500">
+                          (Click to reveal)
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-sm font-medium text-gray-500">
                       Casual Leave
                     </span>
                     <p className="text-lg font-semibold text-gray-800">
-                      {profile.remainingCasualLeaves}<span className="pl-2">days</span>
+                      {profile.remainingCasualLeaves}
+                      <span className="pl-2">days</span>
                     </p>
                   </div>
                   <div className="flex flex-col gap-1">
@@ -317,7 +336,8 @@ const MyProfile = ({ userRole, userData }) => {
                       Sick Leave
                     </span>
                     <p className="text-lg font-semibold text-gray-800">
-                      {profile.remainingSickLeaves}<span className="pl-2">days</span>
+                      {profile.remainingSickLeaves}
+                      <span className="pl-2">days</span>
                     </p>
                   </div>
                   <div className="flex flex-col gap-1">
