@@ -31,7 +31,7 @@ const Register = () => {
   const roles = [
     { value: "Employee", label: "Employee" },
     { value: "AccountAdmin", label: "HR Account Admin" },
-    { value: "OfficeBoy", label: "Office Boy" },
+    { value: "OfficeBoy", label: "Office assistant" },
   ];
 
   const handleChange = (e) => {

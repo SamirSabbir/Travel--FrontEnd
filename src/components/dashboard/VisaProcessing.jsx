@@ -90,14 +90,14 @@ const VisaProcessing = () => {
   const statusColors = {
     Done: "#5CC976",
     "Need Biometric": "#CDCDCD",
-    B2B: "#9DD43B",
+    // B2B: "#9DD43B",
     "Application Done": "#65CAFF",
     "Working on it": "#F5AB3E",
     Emergency: "#BA3354",
     "stuck at Doc": "#DF3649",
-    Block: "#4e4b4b",
+    // Block: "#4e4b4b",
     "Doc Need Notary": "#2A7FB9",
-    "B2B ST": "#38804E",
+    // "B2B ST": "#38804E",
     "Doc at Notary": "#9D50DE",
     "Upload Documents": "#9BADBA",
   };
@@ -180,12 +180,12 @@ const VisaProcessing = () => {
               <th className="py-2 px-3 border-b">PAX</th>
               <th className="py-2 px-3 border-b">Country</th>
               <th className="py-2 px-3 border-b">Date of Entry</th>
-              <th className="py-2 px-3 border-b">Date of Deadline</th>
+              <th className="py-2 px-3 border-b">Date of Submission</th>
               <th className="py-2 px-3 border-b">Details</th>
               <th className="py-2 px-3 border-b">Status</th>
               <th className="py-2 px-3 border-b">Transferred From</th>
-              <th className="py-2 px-3 border-b">Closed Date</th>
-              <th className="py-2 px-3 border-b">Application</th>
+              <th className="py-2 px-3 border-b">Closing Date</th>
+              <th className="py-2 px-3 border-b">Application Details</th>
               <th className="py-2 px-3 border-b">Visa Status</th>
               <th className="py-2 px-3 border-b">Action</th>
             </tr>
@@ -329,7 +329,7 @@ const VisaProcessing = () => {
                     onClick={() => handleApplicationClick(item)}
                     className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded"
                   >
-                    Application
+                    View
                   </button>
                 </td>
 

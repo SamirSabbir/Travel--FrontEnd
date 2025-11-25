@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "../../../api/axios";
-import Cookies from "js-cookie"; 
+import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 const SalaryCertificate = () => {
-   const user = JSON.parse(Cookies.get("user") || "{}");
+  const user = JSON.parse(Cookies.get("user") || "{}");
 
   const [formData, setFormData] = useState({
-    name: "",
+    name: user?.name || "",
     position: user?.role || "",
     joiningDate: "",
     monthlySalary: "",
@@ -14,8 +14,6 @@ const SalaryCertificate = () => {
     email: user?.email || "",
   });
 
-  
-  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -27,12 +25,12 @@ const SalaryCertificate = () => {
     try {
       setLoading(true);
       setError("");
-      
+
       const response = await axios.post("/salaryCertificate", {
         ...formData,
-        status: "draft" // Indicate this is a draft
+        status: "draft", // Indicate this is a draft
       });
-      
+
       console.log("Saved as draft:", response.data);
       toast.success("Salary certificate saved as draft successfully!");
     } catch (err) {
@@ -47,25 +45,29 @@ const SalaryCertificate = () => {
     try {
       setLoading(true);
       setError("");
-     
-      
+
       // Basic validation
-      if (!formData.name || !formData.position || !formData.monthlySalary || !formData.email) {
+      if (
+        !formData.name ||
+        !formData.position ||
+        !formData.monthlySalary ||
+        !formData.email
+      ) {
         setError("Please fill in all required fields");
         return;
       }
-      
+
       const response = await axios.post("/salaryCertificate", {
         ...formData,
-        status: "sent" // Indicate this is being sent
+        status: "sent", // Indicate this is being sent
       });
-      
+
       console.log("Certificate sent:", response.data);
       toast.success("Salary certificate sent successfully!");
-      
+
       // Reset form after successful submission if needed
       setFormData({
-        name: "",
+        name: user?.name,
         position: user?.role,
         joiningDate: "",
         monthlySalary: "",
@@ -80,12 +82,19 @@ const SalaryCertificate = () => {
     }
   };
 
+  useEffect(() => {
+    const currentDate = new Date().toISOString().split("T")[0];
+    setFormData((prev) => ({
+      ...prev,
+      requestDate: currentDate,
+    }));
+  }, []);
+
   return (
     <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg p-8 border border-gray-300">
       {/* Header */}
       <div className="text-center mb-6">
         <h1 className="text-2xl font-bold">Trip & Travel</h1>
-        <p className="text-gray-500">Salary Certificate</p>
       </div>
 
       {/* Error message */}
@@ -102,7 +111,7 @@ const SalaryCertificate = () => {
           name="requestDate"
           value={formData.requestDate}
           onChange={handleChange}
-          className="border p-2 rounded w-full"
+          className="border p-2 rounded w-full bg-gray-100 cursor-not-allowed"
           placeholder="Request Date"
         />
         <input
@@ -110,7 +119,7 @@ const SalaryCertificate = () => {
           name="name"
           value={formData.name}
           onChange={handleChange}
-          className="border p-2 rounded w-full"
+          className="border p-2 rounded w-full bg-gray-100 cursor-not-allowed"
           placeholder="Employee Name*"
           required
         />
@@ -123,14 +132,19 @@ const SalaryCertificate = () => {
           // placeholder="Position*"
           required
         />
-        <input
-          type="date"
-          name="joiningDate"
-          value={formData.joiningDate}
-          onChange={handleChange}
-          className="border p-2 rounded w-full"
-          placeholder="Joining Date"
-        />
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Joining Date
+          </label>
+          <input
+            type="date"
+            name="joiningDate"
+            value={formData.joiningDate}
+            onChange={handleChange}
+            className="border p-2 rounded w-full"
+          />
+        </div>
         <input
           type="number"
           name="monthlySalary"
@@ -155,11 +169,15 @@ const SalaryCertificate = () => {
         <p className="text-right">{formData.requestDate || "Date"}</p>
         <p className="font-bold">PRIVATE & CONFIDENTIAL</p>
         <p>To whom it may concern,</p>
-        <p className="mt-2 font-semibold">Re: {formData.name || "Employee Name"}</p>
+        <p className="mt-2 font-semibold">
+          Re: {formData.name || "Employee Name"}
+        </p>
 
         <p className="mt-4">
           Further to your recent reference enquiry, I can confirm that{" "}
-          <span className="font-medium">{formData.name || "Employee Name"}</span>{" "}
+          <span className="font-medium">
+            {formData.name || "Employee Name"}
+          </span>{" "}
           is a regular full-time employee at Trip & Travel.
         </p>
 
@@ -167,9 +185,14 @@ const SalaryCertificate = () => {
           {formData.name || "Employee Name"} is employed as a{" "}
           <span className="font-medium">{formData.position || "Position"}</span>{" "}
           with Trip & Travel on{" "}
-          <span className="font-medium">{formData.joiningDate || "Joining Date"}</span>. 
-          Additionally, I can confirm that my monthly salary is{" "}
-          <span className="font-medium">Tk {formData.monthlySalary || "----"}</span>.
+          <span className="font-medium">
+            {formData.joiningDate || "Joining Date"}
+          </span>
+          . Additionally, I can confirm that my monthly salary is{" "}
+          <span className="font-medium">
+            Tk {formData.monthlySalary || "----"}
+          </span>
+          .
         </p>
 
         <p className="mt-2">
@@ -201,7 +224,7 @@ const SalaryCertificate = () => {
           disabled={loading}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg disabled:bg-blue-400"
         >
-          {loading ? "Processing..." : "Send"}
+          {loading ? "Processing..." : "Request"}
         </button>
       </div>
     </div>

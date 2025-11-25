@@ -89,7 +89,7 @@ const AirTicket = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Hotel</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Air Ticket</h1>
         <div className="flex items-center space-x-2">
           <input
             type="text"
@@ -180,7 +180,7 @@ const AirTicket = () => {
                       onChange={(e) =>
                         handleInputChange(index, "airLine", e.target.value)
                       }
-                      className="w-[90px] px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-[150px] px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -194,14 +194,7 @@ const AirTicket = () => {
                     />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <input
-                      type="text"
-                      value={ticket.contactNo || ""}
-                      onChange={(e) =>
-                        handleInputChange(index, "contactNo", e.target.value)
-                      }
-                      className="w-[110px] px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                    {ticket.workId?.phone || "N/A"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <input
@@ -277,53 +270,52 @@ const AirTicket = () => {
             )}
           </tbody>
         </table>
-      
       </div>
-        {/* Pagination */}
-        <div className="flex justify-between items-center mt-4">
-          <div>
-            <span className="text-sm text-gray-700">
-              Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-              {Math.min(currentPage * itemsPerPage, filteredData.length)} of{" "}
-              {filteredData.length} entries
-            </span>
-          </div>
-
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1 border rounded disabled:opacity-50"
-            >
-              Previous
-            </button>
-
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              const pageNum = i + 1;
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => setCurrentPage(pageNum)}
-                  className={`px-3 py-1 border rounded ${
-                    currentPage === pageNum ? "bg-blue-500 text-white" : ""
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
-
-            <button
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 border rounded disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
+      {/* Pagination */}
+      <div className="flex justify-between items-center mt-4">
+        <div>
+          <span className="text-sm text-gray-700">
+            Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+            {Math.min(currentPage * itemsPerPage, filteredData.length)} of{" "}
+            {filteredData.length} entries
+          </span>
         </div>
+
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            const pageNum = i + 1;
+            return (
+              <button
+                key={pageNum}
+                onClick={() => setCurrentPage(pageNum)}
+                className={`px-3 py-1 border rounded ${
+                  currentPage === pageNum ? "bg-blue-500 text-white" : ""
+                }`}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+
+          <button
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
