@@ -81,7 +81,25 @@ const Hotel = () => {
   const handleRoomsChange = (id, value) => {
     const updatedData = hotelData.map((item) => {
       if (item._id === id) {
-        return { ...item, room: Math.max(0, value) };
+        const roomCount = Math.max(0, value);
+        const updatedItem = { ...item, room: roomCount };
+
+        // Auto-calculate total price when room count changes
+        if (
+          updatedItem.perNightPrice &&
+          updatedItem.night?.from &&
+          updatedItem.night?.to
+        ) {
+          const startDate = new Date(updatedItem.night.from);
+          const endDate = new Date(updatedItem.night.to);
+          const timeDiff = endDate.getTime() - startDate.getTime();
+          const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
+          const totalNights = nights + 1;
+          updatedItem.totalPrice =
+            updatedItem.perNightPrice * roomCount * totalNights;
+        }
+
+        return updatedItem;
       }
       return item;
     });
@@ -93,13 +111,31 @@ const Hotel = () => {
     setHotelData((prev) =>
       prev.map((item) => {
         if (item._id === id) {
-          return {
+          const updatedItem = {
             ...item,
             night: {
               ...item.night,
               [field]: value,
             },
           };
+
+          // Auto-calculate total price when dates change
+          if (
+            updatedItem.perNightPrice &&
+            updatedItem.night?.from &&
+            updatedItem.night?.to &&
+            updatedItem.room
+          ) {
+            const startDate = new Date(updatedItem.night.from);
+            const endDate = new Date(updatedItem.night.to);
+            const timeDiff = endDate.getTime() - startDate.getTime();
+            const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
+            const totalNights = nights + 1;
+            updatedItem.totalPrice =
+              updatedItem.perNightPrice * updatedItem.room * totalNights;
+          }
+
+          return updatedItem;
         }
         return item;
       })
@@ -145,10 +181,27 @@ const Hotel = () => {
   const handlePerNightPriceChange = (id, field, value) => {
     const updatedData = hotelData.map((item) => {
       if (item._id === id) {
-        return {
+        const updatedItem = {
           ...item,
           [field]: value,
         };
+
+        // Auto-calculate total price when per night price changes
+        if (
+          updatedItem.night?.from &&
+          updatedItem.night?.to &&
+          updatedItem.room
+        ) {
+          const startDate = new Date(updatedItem.night.from);
+          const endDate = new Date(updatedItem.night.to);
+          const timeDiff = endDate.getTime() - startDate.getTime();
+          const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
+          const totalNights = nights + 1;
+          updatedItem.totalPrice =
+            updatedItem.perNightPrice * updatedItem.room * totalNights;
+        }
+
+        return updatedItem;
       }
       return item;
     });
@@ -241,6 +294,31 @@ const Hotel = () => {
       console.error("Error saving data:", err);
       toast.error("Failed to save changes");
     }
+  };
+
+  // Calculate total price with one extra night
+  // Calculate total price: night price × total rooms × (nights + 1)
+  const calculateTotalPrice = (item) => {
+    if (
+      !item.perNightPrice ||
+      !item.night?.from ||
+      !item.night?.to ||
+      !item.room
+    ) {
+      return item.totalPrice || 0; // Fallback to existing totalPrice if data is missing
+    }
+
+    const startDate = new Date(item.night.from);
+    const endDate = new Date(item.night.to);
+
+    // Calculate nights difference
+    const timeDiff = endDate.getTime() - startDate.getTime();
+    const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+    // Add one extra night as requested
+    const totalNights = nights + 1;
+
+    return (item.perNightPrice || 0) * (item.room || 1) * totalNights;
   };
 
   return (
@@ -352,7 +430,7 @@ const Hotel = () => {
                     <div className="flex items-center">
                       <input
                         type="text"
-                        className="border rounded px-2 py-1 w-20"
+                        className="border rounded px-2 py-1 w-80"
                         value={item.hotelName || ""}
                         onChange={(e) =>
                           handleHotelNameChange(
@@ -570,16 +648,9 @@ const Hotel = () => {
                       <span className="pr-1">৳</span>
                       <input
                         type="number"
-                        className="border rounded px-2 py-1 w-20"
-                        value={item.totalPrice || ""}
-                        onChange={(e) =>
-                          handlePriceChange(
-                            item._id,
-                            "totalPrice",
-                            e.target.value
-                          )
-                        }
-                        min="0"
+                        className="border rounded px-2 py-1 w-20 bg-gray-100"
+                        value={calculateTotalPrice(item) || ""}
+                        readOnly
                       />
                     </div>
                   </td>
