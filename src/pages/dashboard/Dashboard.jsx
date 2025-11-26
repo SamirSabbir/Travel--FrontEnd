@@ -286,7 +286,7 @@ const Dashboard = () => {
 
     // Initialize Socket.IO connection
     if (userData.email) {
-      const newSocket = io("http://localhost:5000");
+      const newSocket = io("https://travel-c0ta.onrender.com");
       setSocket(newSocket);
 
       // Socket connection handlers
