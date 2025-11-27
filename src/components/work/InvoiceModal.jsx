@@ -363,7 +363,7 @@ const InvoiceModal = ({ isOpen, onClose, work }) => {
 
           {/* Footer Text */}
           <p className="text-sm text-gray-500 italic mb-6">
-            This is a System generated certificate and requires no signature.
+            This is a System generated invoice and requires no signature
           </p>
 
           {/* Actions */}

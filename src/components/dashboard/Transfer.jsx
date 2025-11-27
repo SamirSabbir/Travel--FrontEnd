@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "../../api/axios";
 import { toast } from "react-toastify";
+import getEnhancedTransferTypeColor from "../../utils/transferColor";
+import { Car, ChevronDown } from "lucide-react";
+import getPremiumTransferTypeColor from "../../utils/transferColor";
+import getEnhancedCarTypeColor from "../../utils/carTypeColor";
 const Transfer = () => {
   const [transfers, setTransfers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -217,29 +221,60 @@ const Transfer = () => {
                     {transfer.workId?.uuId || "N/A"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <select
-                      value={transfer.transferType || ""}
-                      onChange={(e) =>
-                        handleInputChange(index, "transferType", e.target.value)
-                      }
-                      className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Transfer Type</option>
-                      {transferTypes.map((type) => (
-                        <option key={type} value={type}>
-                          {type}
-                        </option>
-                      ))}
-                    </select>
-                    {transfer.transferType && (
-                      <span
-                        className={`ml-2 px-2 py-1 text-xs rounded-full ${getTransferTypeColor(
-                          transfer.transferType
-                        )}`}
-                      >
-                        {transfer.transferType}
-                      </span>
-                    )}
+                    <div className="flex flex-col gap-3 min-w-[280px]">
+                      {/* Large Professional Select */}
+                      <div className="relative">
+                        <select
+                          value={transfer.transferType || ""}
+                          onChange={(e) =>
+                            handleInputChange(
+                              index,
+                              "transferType",
+                              e.target.value
+                            )
+                          }
+                          className="w-full px-6 py-4 border-2 border-gray-300 rounded-2xl bg-white text-gray-900 text-lg font-semibold transition-all duration-300
+                   focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 focus:bg-blue-50
+                   hover:border-blue-400 hover:bg-blue-25 hover:shadow-lg
+                   appearance-none cursor-pointer shadow-md"
+                        >
+                          <option
+                            value=""
+                            className="text-gray-500 text-lg py-3"
+                          >
+                            Select Transfer Type
+                          </option>
+                          {transferTypes.map((type) => (
+                            <option
+                              key={type}
+                              value={type}
+                              className="text-gray-800 text-lg py-3 font-medium hover:bg-blue-100"
+                            >
+                              {type}
+                            </option>
+                          ))}
+                        </select>
+
+                        {/* Enhanced Custom Chevron */}
+                        <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                          <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-sm">
+                            <svg
+                              className="w-4 h-4 text-white"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={3}
+                                d="M19 9l-7 7-7-7"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <input
@@ -266,29 +301,56 @@ const Transfer = () => {
                     />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <select
-                      value={transfer.carType || ""}
-                      onChange={(e) =>
-                        handleInputChange(index, "carType", e.target.value)
-                      }
-                      className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Car Type</option>
-                      {carTypes.map((type) => (
-                        <option key={type} value={type}>
-                          {type}
-                        </option>
-                      ))}
-                    </select>
-                    {transfer.carType && (
-                      <span
-                        className={`ml-2 px-2 py-1 text-xs rounded-full ${getCarTypeColor(
-                          transfer.carType
-                        )}`}
-                      >
-                        {transfer.carType}
-                      </span>
-                    )}
+                    <div className="flex flex-col gap-3 min-w-[220px]">
+                      {/* Enhanced Car Type Select */}
+                      <div className="relative group">
+                        <select
+                          value={transfer.carType || ""}
+                          onChange={(e) =>
+                            handleInputChange(index, "carType", e.target.value)
+                          }
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-white text-gray-900 font-semibold transition-all duration-300
+                   focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 focus:bg-purple-50
+                   hover:border-purple-300 hover:bg-purple-25 hover:shadow-lg
+                   appearance-none cursor-pointer shadow-sm"
+                        >
+                          <option
+                            value=""
+                            className="text-gray-500 font-medium"
+                          >
+                            🚘 Select Car Type
+                          </option>
+                          {carTypes.map((type) => (
+                            <option
+                              key={type}
+                              value={type}
+                              className="text-gray-800 font-medium py-2 hover:bg-purple-100"
+                            >
+                              {type}
+                            </option>
+                          ))}
+                        </select>
+
+                        {/* Custom Chevron */}
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none transition-transform duration-300 group-hover:scale-110">
+                          <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center shadow-sm">
+                            <svg
+                              className="w-3 h-3 text-white"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={3}
+                                d="M19 9l-7 7-7-7"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
@@ -296,7 +358,7 @@ const Transfer = () => {
                         className="bg-gray-200 hover:bg-gray-300 rounded-l px-2 py-1"
                         onClick={() =>
                           handlePassengerChange(
-                            index,
+                            transfer._id, // Changed from 'index' to 'transfer._id'
                             (transfer.passenger || 0) - 1
                           )
                         }
@@ -320,18 +382,37 @@ const Transfer = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <span className="pr-1">৳</span>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={transfer.amount || ""}
-                        onChange={(e) =>
-                          handleInputChange(index, "amount", e.target.value)
-                        }
-                        className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+                    <div className="relative">
+                      <div className="flex items-center bg-white border-2 border-gray-200 rounded-lg hover:border-blue-400 focus-within:border-blue-500 focus-within:ring-3 focus-within:ring-blue-100 transition-all duration-200 shadow-sm">
+                        {/* Compact Currency */}
+                        <div className="pl-3 pr-2 py-2">
+                          <span className="text-base font-bold text-blue-600">
+                            ৳
+                          </span>
+                        </div>
+
+                        {/* Compact Input */}
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={transfer.amount || ""}
+                          onChange={(e) =>
+                            handleInputChange(index, "amount", e.target.value)
+                          }
+                          placeholder="0.00"
+                          className="w-24 px-3 py-2 bg-transparent border-none outline-none text-gray-900 font-semibold text-base placeholder-gray-400 focus:bg-blue-50 rounded-r-lg"
+                        />
+                      </div>
+
+                      {/* Mini Amount Badge */}
+                      {transfer.amount && (
+                        <div className="absolute -top-1 -right-1">
+                          <div className="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full border-2 border-white shadow-md">
+                            ৳
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -353,50 +434,50 @@ const Transfer = () => {
             )}
           </tbody>
         </table>
-        {/* Pagination */}
-        <div className="flex justify-between items-center mt-4">
-          <div>
-            <span className="text-sm text-gray-700">
-              Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-              {Math.min(currentPage * itemsPerPage, filteredData.length)} of{" "}
-              {filteredData.length} entries
-            </span>
-          </div>
+      </div>
+      {/* Pagination */}
+      <div className="flex justify-between items-center mt-4">
+        <div>
+          <span className="text-sm text-gray-700">
+            Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+            {Math.min(currentPage * itemsPerPage, filteredData.length)} of{" "}
+            {filteredData.length} entries
+          </span>
+        </div>
 
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1 border rounded disabled:opacity-50"
-            >
-              Previous
-            </button>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
 
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              const pageNum = i + 1;
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => setCurrentPage(pageNum)}
-                  className={`px-3 py-1 border rounded ${
-                    currentPage === pageNum ? "bg-blue-500 text-white" : ""
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            const pageNum = i + 1;
+            return (
+              <button
+                key={pageNum}
+                onClick={() => setCurrentPage(pageNum)}
+                className={`px-3 py-1 border rounded ${
+                  currentPage === pageNum ? "bg-blue-500 text-white" : ""
+                }`}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
 
-            <button
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 border rounded disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
+          <button
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>

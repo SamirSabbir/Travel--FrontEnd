@@ -1,11 +1,24 @@
 import React, { useEffect, useState } from "react";
 import axios from "../../api/axios";
 import { toast } from "react-toastify";
-import { Loader2, Save, Search } from "lucide-react";
+import {
+  Globe,
+  Loader2,
+  Save,
+  Search,
+  Settings,
+  UserCheck,
+  Lock,
+  Info,
+  Users,
+  X,
+  Calendar,
+} from "lucide-react";
 import WorkRecordsModal from "../work/WorkRecordModal";
 import PaymentDetailsModal from "../work/PaymentDetailsModal";
 import InvoiceModal from "../work/InvoiceModal";
 import Select from "react-select";
+import getServiceColor from "../../utils/serviceColor";
 
 const Work = ({ userRole }) => {
   const [workData, setWorkData] = useState([]);
@@ -597,7 +610,7 @@ const Work = ({ userRole }) => {
                   "Payment Status",
                   "Work Status",
                   "Assigned To",
-                  "Work Records",
+                  // "Work Records",
                   "Payment Details",
                   "Invoice",
                   "Actions",
@@ -628,142 +641,427 @@ const Work = ({ userRole }) => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <Select
-                      isMulti
-                      options={serviceOptions}
-                      value={serviceOptions.filter((option) => {
-                        // Normalize services to always be an array
-                        const services = !work.services
-                          ? []
-                          : Array.isArray(work.services)
-                          ? work.services
-                          : [work.services];
-
-                        return services.includes(option.value);
-                      })}
-                      onChange={(selectedOptions) => {
-                        const selectedValues = selectedOptions
-                          ? selectedOptions.map((option) => option.value)
-                          : [];
-                        handleFieldChange(work._id, "services", selectedValues);
-                      }}
-                      className="w-48 text-sm"
-                      classNamePrefix="select"
-                      placeholder={
-                        work.services &&
-                        (Array.isArray(work.services)
-                          ? work.services.length > 0
-                          : !!work.services)
-                          ? `${
-                              Array.isArray(work.services)
-                                ? work.services.length
-                                : 1
-                            } service(s) selected`
-                          : "Select services..."
-                      }
-                      closeMenuOnSelect={false}
-                      hideSelectedOptions={false}
-                      maxMenuHeight={200}
-                      menuPortalTarget={document.body}
-                      styles={{
-                        menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                      }}
-                    />
-                  </td>
-                  <td className="px-2 py-4 whitespace-nowrap">
-                    {work.serviceAssignedTo ? (
-                      <div className="px-2 py-1 text-sm text-gray-700">
-                        Assigned to: {work.serviceAssignedTo}
-                      </div>
-                    ) : (
-                      <select
-                        value={work.serviceAssignedTo || ""}
-                        onChange={(e) =>
+                    <div className="relative group">
+                      <Select
+                        isMulti
+                        options={serviceOptions}
+                        value={serviceOptions.filter((option) => {
+                          const services = !work.services
+                            ? []
+                            : Array.isArray(work.services)
+                            ? work.services
+                            : [work.services];
+                          return services.includes(option.value);
+                        })}
+                        onChange={(selectedOptions) => {
+                          const selectedValues = selectedOptions
+                            ? selectedOptions.map((option) => option.value)
+                            : [];
                           handleFieldChange(
                             work._id,
-                            "serviceAssignedTo",
-                            e.target.value
-                          )
+                            "services",
+                            selectedValues
+                          );
+                        }}
+                        className="min-w-[200px] max-w-[240px]"
+                        classNamePrefix="service-select"
+                        placeholder={
+                          <div className="flex items-center gap-2 text-gray-500">
+                            <Settings className="w-4 h-4" />
+                            <span>Select services...</span>
+                          </div>
                         }
-                        disabled={work.workStatus !== "Completed"}
-                        className={`px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm ${
-                          work.workStatus !== "Completed"
-                            ? "bg-gray-100 cursor-not-allowed"
-                            : "bg-white"
+                        closeMenuOnSelect={false}
+                        hideSelectedOptions={false}
+                        isSearchable={true}
+                        maxMenuHeight={200}
+                        menuPortalTarget={document.body}
+                        styles={{
+                          control: (base, state) => ({
+                            ...base,
+                            border: state.isFocused
+                              ? "2px solid #8b5cf6"
+                              : "2px solid #e5e7eb",
+                            borderRadius: "8px",
+                            padding: "6px 8px",
+                            backgroundColor: "white",
+                            boxShadow: state.isFocused
+                              ? "0 0 0 3px rgba(139, 92, 246, 0.1)"
+                              : "none",
+                            transition: "all 0.2s ease",
+                            minHeight: "44px",
+                            "&:hover": {
+                              borderColor: state.isFocused
+                                ? "#8b5cf6"
+                                : "#d1d5db",
+                            },
+                          }),
+                          menu: (base) => ({
+                            ...base,
+                            borderRadius: "8px",
+                            border: "1px solid #e5e7eb",
+                            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
+                            zIndex: 9999,
+                          }),
+                          menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                          multiValue: (base, state) => ({
+                            ...base,
+                            backgroundColor: getServiceColor(state.data.value)
+                              .bg,
+                            borderRadius: "6px",
+                            border: `1px solid ${
+                              getServiceColor(state.data.value).border
+                            }`,
+                          }),
+                          multiValueLabel: (base, state) => ({
+                            ...base,
+                            color: getServiceColor(state.data.value).text,
+                            fontWeight: "600",
+                            fontSize: "0.75rem",
+                            padding: "4px 8px",
+                          }),
+                          multiValueRemove: (base, state) => ({
+                            ...base,
+                            color: getServiceColor(state.data.value).text,
+                            borderRadius: "0 6px 6px 0",
+                            opacity: 0.7,
+                            "&:hover": {
+                              backgroundColor: getServiceColor(state.data.value)
+                                .border,
+                              color: "#ef4444",
+                              opacity: 1,
+                            },
+                          }),
+                          option: (base, state) => ({
+                            ...base,
+                            backgroundColor: state.isSelected
+                              ? "#8b5cf6"
+                              : state.isFocused
+                              ? "#f8fafc"
+                              : "white",
+                            color: state.isSelected ? "white" : "#374151",
+                            fontWeight: state.isSelected ? "600" : "500",
+                            padding: "10px 12px",
+                            fontSize: "0.875rem",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            "&:active": {
+                              backgroundColor: "#7c3aed",
+                            },
+                          }),
+                          placeholder: (base) => ({
+                            ...base,
+                            color: "#9ca3af",
+                            fontSize: "0.875rem",
+                          }),
+                        }}
+                        formatOptionLabel={({ value, label }) => (
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={`w-2 h-2 rounded-full ${
+                                getServiceColor(value).dot
+                              }`}
+                            />
+                            <span>{label}</span>
+                          </div>
+                        )}
+                      />
+
+                      {/* Services count badge */}
+                      {work.services &&
+                        (Array.isArray(work.services)
+                          ? work.services.length > 0
+                          : !!work.services) && (
+                          <div className="absolute -top-2 -right-2">
+                            <span className="bg-purple-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg border border-white flex items-center justify-center min-w-[24px]">
+                              {Array.isArray(work.services)
+                                ? work.services.length
+                                : 1}
+                            </span>
+                          </div>
+                        )}
+                    </div>
+                  </td>
+
+                  <td className="px-4 py-4 whitespace-nowrap">
+                    <div className="flex flex-col gap-2 min-w-[180px]">
+                      {work.serviceAssignedTo ? (
+                        <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="flex items-center justify-center w-8 h-8 bg-green-100 rounded-full">
+                            <UserCheck className="w-4 h-4 text-green-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-green-900 truncate">
+                              {work.serviceAssignedTo}
+                            </p>
+                            <p className="text-xs text-green-600 mt-1">
+                              Assigned
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <select
+                            value={work.serviceAssignedTo || ""}
+                            onChange={(e) =>
+                              handleFieldChange(
+                                work._id,
+                                "serviceAssignedTo",
+                                e.target.value
+                              )
+                            }
+                            disabled={work.workStatus !== "Completed"}
+                            className={`
+            w-full px-4 py-3 border-2 rounded-lg text-sm font-medium transition-all duration-200
+            ${
+              work.workStatus !== "Completed"
+                ? "bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed"
+                : "bg-white border-gray-300 text-gray-700 hover:border-purple-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+            }
+          `}
+                          >
+                            <option value="" className="text-gray-500">
+                              👤 Assign to user...
+                            </option>
+                            {assignServiceUsers.map((user) => (
+                              <option
+                                key={user._id}
+                                value={user.email}
+                                className="text-gray-700"
+                              >
+                                {user.name} • {user.email}
+                              </option>
+                            ))}
+                          </select>
+
+                          {work.workStatus !== "Completed" && (
+                            <div className="absolute inset-y-0 right-3 flex items-center">
+                              <Lock className="w-4 h-4 text-gray-400" />
+                            </div>
+                          )}
+
+                          {/* Helper text */}
+                          <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                            <Info className="w-3 h-3" />
+                            {work.workStatus !== "Completed"
+                              ? "Complete work first to assign"
+                              : "Select user to assign services"}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="relative group">
+                      <div className="relative flex items-center">
+                        <input
+                          type="text"
+                          value={work.pax || ""}
+                          onChange={(e) =>
+                            handleFieldChange(work._id, "pax", e.target.value)
+                          }
+                          placeholder="0"
+                          className="w-24 px-4 py-3 border-2 border-gray-200 rounded-xl bg-white text-gray-900 font-semibold text-center transition-all duration-200
+                   focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:bg-blue-50
+                   hover:border-gray-300 hover:bg-gray-50
+                   group-hover:shadow-md"
+                        />
+
+                        {/* Passenger icon */}
+                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                          <Users className="w-4 h-4 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                        </div>
+
+                        {/* Clear button */}
+                        {work.pax && (
+                          <button
+                            onClick={() =>
+                              handleFieldChange(work._id, "pax", "")
+                            }
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                          >
+                            <X className="w-3 h-3 text-gray-400 hover:text-red-500" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Helper label */}
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="relative group">
+                      <Select
+                        isMulti
+                        options={countries}
+                        value={countries.filter((option) =>
+                          Array.isArray(work.country)
+                            ? work.country.includes(option.value)
+                            : work.country === option.value
+                        )}
+                        onChange={(selectedOptions) => {
+                          const selectedValues = selectedOptions
+                            ? selectedOptions.map((option) => option.value)
+                            : [];
+                          handleFieldChange(
+                            work._id,
+                            "country",
+                            selectedValues
+                          );
+                        }}
+                        className="min-w-[200px] max-w-[280px] text-sm"
+                        classNamePrefix="country-select"
+                        placeholder={
+                          <div className="flex items-center gap-2 text-gray-500">
+                            <Globe className="w-4 h-4" />
+                            <span>Select countries...</span>
+                          </div>
+                        }
+                        closeMenuOnSelect={false}
+                        hideSelectedOptions={false}
+                        isSearchable={true}
+                        menuPortalTarget={document.body}
+                        styles={{
+                          control: (base, state) => ({
+                            ...base,
+                            border: state.isFocused
+                              ? "2px solid #3b82f6"
+                              : "2px solid #e5e7eb",
+                            borderRadius: "8px",
+                            padding: "4px 8px",
+                            backgroundColor: "white",
+                            boxShadow: state.isFocused
+                              ? "0 0 0 3px rgba(59, 130, 246, 0.1)"
+                              : "none",
+                            transition: "all 0.2s ease",
+                            "&:hover": {
+                              borderColor: state.isFocused
+                                ? "#3b82f6"
+                                : "#d1d5db",
+                            },
+                          }),
+                          menu: (base) => ({
+                            ...base,
+                            borderRadius: "8px",
+                            border: "1px solid #e5e7eb",
+                            boxShadow:
+                              "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+                            zIndex: 9999,
+                          }),
+                          menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                          multiValue: (base) => ({
+                            ...base,
+                            backgroundColor: "#eff6ff",
+                            borderRadius: "6px",
+                            border: "1px solid #dbeafe",
+                          }),
+                          multiValueLabel: (base) => ({
+                            ...base,
+                            color: "#1e40af",
+                            fontWeight: "500",
+                            fontSize: "0.75rem",
+                          }),
+                          multiValueRemove: (base) => ({
+                            ...base,
+                            color: "#93c5fd",
+                            borderRadius: "0 6px 6px 0",
+                            "&:hover": {
+                              backgroundColor: "#dbeafe",
+                              color: "#ef4444",
+                            },
+                          }),
+                          option: (base, state) => ({
+                            ...base,
+                            backgroundColor: state.isSelected
+                              ? "#3b82f6"
+                              : state.isFocused
+                              ? "#f3f4f6"
+                              : "white",
+                            color: state.isSelected ? "white" : "#374151",
+                            fontWeight: state.isSelected ? "600" : "400",
+                            padding: "8px 12px",
+                            fontSize: "0.875rem",
+                            "&:active": {
+                              backgroundColor: "#2563eb",
+                            },
+                          }),
+                          placeholder: (base) => ({
+                            ...base,
+                            color: "#9ca3af",
+                            fontSize: "0.875rem",
+                          }),
+                        }}
+                      />
+
+                      {/* Selected countries count badge */}
+                      {work.country && work.country.length > 0 && (
+                        <div className="absolute -top-2 -right-2">
+                          <span className="bg-blue-500 text-white text-xs font-medium px-2 py-1 rounded-full shadow-lg border border-white">
+                            {Array.isArray(work.country)
+                              ? work.country.length
+                              : 1}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="relative group">
+                      <div className="flex items-center bg-white border-2 border-gray-200 rounded-lg hover:border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all duration-200">
+                        <div className="pl-3 pr-2 py-2 border-r border-gray-100">
+                          <Calendar className="w-4 h-4 text-gray-400" />
+                        </div>
+                        <input
+                          type="date"
+                          value={work.submissionDate?.slice(0, 10) || ""}
+                          onChange={(e) =>
+                            handleFieldChange(
+                              work._id,
+                              "submissionDate",
+                              e.target.value
+                            )
+                          }
+                          className="w-32 px-2 py-2 bg-transparent border-none outline-none text-gray-900 font-medium text-sm cursor-pointer"
+                        />
+                        {work.submissionDate && (
+                          <button
+                            onClick={() =>
+                              handleFieldChange(work._id, "submissionDate", "")
+                            }
+                            className="pr-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                          ></button>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="relative group">
+                      <div
+                        className={`px-4 py-2 rounded-xl border-2 text-sm font-bold transition-all duration-200 ${
+                          work.payment
+                            ? "bg-gradient-to-br from-green-100 to-green-50 border-green-300 text-green-800 shadow-lg hover:shadow-xl hover:scale-105"
+                            : "bg-gradient-to-br from-gray-100 to-gray-50 border-gray-200 text-gray-600"
                         }`}
                       >
-                        <option value="">Select User</option>
-                        {assignServiceUsers.map((user) => (
-                          <option key={user._id} value={user.email}>
-                            {user.name} ({user.email})
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  </td>
+                        <div className="flex items-center justify-center gap-2">
+                          <span className="text-lg">৳</span>
+                          <span className="text-base">
+                            {work.payment || "N/A"}
+                          </span>
+                        </div>
+                      </div>
 
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <input
-                      type="text"
-                      value={work.pax || ""}
-                      onChange={(e) =>
-                        handleFieldChange(work._id, "pax", e.target.value)
-                      }
-                      className="w-20 px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                  </td>
-
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Select
-                      isMulti
-                      options={countries}
-                      value={countries.filter((option) =>
-                        Array.isArray(work.country)
-                          ? work.country.includes(option.value)
-                          : work.country === option.value
+                      {/* Tooltip on hover */}
+                      {work.payment && (
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                          Payment: {work.payment}
+                          {work.paymentStatus && ` • ${work.paymentStatus}`}
+                        </div>
                       )}
-                      onChange={(selectedOptions) => {
-                        const selectedValues = selectedOptions
-                          ? selectedOptions.map((option) => option.value)
-                          : [];
-                        handleFieldChange(work._id, "country", selectedValues);
-                      }}
-                      className="w-48 text-sm"
-                      classNamePrefix="select"
-                      placeholder="Select countries..."
-                      closeMenuOnSelect={false}
-                      hideSelectedOptions={false}
-                      isSearchable={true}
-                    />
-                  </td>
-
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <input
-                      type="date"
-                      value={work.submissionDate?.slice(0, 10) || ""}
-                      onChange={(e) =>
-                        handleFieldChange(
-                          work._id,
-                          "submissionDate",
-                          e.target.value
-                        )
-                      }
-                      className="px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                  </td>
-
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-                        ৳
-                      </span>
-                      <span
-                        className={`px-3 py-1 rounded-md text-xs font-medium ${getStatusColor(
-                          work.payment
-                        )}`}
-                      >
-                        {work.payment || "N/A"}
-                      </span>
                     </div>
                   </td>
 
@@ -821,7 +1119,7 @@ const Work = ({ userRole }) => {
                       )}
                     </div>
                   </td>
-
+                  {/* 
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
                       onClick={() => fetchWorkRecords(work._id)}
@@ -833,7 +1131,7 @@ const Work = ({ userRole }) => {
                       ) : null}
                       Records
                     </button>
-                  </td>
+                  </td> */}
 
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
@@ -845,33 +1143,47 @@ const Work = ({ userRole }) => {
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {work.workStatus === "Completed" &&
-                      (() => {
-                        const isEmployee =
-                          userRole?.toLowerCase() === "employee";
-                        return (
-                          <button
-                            onClick={() =>
-                              !isEmployee && setSelectedInvoiceWork(work)
-                            }
-                            disabled={isEmployee}
-                            aria-disabled={isEmployee}
-                            title={
-                              isEmployee
-                                ? "Not allowed for Employee role"
-                                : "Open invoice"
-                            }
-                            className={`inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${
-                              isEmployee
-                                ? "bg-green-400 cursor-not-allowed opacity-60"
-                                : "bg-green-600 hover:bg-green-700"
-                            }`}
-                          >
-                            Invoice
-                          </button>
-                        );
-                      })()}
+                    {work.workStatus === "Completed" && (
+                      <button
+                        onClick={() => setSelectedInvoiceWork(work)}
+                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                      >
+                        Invoice
+                      </button>
+                    )}
                   </td>
+
+                  {/* <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button
+                      onClick={() =>
+                        handleServiceAssignment(work._id, {
+                          services: work.services,
+                          assignedTo: work.serviceAssignedTo,
+                          employeeEmail: work.employeeEmail,
+                          workStatus: work.workStatus,
+                        })
+                      }
+                      disabled={
+                        updatingId === work._id ||
+                        work.serviceAssigned ||
+                        (work.services && work.services.length > 0)
+                      }
+                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    >
+                      {updatingId === work._id ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Saving
+                        </>
+                      ) : work.serviceAssigned ? (
+                        "Service Assigned" // Change text when already assigned
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4 mr-2" /> Save Services
+                        </>
+                      )}
+                    </button>
+                  </td> */}
 
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
@@ -883,16 +1195,27 @@ const Work = ({ userRole }) => {
                           workStatus: work.workStatus,
                         })
                       }
-                      disabled={updatingId === work._id || work.serviceAssigned}
-                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                      disabled={
+                        updatingId === work._id ||
+                        work.serviceAssigned ||
+                        (work.services && work.services.length > 0) // This should disable when services exist
+                      }
+                      className={`inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors ${
+                        updatingId === work._id ||
+                        work.serviceAssigned ||
+                        (work.services && work.services.length > 0)
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-blue-600 hover:bg-blue-700"
+                      }`}
                     >
                       {updatingId === work._id ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                           Saving
                         </>
-                      ) : work.serviceAssigned ? (
-                        "Service Assigned" // Change text when already assigned
+                      ) : work.serviceAssigned ||
+                        (work.services && work.services.length > 0) ? (
+                        "Service Assigned"
                       ) : (
                         <>
                           <Save className="w-4 h-4 mr-2" /> Save Services
