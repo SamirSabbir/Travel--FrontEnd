@@ -1196,14 +1196,10 @@ const Work = ({ userRole }) => {
                         })
                       }
                       disabled={
-                        updatingId === work._id ||
-                        work.serviceAssigned ||
-                        (work.services && work.services.length > 0) // This should disable when services exist
+                        updatingId === work._id || work.serviceAssigned // Only disable if already assigned
                       }
                       className={`inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors ${
-                        updatingId === work._id ||
-                        work.serviceAssigned ||
-                        (work.services && work.services.length > 0)
+                        updatingId === work._id || work.serviceAssigned
                           ? "bg-gray-400 cursor-not-allowed"
                           : "bg-blue-600 hover:bg-blue-700"
                       }`}
@@ -1213,8 +1209,7 @@ const Work = ({ userRole }) => {
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                           Saving
                         </>
-                      ) : work.serviceAssigned ||
-                        (work.services && work.services.length > 0) ? (
+                      ) : work.serviceAssigned ? (
                         "Service Assigned"
                       ) : (
                         <>
