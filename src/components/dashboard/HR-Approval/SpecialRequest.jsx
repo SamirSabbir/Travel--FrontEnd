@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "../../../api/axios";
 import { toast } from "react-toastify";
+import Cookies from "js-cookie";
 
 const SpecialRequest = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState("");
 
   // Pagination states for each table
   const [commissionCurrentPage, setCommissionCurrentPage] = useState(1);
@@ -13,6 +15,17 @@ const SpecialRequest = () => {
   const [itemsPerPage] = useState(5);
 
   useEffect(() => {
+    // Get user role from cookies
+    const userData = Cookies.get("user");
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        setUserRole(user.role || "");
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+      }
+    }
+
     fetchSpecialRequests();
   }, []);
 
@@ -49,6 +62,14 @@ const SpecialRequest = () => {
       toast.error("Failed to cancel request");
     }
   };
+
+  // Check if buttons should be disabled based on role and position
+  const shouldDisableButtons = (position) => {
+    // If user role is AccountAdmin and position is AccountAdmin, disable buttons
+    return userRole === "AccountAdmin" && position === "AccountAdmin";
+  };
+
+  // ... rest of your existing code (filtering, pagination, getStatusBadge, etc.)
 
   // Filter requests by type
   const commissionRequests = requests.filter(
@@ -208,9 +229,15 @@ const SpecialRequest = () => {
                     <td className="py-2 px-4 border space-x-2">
                       <button
                         onClick={() => handleApprove(item._id)}
-                        disabled={item.approved || item.cancelled}
+                        disabled={
+                          shouldDisableButtons(item.userRole) ||
+                          item.approved ||
+                          item.cancelled
+                        }
                         className={`px-3 py-1 rounded ${
-                          item.approved || item.cancelled
+                          shouldDisableButtons(item.userRole) ||
+                          item.approved ||
+                          item.cancelled
                             ? "bg-gray-400 cursor-not-allowed"
                             : "bg-green-500 hover:bg-green-600"
                         } text-white`}
@@ -219,9 +246,15 @@ const SpecialRequest = () => {
                       </button>
                       <button
                         onClick={() => handleCancel(item._id)}
-                        disabled={item.cancelled || item.approved}
+                        disabled={
+                          shouldDisableButtons(item.userRole) ||
+                          item.cancelled ||
+                          item.approved
+                        }
                         className={`px-3 py-1 rounded ${
-                          item.cancelled || item.approved
+                          shouldDisableButtons(item.userRole) ||
+                          item.cancelled ||
+                          item.approved
                             ? "bg-gray-400 cursor-not-allowed"
                             : "bg-red-500 hover:bg-red-600"
                         } text-white`}
@@ -290,9 +323,15 @@ const SpecialRequest = () => {
                     <td className="py-2 px-4 border space-x-2">
                       <button
                         onClick={() => handleApprove(item._id)}
-                        disabled={item.approved || item.cancelled}
+                        disabled={
+                          shouldDisableButtons(item.userRole) ||
+                          item.approved ||
+                          item.cancelled
+                        }
                         className={`px-3 py-1 rounded ${
-                          item.approved || item.cancelled
+                          shouldDisableButtons(item.userRole) ||
+                          item.approved ||
+                          item.cancelled
                             ? "bg-gray-400 cursor-not-allowed"
                             : "bg-green-500 hover:bg-green-600"
                         } text-white`}
@@ -301,9 +340,15 @@ const SpecialRequest = () => {
                       </button>
                       <button
                         onClick={() => handleCancel(item._id)}
-                        disabled={item.cancelled || item.approved}
+                        disabled={
+                          shouldDisableButtons(item.userRole) ||
+                          item.cancelled ||
+                          item.approved
+                        }
                         className={`px-3 py-1 rounded ${
-                          item.cancelled || item.approved
+                          shouldDisableButtons(item.userRole) ||
+                          item.cancelled ||
+                          item.approved
                             ? "bg-gray-400 cursor-not-allowed"
                             : "bg-red-500 hover:bg-red-600"
                         } text-white`}
@@ -370,9 +415,15 @@ const SpecialRequest = () => {
                     <td className="py-2 px-4 border space-x-2">
                       <button
                         onClick={() => handleApprove(item._id)}
-                        disabled={item.approved || item.cancelled}
+                        disabled={
+                          shouldDisableButtons(item.userRole) ||
+                          item.approved ||
+                          item.cancelled
+                        }
                         className={`px-3 py-1 rounded ${
-                          item.approved || item.cancelled
+                          shouldDisableButtons(item.userRole) ||
+                          item.approved ||
+                          item.cancelled
                             ? "bg-gray-400 cursor-not-allowed"
                             : "bg-green-500 hover:bg-green-600"
                         } text-white`}
@@ -381,9 +432,15 @@ const SpecialRequest = () => {
                       </button>
                       <button
                         onClick={() => handleCancel(item._id)}
-                        disabled={item.cancelled || item.approved}
+                        disabled={
+                          shouldDisableButtons(item.userRole) ||
+                          item.cancelled ||
+                          item.approved
+                        }
                         className={`px-3 py-1 rounded ${
-                          item.cancelled || item.approved
+                          shouldDisableButtons(item.userRole) ||
+                          item.cancelled ||
+                          item.approved
                             ? "bg-gray-400 cursor-not-allowed"
                             : "bg-red-500 hover:bg-red-600"
                         } text-white`}
